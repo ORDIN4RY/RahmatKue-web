@@ -97,6 +97,90 @@
 
     }
 
+    /* Tentang */
+        .tentang {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 50px 120px;
+            min-height: 50vh;
+            background: #eef;
+        }
+
+        .tentang-text {
+            max-width: 500px;
+        }
+
+        .tentang-text h1 {
+            font-size: 32px;
+            color: #000000;
+            margin-bottom: 15px;
+            display: fle;
+            justify-content: left;
+        }
+
+        .tentang-text p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+      .tentang .icon-tentang img {
+        width: 400px;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      }
+
+      /* Layanan Rahmat Kue */
+        .layanan {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 120px;
+            min-height: 50vh;
+            background: #eef;
+            width: 100%;
+        }
+
+        .layanan h1 {
+            font-size: 32px;
+            color: #000000;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .layanan-section {
+          padding: 50px 50px;
+          text-align: center;
+        }
+
+        .layanan-container {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 30px;
+          justify-items: center;
+        }
+
+        .layanan-card {
+          background: #fbe2c2;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: left;
+          max-width: 250px;
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .layanan-card .btn-layanan {
+          display: inline-block;
+          background: #5b3b2e;
+          color: #fff;
+          padding: 8px 18px;
+          border-radius: 20px;
+          text-decoration: none;
+          font-size: 12px;
+          transition: background 0.3s;
+        }
+
         /* Produk */
 
     .produk-section {
