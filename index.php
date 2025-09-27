@@ -16,7 +16,7 @@
 
         <!-- Navbar -->
         <div class="navbar">
-            <p>Rahmat Kue</p>
+            <p>Rahmat Kue.</p>
             <a href="#" class="active">Beranda</a>
             <a href="produk.php">Produk</a>
             <a href="tentang.php">Tentang</a>
@@ -25,28 +25,30 @@
 
         <!-- Header -->
         <section class="header">
+            <img src="./assets/img/bg-header.png" alt="">
             <div class="header-text">
                 <h1>Rahmat Tahalu asik</h1>
                 <p>
-                    Menyediakan Beranekaragam Kue dengan kualitas wadidaw & Layanan yang sigma86.<br>
+                    dolor sit amet, consectetur adipiscing elit. Vivamus at sapien velit.
+                    Sed ultrices vulputatemi in mollis. Integer pulvinar quam at tortor facilisis varius <br>
                     <br>Jam Operasional (setiap hari):<br>
                     06.00 - 21.00
                 </p>
                 <a href="produk.php" class="btn">Jelajahi Produk</a>
             </div>
-            <div class="icon-header"><img src="./assets/img/logo.png" alt="" srcset=""></div>
         </section>
 
         <section class="tentang">
-            <div class="icon-tentang"><img src="./assets/img/logo.png" alt="" srcset=""></div>
+            <div class="icon-tentang"><img src="./assets/img/logo-remove.png" alt="" srcset="" style="position: relative; z-index: 2;"></div>
+            <img src="./assets/img/Dot1.png" style="position: absolute; left: 0; height: 700px; z-index: 1;" alt="">
             <div class="tentang-text">
                 <h1>Tentang Kami</h1>
-                <p>
-                    dolor sit amet, consectetur adipiscing elit. Vivamus at<br>
-                    sapien velit. Sed ultrices vulputate mi in mollis.
-                    Integer pulvinar quam at tortor facilisis varius a sit <br>
-                    amet dolor. dolor sit amet, consectetur adipiscing elit.
-                </p>
+                <p>dolor sit amet, consectetur adipiscing elit. Vivamus at sapien velit.
+                    Sed ultrices vulputatemi in mollis. Integer pulvinar quam at tortor facilisis varius 
+                    a sit amet dolor. dolor sit amet, consectetur adipiscing elit. Vivamus at sapien velit. 
+                    Sed ultrices vulputate mi in mollis.Integer pulvinar quam at tortor facilisis varius 
+                    a sit amet dolor. dolor sit amet, consectetur adipiscing elit. Vivamus at sapien velit. 
+                    Sed ultrices vulputate mi in mollis. Integer pulvinar  </p>
             </div>
         </section>
 
@@ -55,18 +57,21 @@
                  <div class="layanan-container">
                 <!-- Card 1 -->
                 <div class="layanan-card">
+                    <img src="./assets/img/layanan1.png" alt="" srcset="">
                     <h3>Layanan<br>Pelanggan</h3>
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas consequat neque metus.</p>
                     <a href="#" class="btn-layanan">Hubungi Kami</a>
                 </div>
                 <!-- Card 2 -->
                 <div class="layanan-card">
+                    <img src="./assets/img/layanan2.png" alt="">
                     <h3>Layanan<br>Pelanggan</h3>
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas consequat neque metus.</p>
                     <a href="#" class="btn-layanan">Hubungi Kami</a>
                 </div>
                 <!-- Card 3 -->
                 <div class="layanan-card">
+                    <img src="./assets/img/layanan3.png" alt="">
                     <h3>Layanan<br>Pelanggan</h3>
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas consequat neque metus.</p>
                     <a href="#" class="btn-layanan">Hubungi Kami</a>
