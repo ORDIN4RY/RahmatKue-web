@@ -17,11 +17,11 @@
     <body>
 
         <!-- Navbar -->
-        <div class="navbar">
+        <div class="navbar" id="navbar">
             <p>Rahmat Kue.</p>
             <a href="#" class="active">Beranda</a>
-            <a href="produk.php">Produk</a>
-            <a href="tentang.php">Tentang</a>
+            <a href="produk.html">Produk</a>
+            <a href="pesan.html">Pesanan</a>
             <a href="#">Login</a>
         </div>
 
@@ -96,7 +96,7 @@
 
         <section class="tentang-owner">
             <div class="icon-tentang-owner"><img src="./assets/img/ex-hero.png" alt="" srcset="" style="position: relative; z-index: 2;"></div>
-            <img src="./assets/img/dot2.png" style="position: absolute; right: 0; height: 700px; z-index: 1; margin-bottom: 16rem; flex-direction: row-reverse;" alt="">
+            <img src="./assets/img/dot2.png" style="position: absolute; right: 0; height: 700px; z-index: 1; margin-bottom: 1rem; flex-direction: row-reverse;" alt="">
             <div class="tentang-owner-text">
                 <h1>Tentang Owner</h1>
                 <p>dolor sit amet, consectetur adipiscing elit. Vivamus at sapien velit.
@@ -147,6 +147,12 @@
             </div>
         </footer>
 
+        <script>
+            window.addEventListener("scroll", function() {
+            const navbar = document.getElementById("navbar");
+            navbar.classList.toggle("scrolled", window.scrollY > 50);
+            });
+        </script>
 
     </body>
 

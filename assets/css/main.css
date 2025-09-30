@@ -20,17 +20,23 @@
             display: flex;
             justify-content: flex-end;
             gap: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            /* semi transparan */
-            backdrop-filter: blur(10px);
-            /* efek blur */
+            background: transparent;
+            /* backdrop-filter: blur(10px); */
+            transition: background 0.3s, backdrop-filter 0.3s;
             z-index: 999;
         }
+
+      .navbar.scrolled {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.2);
+      }
+
         .navbar p {
             font-size: 20px;
             color: #5b3b2e;
             font-weight: bold;
             margin-right: auto;
+            font-family: "Abhaya Libre", sans-serif;
         }
         .navbar a {
             text-decoration: none;
@@ -38,6 +44,7 @@
             color: #333;
             font-weight: 500;
             transition: 0.3s;
+            font-family: "Abhaya Libre", sans-serif;
         }
         .navbar a:hover {
             color: #7c4d33;
@@ -398,71 +405,161 @@
 
     /* Produk */
 
-    .produk-section {
-      padding: 50px 50px;
-      text-align: center;
-    }
+    /* Section */
+      .produk-section {
+        text-align: center;
+        margin-top: -4rem;
+        padding: 40px 20px;
+        background: #FFF6F0;
+      }
+      .produk-section h2 {
+        font-size: 37px;
+        margin-bottom: 10px;
+        font-family: "Abhaya Libre", serif;
+      }
+      .produk-section p {
+        font-size: 17px;
+        margin-bottom: 20px;
+        font-family: "Abhaya Libre", serif;
+      }
 
-    .produk-section h2 {
-      font-size: 32px;
-      color: #7c0d0d;
-      margin-bottom: 10px;
-    }
+      .produk-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+        max-width: 1100px;
+        margin: auto;
+      }
 
-    .produk-section p {
-      max-width: 600px;
-      margin: 0 auto 40px;
-      font-size: 14px;
-      color: #5b3b2e;
-    }
+      .btn-search {
+        margin-bottom: 20px;
+        margin-top: 4rem;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+      .btn-search input[type="text"] {
+        padding: 10px;
+        width: 85%;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+      .btn-search button {
+        padding: 10px;
+        width: 40px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+      .kategori {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: left;
+        margin-left: 4rem;
+        gap: 10px;
+      }
+      .kategori .btn-kategori {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 500;
+        background-color: #ECB69E;
+      }
+      .kategori .btn-kategori-active {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        background-color: #FFD1B8;
+      }
+      .kategori button {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 500;
+        background-color: #FFD1B8;
+      }
 
-    .produk-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 30px;
-      justify-items: center;
-    }
+      /* Card */
+      .produk-card {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        height: 400px;
+        min-height: 380px;
+        background-color: #FFE8D8;
+        margin-top: 3rem;
+      }
 
-    .produk-card {
-      background: #fbe2c2;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: left;
-      max-width: 250px;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
+      /* Foto */
+      .produk-card-img {
+        height: 230px;
+        object-fit: cover;
+        display: block;
+      }
 
-    .produk-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
 
-    .produk-card img {
-      width: 75%;
-      display: flex;
-      justify-content: center;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
+      /* Konten teks */
+      .produk-card-content {
+        position: absolute;
+        padding-top: 18px;
+        padding-bottom: 50px;
+        padding-left: 15px;
+        padding-right: 15px;
+        color: #000;
+        z-index: 2;
+        text-align: left;
+        background-color: #fff;
+      }
 
-    .produk-card p {
-      font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 10px;
-      color: #444;
-    }
+      .produk-card-content h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+        font-weight: bold;
+        font-family: "Abhaya Libre", serif;
+      }
 
-    .produk-card .btn {
-      display: inline-block;
-      background: #5b3b2e;
-      color: #fff;
-      padding: 8px 18px;
-      border-radius: 20px;
-      text-decoration: none;
-      font-size: 12px;
-      transition: background 0.3s;
-    }
+      .produk-card-content p {
+        font-size: 14px;
+        margin-bottom: 15px;
+        line-height: 1.5;
+        font-family: "Abhaya Libre", serif;
+      }
 
-    .produk-card .btn:hover {
-      background: #3e2920;
-    }
+      /* Tombol */
+      .btn-produk {
+        text-align: center;
+        display: inline-block;
+        padding: 10px 18px;
+        width: 100%;
+        background: #5a3c35;
+        color: #fff;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: 0.3s;
+      }
+
+      .btn-produk:hover {
+        background: #3a2722;
+      }
+
+
+      /* Responsive */
+      @media (max-width: 992px) {
+        .produk-container {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .produk-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      
