@@ -1,0 +1,155 @@
+@import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Abhaya Libre", serif;
+}
+
+body {
+  background-color: #fff5e6;
+}
+
+/* Produk */
+
+.produk-section {
+  margin-top: -4rem;
+  padding: 40px 20px;
+  background: #fff6f0;
+  text-align: center;
+}
+.produk-section h2 {
+    margin-top: 4rem;
+  font-family: "Abhaya Libre", serif;
+  font-size: 37px;
+}
+.produk-section p {
+  font-size: 17px;
+  margin-bottom: 20px;
+  font-family: "Abhaya Libre", serif;
+}
+
+.produk-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.btn-search {
+  margin-bottom: 20px;
+  margin-top: 4rem;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.btn-search input[type="text"] {
+  padding: 10px;
+  width: 85%;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+.btn-search button {
+  padding: 10px;
+  width: 40px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+.kategori {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: left;
+  margin-left: 4rem;
+  gap: 10px;
+}
+.kategori .btn-kategori {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #ecb69e;
+}
+.kategori .btn-kategori-active {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #ffd1b8;
+}
+.kategori button {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #ffd1b8;
+}
+
+/* Card */
+.produk-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 400px;
+  min-height: 380px;
+  background-color: #ffe8d8;
+  margin-top: 3rem;
+}
+
+/* Foto */
+.produk-card-img {
+  height: 230px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Konten teks */
+.produk-card-content {
+  position: absolute;
+  padding-top: 18px;
+  padding-bottom: 50px;
+  padding-left: 15px;
+  padding-right: 15px;
+  color: #000;
+  z-index: 2;
+  text-align: left;
+  background-color: #fff;
+}
+
+.produk-card-content h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-family: "Abhaya Libre", serif;
+}
+
+.produk-card-content p {
+  font-size: 14px;
+  margin-bottom: 15px;
+  line-height: 1.5;
+  font-family: "Abhaya Libre", serif;
+}
+
+/* Tombol */
+.btn-produk {
+  text-align: center;
+  display: inline-block;
+  padding: 10px 18px;
+  width: 100%;
+  background: #5a3c35;
+  color: #fff;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.btn-produk:hover {
+  background: #3a2722;
+}

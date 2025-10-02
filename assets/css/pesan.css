@@ -1,0 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap");
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #fff5e6;
+}
+
+
+.pesanan-section {
+  margin-top: -4rem;
+  padding: 40px 50px;
+  background: #fff6f0;
+  text-align: left;
+}
+.pesanan-section h2 {
+    margin-top: 4rem;
+  font-family: "Abhaya Libre", serif;
+  font-size: 30px;
+}
+.pesanan-section iframe {
+    margin-top: 10px;
+  width: 600px;
+  height: 340px;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

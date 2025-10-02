@@ -1,565 +1,196 @@
-@import url('https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap");
 * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(to right, #d9b89b, #e5c9a5);
-            color: #333;
-        }
-
-        /* Navbar */
-        .navbar {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            padding: 15px 50px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 30px;
-            background: transparent;
-            /* backdrop-filter: blur(10px); */
-            transition: background 0.3s, backdrop-filter 0.3s;
-            z-index: 999;
-        }
-
-      .navbar.scrolled {
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.2);
-      }
-
-        .navbar p {
-            font-size: 20px;
-            color: #5b3b2e;
-            font-weight: bold;
-            margin-right: auto;
-            font-family: "Abhaya Libre", sans-serif;
-        }
-        .navbar a {
-            text-decoration: none;
-            font-size: 16px;
-            color: #333;
-            font-weight: 500;
-            transition: 0.3s;
-            font-family: "Abhaya Libre", sans-serif;
-        }
-        .navbar a:hover {
-            color: #7c4d33;
-        }
-
-        .navbar a.active {
-            font-weight: bold;
-            border-bottom: 2px solid #7c4d33;
-            padding-bottom: 2px;
-        }
-
-        /* Header */
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 50px 120px;
-            min-height: 50vh;
-        }
-        .header img {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: auto;
-          z-index: -1;
-        }
-
-        .header-text {
-          margin-top: 4rem;
-            max-width: 500px;
-        }
-
-        .header-text h1 {
-            font-family: "Abhaya Libre", sans-serif;
-            font-weight: 800;
-            font-style: normal;
-            font-size: 32px;
-            color: #6a3c2a;
-            margin-bottom: 15px;
-            display: fle;
-            justify-content: center;
-        }
-
-        .header-text p {
-            font-family: "Abhaya Libre", sans-serif;
-            font-weight: 500;
-            font-style: normal;
-            font-size: 16px;
-            margin-bottom: 20px;
-            line-height: 1.6;  
-        }
-
-      .header-text .btn {
-      display: inline-block;
-      background: #5b3b2e;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 20px;
-      text-decoration: none;
-      font-size: 14px;
-      transition: background 0.3s;
-    }
-
-    .header-text .btn:hover {
-      background: #3e2920;
-    }
-
-    .header .icon-header img {
-      width: 400px;
-      border-radius: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-
-    }
-
-    /* Tentang */
-        .tentang {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 150px 120px;
-            margin-top: 7rem;
-            min-height: 50vh;
-            background: #FFF6F0;
-        }
-
-        .tentang-text {
-            max-width: 500px;
-        }
-
-        .tentang-text h1 {
-            font-family: "Abhaya Libre", sans-serif;
-            font-weight: 800;
-            font-style: normal;
-            font-size: 43px;
-            color: #000000;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: left;
-        }
-
-        .tentang-text p {
-            font-size: 18px;
-            margin-bottom: 20px;
-            line-height: 1.6;
-            font-family: "Abhaya Libre", serif;
-            font-weight: 500;
-            font-style: normal;
-        }
-
-      .tentang .icon-tentang img {
-        width: 300px;
-        border-radius: 20px;
-        /* box-shadow: 0 4px 15px rgba(0,0,0,0.1); */
-      }
-
-      /* Section */
-      .layanan-section {
-        text-align: center;
-        padding: 40px 20px;
-        background: #FFF6F0;
-      }
-
-      .layanan-section h1 {
-        font-size: 37px;
-        margin-bottom: 40px;
-        font-family: "Abhaya Libre", serif;
-      }
-
-      /* Container */
-      .layanan-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 25px;
-        max-width: 1100px;
-        margin: auto;
-      }
-
-      /* Card */
-      .layanan-card {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        height: 400px;
-        min-height: 380px;
-      }
-
-      /* Foto */
-      .layanan-card-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      /* Overlay gelap */
-      .layanan-card-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.4); /* transparansi gelap */
-        z-index: 1;
-      }
-
-      /* Konten teks */
-      .layanan-card-content {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
-        color: #fff;
-        z-index: 2;
-        text-align: center;
-      }
-
-      .layanan-card-content h3 {
-        font-size: 20px;
-        margin-bottom: 10px;
-        font-weight: bold;
-        font-family: "Abhaya Libre", serif;
-      }
-
-      .layanan-card-content p {
-        font-size: 14px;
-        margin-bottom: 15px;
-        line-height: 1.5;
-        font-family: "Abhaya Libre", serif;
-      }
-
-      /* Tombol */
-      .btn-layanan {
-        display: inline-block;
-        padding: 10px 18px;
-        background: #5a3c35;
-        color: #fff;
-        border-radius: 20px;
-        text-decoration: none;
-        font-size: 14px;
-        transition: 0.3s;
-      }
-
-      .btn-layanan:hover {
-        background: #3a2722;
-      }
-
-      /* Responsive */
-      @media (max-width: 992px) {
-        .layanan-container {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-
-      @media (max-width: 600px) {
-        .layanan-container {
-          grid-template-columns: 1fr;
-        }
-      }
-
-    /* tentang-owner   */
-
-    .tentang-owner {
-            display: flex;
-            flex-direction: row-reverse;
-            align-items: center;
-            justify-content: space-between;
-            padding: 150px 120px;
-            margin-top: -2rem;
-            min-height: 50vh;
-            background: #FFF6F0;
-        }
-
-        .icon-tentang-owner img {
-          height: 350px;
-          border-radius: 20px;
-        }
-        .tentang-owner-text {
-            max-width: 500px;
-        }
-
-        .tentang-owner-text h1 {
-            font-family: "Abhaya Libre", sans-serif;
-            font-weight: 800;
-            font-style: normal;
-            font-size: 43px;
-            color: #000000;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: left;
-        }
-
-        .tentang-owner-text p {
-            font-size: 18px;
-            margin-bottom: 20px;
-            line-height: 1.6;
-            font-family: "Abhaya Libre", serif;
-            font-weight: 500;
-            font-style: normal;
-        }
-
-
-      /* footer */
-
-      .footer {
-        background: #fff;
-        font-family: Arial, sans-serif;
-      }
-
-      /* Bagian atas footer */
-      .footer-top {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 30px;
-        padding: 20px;
-        background: #e9a98d;
-        color: #222;
-      }
-
-      .footer-col h3 {
-        font-size: 16px;
-        margin-bottom: 10px;
-      }
-
-      .footer-col ul {
-        list-style: disc;
-        margin-left: 20px;
-        font-size: 14px;
-        line-height: 1.6;
-      }
-
-      .footer-col ul li {
-        margin-bottom: 5px;
-      }
-
-      /* Sosial media */
-      .social-icons {
-        display: flex;
-        gap: 15px;
-        margin-top: 10px;
-      }
-
-      .social-icons a {
-        font-size: 22px;
-        color: #222;
-        transition: 0.3s;
-      }
-
-      .social-icons a:hover {
-        color: #5a3c35;
-      }
-
-      /* Alamat */
-      .alamat {
-        font-size: 14px;
-        line-height: 1.5;
-        display: flex;
-      }
-
-      .alamat h3 {
-        width: 80px;
-        font-size: 18px;
-        margin-bottom: 10px;
-      }
-
-      /* Quote */
-      .footer-quote {
-        text-align: center;
-        padding: 15px;
-        font-size: 14px;
-        font-style: italic;
-        color: #333;
-      }
-
-      /* Copyright */
-      .footer-bottom {
-        text-align: right;
-        padding: 10px 20px;
-        font-size: 12px;
-        background: #fff;
-        color: #555;
-        display: flex;
-        justify-content: center;
-        /* border-top: 1px solid #ddd; */
-      }
-
-      /* Responsive */
-      @media (max-width: 768px) {
-        .footer-top {
-          grid-template-columns: 1fr;
-          text-align: center;
-        }
-        .footer-bottom {
-          text-align: center;
-        }
-      }
-
-
-    /* Produk */
-
-    /* Section */
-      .produk-section {
-        text-align: center;
-        margin-top: -4rem;
-        padding: 40px 20px;
-        background: #FFF6F0;
-      }
-      .produk-section h2 {
-        font-size: 37px;
-        margin-bottom: 10px;
-        font-family: "Abhaya Libre", serif;
-      }
-      .produk-section p {
-        font-size: 17px;
-        margin-bottom: 20px;
-        font-family: "Abhaya Libre", serif;
-      }
-
-      .produk-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 25px;
-        max-width: 1100px;
-        margin: auto;
-      }
-
-      .btn-search {
-        margin-bottom: 20px;
-        margin-top: 4rem;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-      .btn-search input[type="text"] {
-        padding: 10px;
-        width: 85%;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-      }
-      .btn-search button {
-        padding: 10px;
-        width: 40px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-      }
-      .kategori {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: left;
-        margin-left: 4rem;
-        gap: 10px;
-      }
-      .kategori .btn-kategori {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-        font-weight: 500;
-        background-color: #ECB69E;
-      }
-      .kategori .btn-kategori-active {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-        font-weight: bold;
-        background-color: #FFD1B8;
-      }
-      .kategori button {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-        font-weight: 500;
-        background-color: #FFD1B8;
-      }
-
-      /* Card */
-      .produk-card {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        height: 400px;
-        min-height: 380px;
-        background-color: #FFE8D8;
-        margin-top: 3rem;
-      }
-
-      /* Foto */
-      .produk-card-img {
-        height: 230px;
-        object-fit: cover;
-        display: block;
-      }
-
-
-      /* Konten teks */
-      .produk-card-content {
-        position: absolute;
-        padding-top: 18px;
-        padding-bottom: 50px;
-        padding-left: 15px;
-        padding-right: 15px;
-        color: #000;
-        z-index: 2;
-        text-align: left;
-        background-color: #fff;
-      }
-
-      .produk-card-content h3 {
-        font-size: 20px;
-        margin-bottom: 10px;
-        font-weight: bold;
-        font-family: "Abhaya Libre", serif;
-      }
-
-      .produk-card-content p {
-        font-size: 14px;
-        margin-bottom: 15px;
-        line-height: 1.5;
-        font-family: "Abhaya Libre", serif;
-      }
-
-      /* Tombol */
-      .btn-produk {
-        text-align: center;
-        display: inline-block;
-        padding: 10px 18px;
-        width: 100%;
-        background: #5a3c35;
-        color: #fff;
-        border-radius: 20px;
-        text-decoration: none;
-        font-size: 14px;
-        transition: 0.3s;
-      }
-
-      .btn-produk:hover {
-        background: #3a2722;
-      }
-
-
-      /* Responsive */
-      @media (max-width: 992px) {
-        .produk-container {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-
-      @media (max-width: 600px) {
-        .produk-container {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #fff5e6;
+  scroll-behavior: smooth;
+}
+
+/* Navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  padding: 15px 50px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 30px;
+  background: transparent;
+  transition: background 0.3s, backdrop-filter 0.3s;
+  z-index: 999;
+}
+
+.navbar.scrolled {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.navbar p {
+  font-size: 20px;
+  color: #5b3b2e;
+  font-weight: bold;
+  margin-right: auto;
+  font-family: "Abhaya Libre", sans-serif;
+}
+.navbar a {
+  text-decoration: none;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+  transition: 0.3s;
+  font-family: "Abhaya Libre", sans-serif;
+}
+.navbar a:hover {
+  color: #7c4d33;
+}
+
+.navbar a.active {
+  font-weight: bold;
+  border-bottom: 2px solid #7c4d33;
+  padding-bottom: 2px;
+}
+
+/* footer */
+
+.footer {
+  background: #fff;
+  font-family: Arial, sans-serif;
+}
+
+/* Bagian atas footer */
+.footer-top {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  padding: 20px;
+  background: #e9a98d;
+  color: #222;
+}
+
+.footer-col h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.footer-col ul {
+  list-style: disc;
+  margin-left: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.footer-col ul li {
+  margin-bottom: 5px;
+}
+
+/* Sosial media */
+.social-icons {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.social-icons a {
+  font-size: 22px;
+  color: #222;
+  transition: 0.3s;
+}
+
+.social-icons a:hover {
+  color: #5a3c35;
+}
+
+/* Alamat */
+.alamat {
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+}
+
+.alamat h3 {
+  width: 80px;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+/* Quote */
+.footer-quote {
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  font-style: italic;
+  color: #333;
+}
+
+/* Copyright */
+.footer-bottom {
+  text-align: right;
+  padding: 10px 20px;
+  font-size: 12px;
+  background: #fff;
+  color: #555;
+  display: flex;
+  justify-content: center;
+  /* border-top: 1px solid #ddd; */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer-top {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .footer-bottom {
+    text-align: center;
+  }
+}
+
+/* Responsive Navbar */
+@media (max-width: 900px) {
+  .navbar {
+    padding: 12px 20px;
+    gap: 18px;
+    font-size: 15px;
+  }
+  .navbar p {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 8px;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .navbar p {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .navbar a {
+    font-size: 14px;
+    padding: 6px 0;
+  }
+}
+
+/* ...existing code... */
+
+/* Responsive */
+@media (max-width: 992px) {
+  .produk-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .produk-container {
+    grid-template-columns: 1fr;
+  }
+}
