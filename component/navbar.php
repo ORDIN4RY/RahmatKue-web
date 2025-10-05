@@ -15,7 +15,7 @@
     ?>
 
     <div class="navbar" id="navbar">
-        <p>Rahmat Kue.</p>
+        <p>Rahmat Kue</p>
         <a href="index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Beranda</a>
         <a href="produk.php" class="<?= ($current_page == 'produk.php') ? 'active' : '' ?>">Produk</a>
         <a href="pesan.php" class="<?= ($current_page == 'pesan.php') ? 'active' : '' ?>">Pesanan</a>

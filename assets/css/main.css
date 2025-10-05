@@ -20,14 +20,14 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 30px;
-  background: transparent;
+  background: #FFD1B8;
   transition: background 0.3s, backdrop-filter 0.3s;
   z-index: 999;
 }
 
 .navbar.scrolled {
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.2);
+  background: #FFD1B8;
 }
 
 .navbar p {
@@ -58,34 +58,46 @@ body {
 /* footer */
 
 .footer {
-  background: #fff;
+  background: #fff5ef;
   font-family: Arial, sans-serif;
+  color: #3b2d25;
 }
 
 /* Bagian atas footer */
 .footer-top {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  padding: 20px;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
   background: #e9a98d;
-  color: #222;
+  text-align: center;
 }
 
 .footer-col h3 {
-  font-size: 16px;
+  font-size: 20px;
   margin-bottom: 10px;
+  color: #000;
 }
 
 .footer-col ul {
   list-style: disc;
   margin-left: 20px;
-  font-size: 14px;
   line-height: 1.6;
+  text-align: left;
+  display: inline-block;
 }
 
 .footer-col ul li {
-  margin-bottom: 5px;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+/*logo halal*/
+.footer-halal {
+  width: auto;
+  margin: 0 auto;
+  display: block;
 }
 
 /* Sosial media */
@@ -93,10 +105,12 @@ body {
   display: flex;
   gap: 15px;
   margin-top: 10px;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
 .social-icons a {
-  font-size: 22px;
+  font-size: 30px;
   color: #222;
   transition: 0.3s;
 }
@@ -106,16 +120,22 @@ body {
 }
 
 /* Alamat */
-.alamat {
+.footer-alamat {
   font-size: 14px;
   line-height: 1.5;
   display: flex;
+  margin-bottom: 10px;
 }
 
-.alamat h3 {
-  width: 80px;
+.footer-alamat p {
+  width: auto;
   font-size: 18px;
   margin-bottom: 10px;
+}
+
+.footer-maps iframe {
+  border-radius: 8px;
+  width: auto;
 }
 
 /* Quote */
