@@ -10,23 +10,167 @@ body {
   background-color: #fff5e6;
 }
 
-
 .pesanan-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-top: -4rem;
   padding: 40px 50px;
   background: #fff6f0;
   text-align: left;
 }
 .pesanan-section h2 {
-    margin-top: 4rem;
+  margin-right: 580px;
+  margin-top: 4rem;
   font-family: "Abhaya Libre", serif;
   font-size: 30px;
 }
 .pesanan-section iframe {
-    margin-top: 10px;
-  width: 600px;
+  margin-top: 10px;
+  width: 660px;
   height: 340px;
   border: none;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-pesanan {
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  margin-left: 20px;
+  background: #ffe9dd;
+  padding: 30px;
+  border-radius: 12px;
+  width: 470px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dekorasi bentuk */
+/* .card::before, .card::after {
+      content: "";
+      position: absolute;
+      background: #c49b89;
+      border-radius: 50%;
+      z-index: 0;
+    } */
+
+.card::before {
+  width: 150px;
+  height: 150px;
+  top: -40px;
+  right: -40px;
+}
+.card::after {
+  width: 100px;
+  height: 100px;
+  bottom: -30px;
+  left: -30px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.header img {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+  border-radius: 50%;
+}
+.header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+.header p {
+  font-size: 12px;
+  margin: 0;
+  color: #666;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 1;
+}
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background: #fff7f3;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+textarea {
+  resize: none;
+  height: 80px;
+}
+
+.card-pembelian {
+  border: 2px solid #e0cfc2;
+  border-radius: 20px;
+  padding: 30px 40px;
+  width: 60%;
+  background: #fff5e6;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.card-pembelian h3 {
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 16px;
+  color: #5b4034;
+}
+
+.row-pembelian {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0;
+  font-size: 15px;
+  color: #5b4034;
+}
+
+.row-pembelian strong {
+  font-weight: 600;
+}
+
+
+
+.card-pembayaran {
+  border: 2px solid #e0cfc2;
+  border-radius: 20px;
+  padding: 30px 40px;
+  width: 60%;
+  background: #fff5e6;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.card-pembayaran h3 {
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 16px;
+  color: #5b4034;
+}
+
+.row-pembayaran {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0;
+  font-size: 15px;
+  color: #5b4034;
+}
+
+.row-pembayaran strong {
+  font-weight: 600;
 }

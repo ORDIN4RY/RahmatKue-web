@@ -37,8 +37,8 @@ body {
 .header-text h1 {
     font-weight: 800;
     font-style: normal;
-    font-size: 32px;
-    color: #fff5e6;
+    font-size: 40px;
+    color: #5b3b2e;
     margin-bottom: 15px;
     display: fle;
     justify-content: center;
@@ -48,7 +48,7 @@ body {
 .header-text p {
     font-weight: 500;
     font-style: normal;
-    font-size: 16px;
+    font-size: 20px;
     margin-bottom: 20px;
     line-height: 1.6;  
     font-family: "Abhaya Libre", sans-serif;
@@ -57,10 +57,10 @@ body {
 .header-text .btn {
     background: #5b3b2e;
     color: #fff;
-    padding: 10px 20px;
-    border-radius: 20px;
+    padding: 17px 27px;
+    border-radius: 30px;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 18px;
     transition: background 0.3s;
     display: inline-block;
 }
@@ -88,7 +88,7 @@ body {
 }
 
 .tentang-text {
-    max-width: 500px;
+    max-width: 600px;
 }
 
 .tentang-text h1 {
@@ -112,7 +112,7 @@ body {
 }
 
 .tentang .icon-tentang img {
-    width: 300px;
+    width: 400px;
     border-radius: 20px;
 }
 
@@ -217,11 +217,11 @@ body {
 }
 
 .icon-tentang-owner img {
-    height: 350px;
+    height: 400px;
     border-radius: 20px;
 }
 .tentang-owner-text {
-    max-width: 500px;
+    max-width: 600px;
 }
 
 .tentang-owner-text h1 {
@@ -283,11 +283,11 @@ body {
         flex-direction: column;
         padding: 60px 20px;
         min-height: 30vh;
-        text-align: center;
+        /* text-align: center; */
         gap: 20px;
     }
     .tentang-text {
-        max-width: 100%;
+        max-width: 80%;
     }
     .tentang .icon-tentang img {
         width: 180px;
@@ -341,7 +341,6 @@ body {
         flex-direction: column;
         padding: 60px 20px;
         min-height: 30vh;
-        text-align: center;
         gap: 20px;
     }
     .icon-tentang-owner img {
@@ -349,7 +348,7 @@ body {
         margin-bottom: 20px;
     }
     .tentang-owner-text {
-        max-width: 100%;
+        max-width: 80%;
     }
 }
 

@@ -14,7 +14,6 @@
 
 <body>
     </head>
-<!--hy-->
     <body>
 
         <?php include 'component/navbar.php'; ?>
@@ -23,7 +22,7 @@
         <section class="header">
             <img src="./assets/img/bg-header.png" alt="">
             <div class="header-text">
-                <h1>Rahmat Tahalu asik</h1>
+                <h1>Rahmat Kue</h1>
                 <p>
                     dolor sit amet, consectetur adipiscing elit. Vivamus at sapien velit.
                     Sed ultrices vulputatemi in mollis. Integer pulvinar quam at tortor facilisis varius <br>

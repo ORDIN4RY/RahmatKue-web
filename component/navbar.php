@@ -19,7 +19,7 @@
         <a href="index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Beranda</a>
         <a href="produk.php" class="<?= ($current_page == 'produk.php') ? 'active' : '' ?>">Produk</a>
         <a href="pesan.php" class="<?= ($current_page == 'pesan.php') ? 'active' : '' ?>">Pesanan</a>
-        <a href="login.php" class="<?= ($current_page == 'login.php') ? 'active' : '' ?>">Login</a>
+        <a href="auth/login.php">Login</a>
     </div>
     
     <script>
