@@ -27,9 +27,8 @@ body {
 
 .navbar.scrolled {
   backdrop-filter: blur(10px);
-  background: #FFD1B8;
+  background: transparent;
 }
-
 .navbar p {
   font-size: 20px;
   color: #5b3b2e;

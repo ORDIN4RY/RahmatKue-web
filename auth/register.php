@@ -2,32 +2,54 @@
 include "koneksi.php";
 
 if (isset($_POST['register'])) {
-    $username = $_POST['username'];
-    $no_hp    = $_POST['no_hp_login'];
-    $password = $_POST['password'];
-    $level    = $_POST['level']; // 0 = customer, 1 = seller
+    $username   = $_POST['username'];
+    $no_hp      = $_POST['no_hp_login'];
+    $password   = $_POST['password'];
+    $level      = '0'; // default level = 0 (customer)
 
-    // cek apakah username atau no_hp sudah dipakai
-    $cek = $conn->prepare("SELECT * FROM user WHERE username=? OR no_hp_login=?");
-    $cek->bind_param("ss", $username, $no_hp);
-    $cek->execute();
-    $res = $cek->get_result();
+    // Enkripsi password
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    if ($res->num_rows > 0) {
-        echo "❌ Username atau No HP sudah digunakan!";
+    // Query simpan data
+    $stmt = $conn->prepare("INSERT INTO user (username, no_hp_login, password, level) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $username, $no_hp, $hashed_password, $level);
+
+    if ($stmt->execute()) {
+        echo "<script>alert('Registrasi berhasil! Silakan login.'); window.location='login.php';</script>";
     } else {
-        $stmt = $conn->prepare("INSERT INTO user (username,no_hp_login,password,level) VALUES (?,?,?,?)");
-        $stmt->bind_param("sssi", $username, $no_hp, $password, $level);
-
-        if ($stmt->execute()) {
-            echo "✅ Registrasi berhasil!";
-        } else {
-            echo "❌ Registrasi gagal!";
-        }
+        echo "Terjadi kesalahan: " . $stmt->error;
     }
+
+    $stmt->close();
+    $conn->close();
 }
 ?>
 
+<link rel="stylesheet" href="../assets/css/auth.css">
+  <div class="container">
+    <div class="image-section"></div>
+
+    <div class="form-section">
+      <div class="login-box">
+        <h2>Selamat datang di Rahmat Kue</h2>
+        <p>Buat akun anda</p>
+
+        <form method="POST">
+          <label for="phone">Nama Pengguna</label>
+          <input type="text" name="username" placeholder="Masukkan nama pengguna" required />
+
+          <label for="phone">Nomor Handphone</label>
+          <input type="text" name="no_hp_login" placeholder="Masukkan nomor handphone" required />
+
+          <label for="password">Password</label>
+          <input type="password" name="password" placeholder="Masukkan password" required />
+
+          <button type="submit" class="btn" name="register">Daftar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+<!-- 
 <form method="POST">
     <input type="text" name="username" placeholder="Username" required><br>
     <input type="text" name="no_hp_login" placeholder="No HP" required><br>
@@ -39,4 +61,4 @@ if (isset($_POST['register'])) {
     </select><br>
 
     <button type="submit" name="register">Register</button>
-</form>
+</form> -->

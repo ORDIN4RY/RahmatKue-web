@@ -6,35 +6,64 @@ if (isset($_POST['login'])) {
     $no_hp   = $_POST['no_hp_login']; 
     $password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT * FROM user WHERE no_hp_login=? AND password=?");
-    $stmt->bind_param("ss", $no_hp, $password);
+    $stmt = $conn->prepare("SELECT * FROM user WHERE no_hp_login=?");
+    $stmt->bind_param("s", $no_hp);
     $stmt->execute();
     $res = $stmt->get_result();
 
     if ($res->num_rows === 1) {
         $row = $res->fetch_assoc();
 
-        $_SESSION['id_user'] = $row['id_user'];
-        $_SESSION['username'] = $row['username'];
-        $_SESSION['level']    = $row['level'];
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['id_user'] = $row['id_user'];
+            $_SESSION['username'] = $row['username'];
+            $_SESSION['level']    = $row['level'];
 
-        // redirect sesuai level
-        if ($row['level'] == '0') {
-            header("Location: pages/user/dashboard-user.php");
+            // Pastikan tidak ada output sebelum header
+            ob_start();
+            if ($row['level'] == '0') {
+                header("Location: ../index.php"); // dirubah pada halaman dashboard, perubahan di bisa menambahkan produk, dan melihat pesanan jika sudah menambahkan produk
+            } else if ($row['level'] == '1') {
+                header("Location: ../pages/admin/dashboard-admin.php");
+            } else {
+                echo "Level user tidak dikenali.";
+            }
+            ob_end_flush();
+            exit();
         } else {
-            header("Location: pages/admin/dashboard-admin.php");
+            echo "❌ Password salah!";
         }
-        exit();
     } else {
-        echo "❌ No HP atau Password salah!";
+        echo "❌ No HP tidak ditemukan!";
     }
 }
 ?>
+<link rel="stylesheet" href="../assets/css/auth.css">
+  <div class="container">
+    <div class="image-section"></div>
 
-<form method="POST">
-    <input type="text" name="no_hp_login" placeholder="No HP" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
-    <button type="submit" name="login">Login</button>
-</form>
+    <div class="form-section">
+      <div class="login-box">
+        <h2>Selamat datang di Rahmat Kue</h2>
+        <p>Masukkan akun anda</p>
 
-<a href="register.php">tidak punya akun?</a>
+        <form method="POST">
+          <label for="phone">Nomor Handphone</label>
+          <input type="text" name="no_hp_login" placeholder="Masukkan nomor handphone" required />
+
+          <label for="password">Password</label>
+          <input type="password" name="password" placeholder="Masukkan password" required />
+
+          <div class="forgot">
+            <a href="#">Lupa password?</a>
+          </div>
+
+          <button type="submit" class="btn" name="login">Log in</button>
+
+          <div class="register">
+            Belum punya akun? <a href="register.php">Daftar sekarang</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

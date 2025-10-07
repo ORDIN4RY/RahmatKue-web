@@ -1,0 +1,136 @@
+@import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap");
+* {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    font-family: "Abhaya Libre", sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      background-color: #faf7f3;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+    }
+
+    /* Gambar di kiri */
+    .image-section {
+      flex: 1;
+      background: url('../img/donut-login.jpg') no-repeat center center;
+      background-size: cover;
+    }
+
+    /* Bagian form login */
+    .form-section {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fffaf5;
+      padding: 40px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .login-box h2 {
+      font-size: 36px;
+      color: #5a3d2e;
+      margin-bottom: 8px;
+      width: 80%;
+    }
+
+    .login-box p {
+      color: #9a7e6f;
+      margin-bottom: 30px;
+    }
+
+    .login-box label {
+      display: block;
+      color: #5a3d2e;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      border: 1px solid #c4a78c;
+      border-radius: 6px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    .login-box input:focus {
+      border-color: #8b5e3c;
+    }
+
+    .forgot {
+      text-align: right;
+      margin-top: -10px;
+      margin-bottom: 20px;
+    }
+
+    .forgot a {
+      color: #8b5e3c;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .forgot a:hover {
+      text-decoration: underline;
+    }
+
+    .btn {
+      width: 100%;
+      background-color: #8b5e3c;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #6f472e;
+    }
+
+    .register {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .register a {
+      color: #8b5e3c;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .register a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsif: sembunyikan gambar di layar kecil */
+    @media (max-width: 768px) {
+      .image-section {
+        display: none;
+      }
+      .form-section {
+        flex: 1;
+        background-color: #fffaf5;
+      }
+      .login-box {
+        max-width: 320px;
+      }
+    }

@@ -10,8 +10,7 @@
 
 <body>
     <?php
-    // ambil nama file halaman sekarang
-    $current_page = basename($_SERVER['PHP_SELF']);
+        $current_page = basename($_SERVER['PHP_SELF']);
     ?>
 
     <div class="navbar" id="navbar">
