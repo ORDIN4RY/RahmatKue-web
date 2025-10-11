@@ -23,12 +23,12 @@ if ($_SESSION['level'] != '1') {
 
   <?php include '../../component/sidebar.php'; ?>
 
-  <div class="main-content">
-    <div class="header">
-      <button class="toggle-btn" id="toggleBtn">☰</button>
-      <h2>Dashboard</h2>
-      <div class="profile" id="profileButton">
-  <img src="https://i.pravatar.cc/30" alt="user" />
+<div class="main-content">
+  <div class="header">
+    <button class="toggle-btn" id="toggleBtn">☰</button>
+    <h2>Dashboard</h2>
+    <div class="profile" id="profileButton">
+        <img src="https://i.pravatar.cc/30" alt="user" />
   <div class="profile-info">
     <strong>Raffin</strong>
     <small>Admin</small>
