@@ -22,6 +22,15 @@ body {
   z-index: 200;
 }
 
+.sidebar .menu .btn-logout{
+  width: 100%;
+  padding: 20px;
+  transition: transform 0.3s ease;
+  z-index: 200;
+  text-align: center;
+}
+
+
 .sidebar.hidden {
   transform: translateX(-100%);
 }

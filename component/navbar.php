@@ -10,7 +10,11 @@
 
 <body>
     <?php
-        $current_page = basename($_SERVER['PHP_SELF']);
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $current_page = basename($_SERVER['PHP_SELF']);
+    $isLoggedIn = isset($_SESSION['id_user']);
     ?>
 
     <div class="navbar" id="navbar">
@@ -18,9 +22,14 @@
         <a href="index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Beranda</a>
         <a href="produk.php" class="<?= ($current_page == 'produk.php') ? 'active' : '' ?>">Produk</a>
         <a href="pesan.php" class="<?= ($current_page == 'pesan.php') ? 'active' : '' ?>">Pesanan</a>
-        <a href="auth/login.php">Login</a>
+
+        <?php if ($isLoggedIn): ?>
+            <a href="auth/logout.php" onclick="return confirm('Yakin ingin logout?')">Logout</a>
+        <?php else: ?>
+            <a href="auth/login.php" class="<?= ($current_page == 'login.php') ? 'active' : '' ?>">Login</a>
+        <?php endif; ?>
     </div>
-    
+
     <script>
         window.addEventListener("scroll", function() {
             const navbar = document.getElementById("navbar");

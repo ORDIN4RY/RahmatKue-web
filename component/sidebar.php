@@ -19,6 +19,9 @@
       <a href="#">Pesanan</a>
       <a href="#">Kelola Voucher</a>
       <a href="#">Edit Profil</a>
+      <div class="btn-logout">
+        <a href="../../auth/logout.php">Logout</a>
+      </div>
     </div>
   </div>
 

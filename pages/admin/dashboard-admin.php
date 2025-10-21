@@ -1,43 +1,45 @@
 <?php
 session_start();
 if (!isset($_SESSION['id_user'])) {
-    header("Location: ../../auth/login.php");
-    exit();
+  header("Location: ../../auth/login.php");
+  exit();
 }
 
 if ($_SESSION['level'] != '1') {
-    header("Location: ../../auth/login.php");
-    exit();
+  header("Location: ../../auth/login.php");
+  exit();
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Admin</title>
   <link rel="stylesheet" href="../../assets/css/dashboard-admin.css">
 </head>
+
 <body>
 
   <?php include '../../component/sidebar.php'; ?>
 
-<div class="main-content">
-  <div class="header">
-    <button class="toggle-btn" id="toggleBtn">☰</button>
-    <h2>Dashboard</h2>
-    <div class="profile" id="profileButton">
+  <div class="main-content">
+    <div class="header">
+      <button class="toggle-btn" id="toggleBtn">☰</button>
+      <h2>Dashboard</h2>
+      <div class="profile" id="profileButton">
         <img src="https://i.pravatar.cc/30" alt="user" />
-  <div class="profile-info">
-    <strong>Raffin</strong>
-    <small>Admin</small>
-  </div>
-</div>
+        <div class="profile-info">
+          <strong>Raffin</strong>
+          <small>Admin</small>
+        </div>
+      </div>
 
-<div class="logout-menu" id="logoutMenu">
-  <a href="../../auth/logout.php">Logout</a>
-</div>
+      <div class="logout-menu" id="logoutMenu">
+        <a href="../../auth/logout.php">Logout</a>
+      </div>
     </div>
 
     <div class="cards">
@@ -75,20 +77,21 @@ if ($_SESSION['level'] != '1') {
       }
     });
 
-     const profileBtn = document.getElementById("profileButton");
-  const logoutMenu = document.getElementById("logoutMenu");
+    const profileBtn = document.getElementById("profileButton");
+    const logoutMenu = document.getElementById("logoutMenu");
 
-  profileBtn.addEventListener("click", () => {
-    logoutMenu.classList.toggle("show");
-  });
+    profileBtn.addEventListener("click", () => {
+      logoutMenu.classList.toggle("show");
+    });
 
-  // Tutup menu jika klik di luar
-  document.addEventListener("click", (e) => {
-    if (!profileBtn.contains(e.target) && !logoutMenu.contains(e.target)) {
-      logoutMenu.classList.remove("show");
-    }
-  });
+    // Tutup menu jika klik di luar
+    document.addEventListener("click", (e) => {
+      if (!profileBtn.contains(e.target) && !logoutMenu.contains(e.target)) {
+        logoutMenu.classList.remove("show");
+      }
+    });
   </script>
 
 </body>
+
 </html>
