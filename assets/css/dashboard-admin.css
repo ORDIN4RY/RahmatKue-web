@@ -15,6 +15,7 @@ body {
 
 /* ===== SIDEBAR ===== */
 .sidebar {
+  position: sticky;
   width: 240px;
   background-color: #f8e3d9;
   padding: 20px;
@@ -53,7 +54,8 @@ body {
 
 .menu a.active,
 .menu a:hover {
-  background-color: #fddbc8;
+  background-color: #8E5E48;
+  color: #fff;
 }
 
 /* ===== MAIN CONTENT ===== */

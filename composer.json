@@ -1,0 +1,6 @@
+{
+    "require": {
+        "rafaelwendel/phpsupabase": "^0.0.10",
+        "guzzlehttp/guzzle": "^7.10"
+    }
+}

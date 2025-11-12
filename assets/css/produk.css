@@ -8,25 +8,24 @@
 }
 
 body {
-  background-color: #fff5e6;
+  background: #fff6f0;
 }
 
 /* Produk */
 
 .produk-section {
-  margin-top: -4rem;
   padding: 40px 20px;
-  background: #fff6f0;
+  /* background: #fff6f0; */
   text-align: center;
 }
 .produk-section h2 {
-  margin-top: 4rem;
+  /* margin-top: 2rem; */
   font-family: "Abhaya Libre", serif;
   font-size: 37px;
 }
 .produk-section p {
   font-size: 17px;
-  margin-bottom: 20px;
+  margin-top: 20px;
   font-family: "Abhaya Libre", serif;
 }
 
@@ -38,68 +37,107 @@ body {
   margin: auto;
 }
 
-.btn-search {
-  margin-bottom: 20px;
-  margin-top: 4rem;
+.search-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 20px auto 30px;
+  padding: 0 20px;
+}
+
+.search-form {
+  width: 100%;
+}
+
+.search-box {
+  width: 100%;
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #e4e4e4;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
-.btn-search input[type="text"] {
-  padding: 10px;
-  width: 85%;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
+
+.search-icon {
+  color: #8e5e48;
+  margin-right: 12px;
+  font-size: 18px;
 }
-.btn-search button {
-  padding: 10px;
-  width: 40px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
+
+.search-box input {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 8px;
+  font-size: 16px;
+  color: #333;
+  outline: none;
 }
-.kategori {
-  margin-bottom: 20px;
+
+.search-box input::placeholder {
+  color: #999;
+}
+
+.filter-btn {
+  background: none;
+  border: none;
+  color: #8e5e48;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* Category buttons styles */
+.kategori-container {
   display: flex;
-  justify-content: left;
-  margin-left: 4rem;
-  gap: 10px;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 10px 20px;
+  margin: 0 auto 30px;
+  max-width: 800px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-.kategori .btn-kategori {
-  padding: 10px;
-  border: 1px solid #ccc;
+
+.kategori-container::-webkit-scrollbar {
+  display: none;
+}
+
+.kategori-btn {
+  background-color: #fff;
+  color: #8e5e48;
+  border: 1px solid #8e5e48;
+  padding: 10px 24px;
   border-radius: 5px;
   font-size: 14px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.3s ease;
   font-weight: 500;
-  background-color: #ecb69e;
 }
-.kategori .btn-kategori-active {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: bold;
-  background-color: #ffd1b8;
+
+.kategori-btn:hover {
+  background-color: #fff5f1;
+  border-color: #8e5e48;
 }
-.kategori button {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: 500;
-  background-color: #ffd1b8;
+
+.kategori-btn.active {
+  background-color: #8e5e48;
+  color: white;
+  border-color: #8e5e48;
 }
 
 /* Card */
 .produk-card {
   position: relative;
-  border-radius: 12px;
   overflow: hidden;
-  height: 400px;
-  min-height: 380px;
+  height: 300px;
+  /* min-height: 380px; */
   background-color: #ffe8d8;
   margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Foto */
@@ -112,44 +150,43 @@ body {
 
 /* Konten teks */
 .produk-card-content {
-  position: absolute;
-  padding-top: 18px;
-  padding-bottom: 50px;
-  padding-left: 15px;
-  padding-right: 15px;
+  flex: 1;
+  padding: 10px 15px 20px 15px;
   color: #000;
-  width: 100%;
-  z-index: 2;
-  text-align: left;
   background-color: #fff;
+  text-align: left;
+  position: relative;
+  font-family: "Abhaya Libre", serif;
 }
 
 .produk-card-content h3 {
-  font-size: 20px;
-  margin-bottom: 10px;
-  font-weight: bold;
   font-family: "Abhaya Libre", serif;
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .produk-card-content p {
+  font-family: "Abhaya Libre", serif;
   font-size: 14px;
   margin-bottom: 15px;
-  line-height: 1.5;
-  font-family: "Abhaya Libre", serif;
+  line-height: 0.1;
 }
-.produk-card-content .kategori-item {
-  font-family: "Abhaya Libre", serif;
-  font-size: 15px;
+
+.produk-card-content .harga {
+  line-height: 1.5;
+  font-size: 18px;
   font-weight: bold;
 }
 
 /* Tombol */
 .btn-produk {
+  position: absolute;
+  bottom: 10px; /* posisikan di bawah */
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 30px); /* beri jarak dari sisi kiri kanan */
   text-align: center;
-  display: inline-block;
-  margin-top: 20px;
   padding: 10px 18px;
-  width: 100%;
   background: #5a3c35;
   color: #fff;
   border-radius: 20px;
@@ -191,4 +228,117 @@ body {
 }
 .catatan i {
   margin-right: 5px;
+}
+
+/* Sticky Cart Button */
+.sticky-cart-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #8e5e48;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(142, 94, 72, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.sticky-cart-btn:hover {
+  transform: scale(1.1);
+  background-color: #7a4e3c;
+  box-shadow: 0 6px 16px rgba(142, 94, 72, 0.4);
+}
+
+.sticky-cart-btn i {
+  margin: 0;
+  padding: 0;
+}
+
+/* Produk Detail */
+
+h2 {
+  font-weight: 700;
+}
+
+h4 {
+  font-weight: 600;
+  color: #222;
+}
+
+.img-fluid {
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#produk-detail-form {
+  padding-left: 20px;
+}
+
+.btn-submit {
+  background-color: #5a4fcf;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  transition: 0.3s;
+}
+
+.btn-submit:hover {
+  background-color: #473dc0;
+}
+
+.form-control,
+.form-select {
+  border-radius: 8px;
+}
+
+.wishlist {
+  margin-top: 10px;
+  color: #555;
+  cursor: pointer;
+}
+
+.wishlist i {
+  color: #999;
+}
+
+.badge-custom {
+  background-color: #e6e6e6;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  margin-right: 5px;
+}
+
+.quantity-group {
+  display: flex;
+  align-items: center;
+  max-width: 150px;
+}
+
+.quantity-group input {
+  text-align: center;
+  margin: 0 8px;
+}
+
+.btn-buy {
+  background-color: white;
+  border: 1px solid #5a4fcf;
+  color: #5a4fcf;
+  border-radius: 8px;
+  padding: 10px 20px;
+  transition: 0.3s;
+}
+
+.btn-buy:hover {
+  background-color: #5a4fcf;
+  color: white;
 }

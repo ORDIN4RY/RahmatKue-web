@@ -14,14 +14,18 @@
         session_start();
     }
     $current_page = basename($_SERVER['PHP_SELF']);
-    $isLoggedIn = isset($_SESSION['id_user']);
+    $isLoggedIn = isset($_SESSION['id_user']) || isset($_SESSION['access_token']);
     ?>
 
     <div class="navbar" id="navbar">
         <p>Rahmat Kue</p>
         <a href="index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Beranda</a>
         <a href="produk.php" class="<?= ($current_page == 'produk.php') ? 'active' : '' ?>">Produk</a>
-        <a href="pesan.php" class="<?= ($current_page == 'pesan.php') ? 'active' : '' ?>">Pesanan</a>
+        <a href="promo.php" class="<?= ($current_page == 'promo.php') ? 'active' : '' ?>">Promo</a>
+
+        <?php if ($isLoggedIn): ?>
+            <a href="pesan.php" class="<?= ($current_page == 'pesan.php') ? 'active' : '' ?>">Pesanan</a>
+        <?php endif; ?>
 
         <?php if ($isLoggedIn): ?>
             <a href="auth/logout.php" onclick="return confirm('Yakin ingin logout?')">Logout</a>

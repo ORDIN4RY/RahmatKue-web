@@ -8,7 +8,7 @@
 </head>
 
 <body>
-    <footer class="footer">
+    <footer class="footer" style="margin-top: 7rem;">
         <div class="footer-top">
             <!-- Pengunjung -->
             <div class="footer-col footer-pengunjung">

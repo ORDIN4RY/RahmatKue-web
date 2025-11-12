@@ -1,14 +1,12 @@
 <?php
 session_start();
-if (!isset($_SESSION['id_user'])) {
+// Cek login admin Supabase
+if (!isset($_SESSION['user']) || (strtolower($_SESSION['level'] ?? '') !== 'admin')) {
   header("Location: ../../auth/login.php");
   exit();
 }
+$NamaAdmin = isset($_SESSION['nama']) ? $_SESSION['nama'] : (isset($_SESSION['username']) ? $_SESSION['username'] : 'Admin');
 
-if ($_SESSION['level'] != '1') {
-  header("Location: ../../auth/login.php");
-  exit();
-}
 ?>
 
 <!DOCTYPE html>
@@ -29,6 +27,7 @@ if ($_SESSION['level'] != '1') {
     <div class="header">
       <button class="toggle-btn" id="toggleBtn">☰</button>
       <h2>Dashboard</h2>
+      <p>Selamat datang admin <?php echo $NamaAdmin ?></?php>
       <div class="profile" id="profileButton">
         <img src="https://i.pravatar.cc/30" alt="user" />
         <div class="profile-info">
