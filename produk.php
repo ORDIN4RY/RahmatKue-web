@@ -114,70 +114,6 @@ if (isset($_GET['status'])) {
         </div>
 
 
-        <div class="keranjang">
-            <button class="btn btn-secondary position-fixed bottom-0 end-0 m-4 rounded-circle shadow" data-bs-toggle="modal" data-bs-target="#cartModal" style="width: 60px; height: 60px;">
-                <i class="bi bi-cart-fill fs-4"></i>
-                <?php if (count($_SESSION['cart']) > 0): ?>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        <?= count($_SESSION['cart']) ?>
-                    </span>
-                <?php endif; ?>
-            </button>
-
-            <!-- Modal Keranjang -->
-            <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="cartModalLabel">Keranjang Anda</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                        </div>
-                        <div class="modal-body">
-                            <?php if (empty($_SESSION['cart'])): ?>
-                                <p class="text-center text-muted">Keranjang masih kosong.</p>
-                            <?php else: ?>
-                                <table class="table align-middle text-center">
-                                    <thead>
-                                        <tr>
-                                            <th>Foto</th>
-                                            <th>Nama</th>
-                                            <th>Ukuran</th>
-                                            <th>Jumlah</th>
-                                            <th>Harga</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($_SESSION['cart'] as $cart_item): ?>
-                                            <tr>
-                                                <td><img src="<?= $cart_item['foto'] ?>" alt="<?= $cart_item['nama'] ?>" width="60"></td>
-                                                <td><?= $cart_item['nama'] ?></td>
-                                                <td><?= $cart_item['size'] ?: '-' ?></td>
-                                                <td><?= $cart_item['quantity'] ?></td>
-                                                <td>Rp <?= number_format($cart_item['harga'] * $cart_item['quantity'], 0, ',', '.') ?></td>
-                                                <td>
-                                                    <form method="POST" class="d-inline">
-                                                        <input type="hidden" name="hapus_id" value="<?= $cart_item['id'] ?>">
-                                                        <button type="submit" name="hapus_item" class="btn btn-sm btn-danger">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            <?php endif; ?>
-                        </div>
-                        <div class="modal-footer">
-                            <a href="pesan.php" class="btn btn-success">Beli Sekarang</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
         <div class="produk-container">
             <?php if (!empty($data)) { ?>
                 <?php foreach ($data as $row) {
@@ -186,7 +122,7 @@ if (isset($_GET['status'])) {
                     $deskripsi = htmlspecialchars($row['deskripsi'] ?? '');
                     $harga = isset($row['harga']) ? number_format($row['harga'], 0, ',', '.') : '-';
                     $foto = htmlspecialchars($row['foto_produk'] ?? '');
-                    $foto = htmlspecialchars($row['foto_produk'] ?? '');
+
                     if ($foto !== '') {
                         if (filter_var($foto, FILTER_VALIDATE_URL)) {
                             $imgUrl = $foto;
@@ -198,14 +134,23 @@ if (isset($_GET['status'])) {
                     }
                     $nama_kategori = htmlspecialchars($row['kategori']['nama_kategori'] ?? 'Tanpa Kategori');
                 ?>
-                    <div class="produk-card" onclick="window.location.href='produk-detail.php?id=<?= urlencode($row['id_produk']) ?>'" style="cursor: pointer;">
-                        <img src="<?= $imgUrl ?>" alt="<?= $nama ?>" onerror="this.src='assets/img/no-image.png';" loading="lazy">
+                    <div class="produk-card"
+                        style="cursor: pointer;"
+                        <?php if ($isLoggedIn): ?>
+                        onclick="window.location.href='produk-detail.php?id=<?= urlencode($row['id_produk']) ?>'"
+                        <?php else: ?>
+                        data-bs-toggle="modal"
+                        data-bs-target="#loginModal"
+                        <?php endif; ?>>
+
+                        <div class="produk-image-wrapper">
+                            <img src="<?= $imgUrl ?>" alt="<?= $nama ?>" onerror="this.src='assets/img/no-image.png';" loading="lazy">
+                        </div>
 
                         <div class="produk-card-content">
                             <h3><?= $nama ?></h3>
-                            <p><?= $deskripsi ?></p>
+                            <p class="deskripsi"><?= $deskripsi ?></p>
                             <p class="harga">Rp <?= $harga ?></p>
-                            <span class="kategori-item"><?= $nama_kategori ?></span>
                         </div>
                     </div>
                 <?php } ?>
@@ -213,6 +158,24 @@ if (isset($_GET['status'])) {
                 <p>Tidak ada produk tersedia saat ini.</p>
             <?php } ?>
         </div>
+
+        <div class="modal fade" id="loginModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Login Diperlukan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Anda harus login terlebih dahulu untuk melihat detail produk.
+                    </div>
+                    <div class="modal-footer">
+                        <a href="./auth/login.php" class="btn btn-primary">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </section>
 
     <?php include 'component/footer.php'; ?>

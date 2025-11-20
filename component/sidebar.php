@@ -1,9 +1,9 @@
-<ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar" style="background-color: #8E5E48;">
-
+<ul class="navbar-nav sidebar sidebar-dark accordion sticky-sidebar" id="accordionSidebar" style="background-color: #8E5E48;">
+  
   <!-- Sidebar - Brand -->
-  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard-admin2.php">
     <div class="sidebar-brand-icon">
-      <img src="../../../assets/img/logo-remove.png" alt="" style="width: 40px;">
+      <img src="../../../../assets/img/logo-remove.png" alt="" style="width: 40px;">
     </div>
     <div class="sidebar-brand-text mx-3">Rahmat Kue</div>
   </a>
@@ -16,38 +16,66 @@
     session_start();
   }
   $current_page = basename($_SERVER['PHP_SELF']);
+
+  // Helper untuk menentukan active
+  function sidebar_active($file)
+  {
+    global $current_page;
+    return $current_page === $file ? 'active animated-active' : '';
+  }
   ?>
+  <style>
+    .animated-active {
+      background: linear-gradient(90deg, #a97c5a 0%, #8E5E48 100%);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: background 0.4s, box-shadow 0.4s;
+      border-radius: 0 30px 30px 0;
+      position: relative;
+    }
+
+    .animated-active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: #fff;
+      border-radius: 0 5px 5px 0;
+      transition: background 0.4s;
+    }
+    .sticky-sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 100;
+    }
+  </style>
   <!-- Nav Item - Dashboard -->
-  <li class="nav-item active">
+  <li class="nav-item <?= sidebar_active('dashboard-admin2.php') ?>">
     <a class="nav-link" href="dashboard-admin2.php">
       <i class="bi bi-house-door-fill"></i>
       <span>Beranda</span></a>
   </li>
-  <li class="nav-item">
-    <a class="nav-link" href="index.html">
+  <li class="nav-item <?= sidebar_active('pesanan.php') ?>">
+    <a class="nav-link" href="pesanan.php">
       <i class="bi bi-bag-fill"></i>
       <span>Pesanan</span></a>
   </li>
-  <li class="nav-item">
+  <li class="nav-item <?= sidebar_active('tambah-produk.php') ?>">
     <a class="nav-link" href="tambah-produk.php">
       <i class="bi bi-plus-circle"></i>
       <span>Kelola Produk</span></a>
   </li>
-  <li class="nav-item">
-    <a class="nav-link" href="index.html">
+  <li class="nav-item <?= sidebar_active('kelola-user.php') ?>">
+    <a class="nav-link" href="kelola-user.php">
       <i class="bi bi-person-gear"></i>
       <span>Kelola User</span></a>
   </li>
-  <li class="nav-item">
-    <a class="nav-link" href="index.html">
+  <li class="nav-item <?= sidebar_active('kelola-voucher.php') ?>">
+    <a class="nav-link" href="kelola-voucher.php">
       <i class="bi bi-card-text"></i>
       <span>Kelola Voucher</span></a>
   </li>
-  <li class="nav-item active">
-    <a class="nav-link" href="../../../auth/logout.php">
-      <i class="bi bi-box-arrow-left"></i>
-      <span>Logout</span></a>
-  </li>
-
 
 </ul>

@@ -12,16 +12,19 @@
     $current_page = basename($_SERVER['PHP_SELF']);
     switch ($current_page) {
         case 'dashboard-admin2.php':
-            $page_title = 'Dashboard';
+            $page_title = 'Beranda';
+            break;
+        case 'pesanan.php':
+            $page_title = 'Pesanan';
             break;
         case 'tambah-produk.php':
             $page_title = 'Kelola Produk';
             break;
-        case 'data-produk.php':
-            $page_title = 'Data Produk';
+        case 'kelola-user.php':
+            $page_title = 'Kelola User';
             break;
-        case 'data-user.php':
-            $page_title = 'Data User';
+        case 'kelola-voucher.php':
+            $page_title = 'Kelola Voucher';
             break;
         default:
             $page_title = 'Halaman Admin';
@@ -117,7 +120,7 @@
                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">Douglas McGee</span>
                 <img class="img-profile rounded-circle"
-                    src="img/undraw_profile.svg">
+                    src="../img/undraw_profile.svg">
             </a>
             <!-- Dropdown - User Information -->
             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -135,7 +138,7 @@
                     Activity Log
                 </a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="../../../auth/logout.php" data-toggle="modal" data-target="#logoutModal">
+                <a class="dropdown-item" href="../auth/logout.php" data-toggle="modal" data-target="#logoutModal">
                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                     Logout
                 </a>
@@ -144,4 +147,31 @@
 
     </ul>
 
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Logout</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">Apakah anda yakin ingin logout?</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-primary" href="../../../../auth/logout.php">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="../js/sb-admin-2.min.js"></script>
+<script src="../vendor/jquery/jquery.min.js"></script>
+<script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

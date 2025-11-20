@@ -5,15 +5,14 @@ require __DIR__ . '/../vendor/autoload.php';
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
-// === Konfigurasi Supabase ===
+// === 🔧 Konfigurasi Supabase ===
 $SUPABASE_URL = "https://fsiuefdwcbdhunfhbiwl.supabase.co";
-$SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzM0NDMsImV4cCI6MjA3NTUwOTQ0M30.pSATGpW89fntkKRuF-qvC7wiO1oZsTruDd-1wMjOdIU";
-$SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTkzMzQ0MywiZXhwIjoyMDc1NTA5NDQzfQ.Fuj3tINEzdkmIzJQ6YPegk--_AGPTN7HIiupCWM6mU4";
+$SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzM0NDMsImV4cCI6MjA3NTUwOTQ0M30.pSATGpW89fntkKRuF-qvC7wiO1oZsTruDd-1wMjOdIU";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $username = trim($_POST['username'] ?? '');
   $email = trim($_POST['email'] ?? '');
   $password = trim($_POST['password'] ?? '');
-  $username = trim($_POST['username'] ?? '');
 
   if ($email === '' || $password === '' || $username === '') {
     $error = "❌ Semua field wajib diisi.";
@@ -24,74 +23,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
 
     try {
-      // === 1️⃣ Registrasi user ke Supabase Auth ===
+      // === 1️⃣ Daftarkan user ke Supabase Auth tanpa verifikasi email ===
       $resp = $client->post('/auth/v1/signup', [
         'headers' => [
-          'Content-Type' => 'application/json',
-          'apikey' => $SUPABASE_KEY,
+          'apikey' => $SUPABASE_ANON_KEY,
+          'Content-Type' => 'application/json'
         ],
         'json' => [
           'email' => $email,
           'password' => $password,
+          'data' => ['username' => $username], // metadata tambahan
+          'autoConfirm' => true // nonaktifkan verifikasi email
         ]
       ]);
 
       $body = json_decode($resp->getBody()->getContents(), true);
 
-      if (empty($body['user']['id'])) {
-        $error = "❌ Gagal mendaftar. Tidak ada ID user diterima dari Supabase.";
-      } else {
+      // Jika Supabase mengembalikan ID user (berarti email confirmation OFF)
+      if (!empty($body['user']['id'])) {
         $user_id = $body['user']['id'];
 
-        // === 2️⃣ Tambahkan data ke tabel "profiles" ===
-        $resp2 = $client->post('/rest/v1/profiles', [
-          'headers' => [
-            'Content-Type' => 'application/json',
-            'apikey' => $SUPABASE_SERVICE_KEY,
-            'Authorization' => 'Bearer ' . $SUPABASE_SERVICE_KEY,
-            'Prefer' => 'return=representation',
-          ],
-          'json' => [[  // gunakan array (bulk insert 1 record)
-            'id' => $user_id,
-            'username' => $username,
-            'email' => $email,
-            'level' => 'user',
-            'point' => 0,
-            'created_at' => date('c')
-          ]]
-        ]);
+        // === Insert ke tabel profiles ===
+        try {
+          $resp2 = $client->post('/rest/v1/profiles', [
+            'headers' => [
+              'apikey' => $SUPABASE_SERVICE_KEY,
+              'Authorization' => 'Bearer ' . $SUPABASE_SERVICE_KEY,
+              'Content-Type' => 'application/json',
+              'Prefer' => 'return=representation'
+            ],
+            'json' => [
+              'id' => $user_id,
+              'username' => $username,
+              'email' => $email,
+              'level' => 'user',
+              'point' => 0
+            ]
+          ]);
 
-        $insertResult = json_decode($resp2->getBody()->getContents(), true);
+          $_SESSION['user_id'] = $user_id;
+          $_SESSION['username'] = $username;
+          $_SESSION['email'] = $email;
+          $_SESSION['level'] = 'user';
+          $_SESSION['point'] = 0;
 
-        // Debug jika gagal insert
-        if (isset($insertResult['message']) || empty($insertResult)) {
-          echo "<pre>Insert Error: " . htmlspecialchars(json_encode($insertResult, JSON_PRETTY_PRINT)) . "</pre>";
+          header('Location: ../index.php?status=registered');
           exit;
+        } catch (RequestException $e) {
+          if ($e->hasResponse()) {
+            $msg = $e->getResponse()->getBody()->getContents();
+          } else {
+            $msg = $e->getMessage();
+          }
+          $error = "⚠️ Gagal insert ke profiles: " . htmlspecialchars($msg);
         }
-
-        // === 3️⃣ Simpan session dan redirect ===
-        $_SESSION['user_id'] = $user_id;
-        $_SESSION['username'] = $username;
-        $_SESSION['email'] = $email;
-        $_SESSION['level'] = 'user';
-        $_SESSION['point'] = 0;
-
-        header('Location: ../index.php?status=registered');
-        exit;
+      } else {
+        // === Jika tidak ada user.id, berarti butuh verifikasi email ===
+        $error = "✅ Akun berhasil dibuat. Silakan cek email untuk verifikasi sebelum login.";
       }
     } catch (RequestException $e) {
-      $msg = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : $e->getMessage();
+      if ($e->hasResponse()) {
+        $msg = $e->getResponse()->getBody()->getContents();
+      } else {
+        $msg = $e->getMessage();
+      }
       $error = "⚠️ Request error: " . htmlspecialchars($msg);
-    } catch (Exception $e) {
-      $error = "⚠️ Error: " . htmlspecialchars($e->getMessage());
     }
   }
 }
 ?>
 
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <link rel="stylesheet" href="../assets/css/auth.css">
+</head>
 
-<!-- === Tampilan Form === -->
-<link rel="stylesheet" href="../assets/css/auth.css">
 <div class="container">
   <div class="image-section"></div>
 
@@ -118,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 </div>
+
 
 <!-- 
 <form method="POST">

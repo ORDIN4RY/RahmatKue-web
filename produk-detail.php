@@ -8,14 +8,20 @@ require 'auth/koneksi.php';
 $id_produk = $_GET['id'] ?? null;
 if (!$id_produk) die("ID Produk tidak ditemukan");
 
-$query = sprintf(
-    "produk?id_produk=eq.%s&select=*,kategori(nama_kategori)",
-    urlencode($id_produk)
-);
-
-$product = getSupabaseData($query);
-if (empty($product)) die("Produk tidak ditemukan");
-$product = $product[0];
+// Gunakan Guzzle client untuk ambil data produk
+try {
+    $response = $client->get("/rest/v1/produk", [
+        'query' => [
+            'id_produk' => 'eq.' . $id_produk,
+            'select' => '*,kategori(nama_kategori)'
+        ]
+    ]);
+    $product = json_decode($response->getBody(), true);
+    if (empty($product)) die("Produk tidak ditemukan");
+    $product = $product[0];
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
+}
 
 // Format data
 $nama = htmlspecialchars($product['nama_produk']);
@@ -33,99 +39,73 @@ if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// =====================
-// 2️⃣ TAMBAHKAN PRODUK KE KERANJANG
-// =====================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id_user = $_SESSION['user_id'] ?? $_SESSION['id_user'] ?? null;
+
+    if (empty($id_user)) {
+        $_SESSION['message'] = "❌ Anda harus login terlebih dahulu.";
+        header("Location: login.php?redirect=produk-detail.php?id=$id_produk");
+        exit;
+    }
+
     $quantity = (int)$_POST['quantity'];
     $size = $_POST['size'] ?? null;
     $wording = $_POST['wording'] ?? null;
-    $id_user = $_SESSION['user_id'] ?? null;
-    $id_produk = $_GET['id'] ?? null;
 
-    if (empty($id_user) || empty($id_produk) || $quantity <= 0) {
-        $_SESSION['message'] = "❌ Data tidak lengkap untuk menambahkan ke keranjang.";
-    } else {
-        // Simpan ke session
-        $item = [
-            'id_produk' => $id_produk,
-            'nama_produk' => $nama,
-            'harga' => $harga,
-            'foto_produk' => $foto,
-            'quantity' => $quantity,
-            'size' => $size,
-            'wording' => $wording,
-        ];
-
-        $found = false;
-        foreach ($_SESSION['cart'] as &$cart_item) {
-            if (
-                $cart_item['id_produk'] === $id_produk &&
-                $cart_item['size'] === $size &&
-                $cart_item['wording'] === $wording
-            ) {
-                $cart_item['quantity'] += $quantity;
-                $found = true;
-                break;
-            }
-        }
-
-        if (!$found) {
-            $_SESSION['cart'][] = $item;
-        }
-
-        // Simpan ke Supabase
-        $data = [
-            "id_user" => $id_user,
-            "id_produk" => $id_produk,
-            "id_paket" => null,
-            "jumlah" => $quantity
-        ];
-
-        $insertResult = insertSupabaseData('keranjang', $data);
-
-        if ($insertResult === false) {
-            $_SESSION['message'] = "⚠️ Gagal menyimpan ke database Supabase.";
-        } else {
-            $_SESSION['message'] = "✅ Produk berhasil ditambahkan ke keranjang!";
-        }
+    if ($quantity <= 0) {
+        $_SESSION['message'] = "❌ Jumlah produk harus lebih dari 0.";
+        header("Location: produk-detail.php?id=$id_produk");
+        exit;
     }
 
-    header("Location: produk-detail.php?id=$id_produk");
-    exit;
-}
+    // data item ke session
+    $item = [
+        'id' => uniqid(),
+        'id_produk' => $id_produk,
+        'nama' => $nama,
+        'harga' => $harga,
+        'foto' => $foto,
+        'quantity' => $quantity,
+        'size' => $size,
+        'wording' => $wording,
+    ];
 
-
-
-
-// =====================
-// 4️⃣ HAPUS ITEM DARI KERANJANG
-// =====================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus_item'])) {
-    $hapus_id = $_POST['hapus_id'];
-
-    foreach ($_SESSION['cart'] as $key => $item) {
-        if ($item['id'] === $hapus_id) {
-            unset($_SESSION['cart'][$key]);
-            $_SESSION['cart'] = array_values($_SESSION['cart']);
+    // cek apakah item sejenis sudah ada di cart
+    $found = false;
+    foreach ($_SESSION['cart'] as &$cart_item) {
+        if (
+            $cart_item['id_produk'] === $id_produk &&
+            ($cart_item['size'] ?? null) === $size &&
+            ($cart_item['wording'] ?? null) === $wording
+        ) {
+            $cart_item['quantity'] += $quantity;
+            $found = true;
             break;
         }
     }
+    if (!$found) {
+        $_SESSION['cart'][] = $item;
+    }
 
-    header("Location: produk-detail.php?id=$id_produk&status=deleted");
-    exit;
+    // Kondisi sesuai tombol yang ditekan
+    if (isset($_POST['buy_now'])) {
+        header("Location: pesan.php");
+        exit;
+    } else {
+        $_SESSION['message'] = "🛒 Produk berhasil ditambahkan ke keranjang!";
+        header("Location: produk-detail.php?id=$id_produk");
+        exit;
+    }
 }
 
+
 // =====================
-// 5️⃣ NOTIFIKASI STATUS
+// 6️⃣ AMBIL PESAN NOTIFIKASI
 // =====================
 $message = '';
-if (isset($_GET['status'])) {
-    if ($_GET['status'] === 'added') {
-        $message = "Produk berhasil ditambahkan ke keranjang!";
-    } elseif ($_GET['status'] === 'deleted') {
-        $message = "Produk berhasil dihapus dari keranjang!";
-    }
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    unset($_SESSION['message']);
 }
 ?>
 <!DOCTYPE html>
@@ -147,7 +127,10 @@ if (isset($_GET['status'])) {
 
     <div class="container my-5">
         <?php if (!empty($message)) : ?>
-            <div class="alert alert-success text-center"><?= $message ?></div>
+            <div class="alert alert-<?= strpos($message, '✅') !== false ? 'success' : 'danger' ?> alert-dismissible fade show text-center" role="alert">
+                <?= $message ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         <?php endif; ?>
 
         <div class="row align-items-center">
@@ -183,13 +166,14 @@ if (isset($_GET['status'])) {
                         <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control" style="width: 100px;">
                     </div>
 
+
                     <div class="d-flex gap-3 mb-3">
                         <button type="submit" name="add_to_cart" class="btn-submit">
                             <i class="bi bi-cart-plus"></i> Tambahkan ke Keranjang
                         </button>
-                        <a href="checkout.php" class="btn btn-success">
+                        <button type="submit" name="buy_now" class="btn btn-success">
                             <i class="bi bi-lightning-fill"></i> Beli Sekarang
-                        </a>
+                        </button>
                     </div>
 
                     <p class="wishlist"><i class="bi bi-heart"></i> Tambahkan ke wishlist</p>
@@ -199,6 +183,8 @@ if (isset($_GET['status'])) {
     </div>
 
     <?php include 'component/footer.php'; ?>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

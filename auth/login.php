@@ -1,27 +1,33 @@
 <?php
 session_start();
-require __DIR__ . '/../vendor/autoload.php'; // sesuaikan path jika perlu
+require __DIR__ . '/../vendor/autoload.php';
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
-$SUPABASE_URL = "https://fsiuefdwcbdhunfhbiwl.supabase.co"; // ganti
-$SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzM0NDMsImV4cCI6MjA3NTUwOTQ0M30.pSATGpW89fntkKRuF-qvC7wiO1oZsTruDd-1wMjOdIU"; // ganti
+$SUPABASE_URL = "https://fsiuefdwcbdhunfhbiwl.supabase.co";
+$SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzM0NDMsImV4cCI6MjA3NTUwOTQ0M30.pSATGpW89fntkKRuF-qvC7wiO1oZsTruDd-1wMjOdIU";
+
+$toastMessage = "";
+$toastType = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
   $email = trim($_POST['email'] ?? '');
   $password = trim($_POST['password'] ?? '');
 
   if ($email === '' || $password === '') {
-    $error = "Email dan password wajib diisi.";
+    $toastMessage = "Email dan password wajib diisi.";
+    $toastType = "danger";
   } else {
+
     $client = new Client([
       'base_uri' => rtrim($SUPABASE_URL, '/'),
-      'timeout'  => 10,
+      'timeout' => 10,
     ]);
 
     try {
-      // 1) LOGIN -> ambil access_token
+      // 1. LOGIN
       $resp = $client->post('/auth/v1/token?grant_type=password', [
         'headers' => [
           'Content-Type' => 'application/json',
@@ -35,22 +41,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       $body = json_decode($resp->getBody()->getContents(), true);
 
-
-      if (empty($body['access_token']) || empty($body['user']['id'])) {
-        $error = "Login gagal: token tidak diterima.";
+      if (empty($body['access_token'])) {
+        $toastMessage = "Login gagal: email atau password salah.";
+        $toastType = "danger";
       } else {
+
         $access_token = $body['access_token'];
         $user_id = $body['user']['id'];
 
-        // 2) AMBIL PROFILE via REST API
-        // format query: /rest/v1/profiles?select=*&user_id=eq.<uuid>
-        $query = http_build_query([
-          'select' => '*',
-          'id' => "eq.$user_id"
-        ]);
-        $profilesUrl = "/rest/v1/profiles?$query";
+        // 2. AMBIL DATA PROFILE
+        $profileUrl = "/rest/v1/profiles?id=eq.$user_id&select=*";
 
-        $resp2 = $client->get($profilesUrl, [
+        $resp2 = $client->get($profileUrl, [
           'headers' => [
             'apikey' => $SUPABASE_KEY,
             'Authorization' => 'Bearer ' . $access_token,
@@ -59,35 +61,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $profiles = json_decode($resp2->getBody()->getContents(), true);
 
-        if (!empty($profiles) && isset($profiles[0])) {
-          // simpan profile ke session
-          foreach ($profiles[0] as $k => $v) {
-            $_SESSION[$k] = $v;
+        if (!empty($profiles)) {
+
+          // 3. CEK APAKAH DIBLOKIR
+          if (!empty($profiles[0]['is_blocked'])) {
+            echo "<script>alert('Akun Anda diblokir. Hubungi Admin'); window.location='login.php';</script>";
+            exit;
+          }
+
+          // 4. SIMPAN SESSION
+          foreach ($profiles[0] as $key => $val) {
+            $_SESSION[$key] = $val;
           }
           $_SESSION['access_token'] = $access_token;
           $_SESSION['user'] = $user_id;
 
-          $level = strtolower(trim($profiles[0]['level'] ?? 'user'));
-          if ($level === 'admin') {
-            header('Location: ../pages/admin/admin-page/dashboard-admin2.php');
-          } else {
-            header('Location: ../produk.php');
-          }
-          exit;
+          $level = strtolower($profiles[0]['level'] ?? 'user');
+
+          $toastMessage = "Login berhasil! Selamat datang, " . htmlspecialchars($profiles[0]['username']) . ".";
+          $toastType = "success";
+
+          echo "<script>
+                        setTimeout(function() {
+                            window.location.href = '" . ($level === 'admin'
+            ? "../pages/admin/admin-page/admin/dashboard-admin2.php"
+            : "../produk.php") . "';
+                        }, 1200);
+                    </script>";
         } else {
-          $error = "Data profil tidak ditemukan. Pastikan 'profiles.user_id' berisi id yang sama.";
+          $toastMessage = "Profile tidak ditemukan.";
+          $toastType = "danger";
         }
       }
     } catch (RequestException $e) {
-      // debugging: tampilkan pesan error server (jika ada)
-      $msg = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : $e->getMessage();
-      $error = "Request error: " . htmlspecialchars($msg);
-    } catch (Exception $e) {
-      $error = "Error: " . htmlspecialchars($e->getMessage());
+
+      if ($e->hasResponse()) {
+        $err = json_decode($e->getResponse()->getBody()->getContents(), true);
+        $toastMessage = $err['msg'] ?? "Login gagal. Periksa kembali email dan password.";
+      } else {
+        $toastMessage = "Tidak dapat terhubung ke server Supabase.";
+      }
+
+      $toastType = "danger";
     }
   }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
@@ -95,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8">
   <title>Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/auth.css">
 </head>
 
@@ -106,16 +127,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="login-box">
         <h2>Selamat datang di Rahmat Kue</h2>
         <p>Login akun anda</p>
+        <?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>
         <form method="POST">
           <label for="email">Email</label>
           <input type="text" name="email" placeholder="Masukkan email" required />
           <label for="password">Password</label>
           <input type="password" name="password" placeholder="Masukkan password" required />
           <button type="submit" class="btn" name="register">Login</button>
-          <a href="register.php" style="text-decoration: none;">belum punya akun? daftar sekarang</a>
+          <a href="register.php" style="text-decoration: none; color: #8b5e3c;">belum punya akun? daftar sekarang</a>
         </form>
       </div>
     </div>
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+      <div id="liveToast" class="toast text-white border-0 <?php echo $toastType === 'success' ? 'bg-success' : ($toastType === 'danger' ? 'bg-danger' : ''); ?>" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">
+            <?php echo htmlspecialchars($toastMessage); ?>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      <?php if (!empty($toastMessage)) : ?>
+        const toastLive = document.getElementById('liveToast');
+        const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLive);
+        toastBootstrap.show();
+      <?php endif; ?>
+    </script>
   </div>
 </body>
 

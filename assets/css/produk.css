@@ -31,10 +31,123 @@ body {
 
 .produk-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
-  max-width: 1100px;
-  margin: auto;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* Card */
+.produk-card {
+  position: relative;
+  overflow: hidden;
+  background-color: #fff;
+  border-radius: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  max-width: 280px;
+}
+
+.produk-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Wrapper untuk foto dengan rasio tetap */
+.produk-image-wrapper {
+  width: 100%;
+  padding-top: 70%; /* Rasio lebih pendek */
+  position: relative;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+/* Foto */
+.produk-card img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Konten teks */
+.produk-card-content {
+  flex: 1;
+  padding: 15px 12px;
+  color: #333;
+  background-color: #fff;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.produk-card-content h3 {
+  font-family: "Abhaya Libre", serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #2c2c2c;
+  line-height: 1.3;
+}
+
+.produk-card-content .deskripsi {
+  font-family: "Abhaya Libre", serif;
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.produk-card-content .harga {
+  font-family: "Abhaya Libre", serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 6px 0 0 0;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .produk-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .produk-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .produk-card {
+    max-width: 100%;
+  }
+
+  .produk-card-content h3 {
+    font-size: 16px;
+  }
+
+  .produk-card-content .harga {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .produk-container {
+    grid-template-columns: 1fr;
+  }
 }
 
 .search-container {
@@ -126,56 +239,6 @@ body {
   background-color: #8e5e48;
   color: white;
   border-color: #8e5e48;
-}
-
-/* Card */
-.produk-card {
-  position: relative;
-  overflow: hidden;
-  height: 300px;
-  /* min-height: 380px; */
-  background-color: #ffe8d8;
-  margin-top: 3rem;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Foto */
-.produk-card img {
-  height: 180px;
-  width: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Konten teks */
-.produk-card-content {
-  flex: 1;
-  padding: 10px 15px 20px 15px;
-  color: #000;
-  background-color: #fff;
-  text-align: left;
-  position: relative;
-  font-family: "Abhaya Libre", serif;
-}
-
-.produk-card-content h3 {
-  font-family: "Abhaya Libre", serif;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.produk-card-content p {
-  font-family: "Abhaya Libre", serif;
-  font-size: 14px;
-  margin-bottom: 15px;
-  line-height: 0.1;
-}
-
-.produk-card-content .harga {
-  line-height: 1.5;
-  font-size: 18px;
-  font-weight: bold;
 }
 
 /* Tombol */
