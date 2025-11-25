@@ -29,10 +29,7 @@ body {
   width: 50%;
   min-width: 0;
 }
-body {
-  margin: 0 !important;
-  padding: 0 !important;
-}
+
 
 /* Bagian form login */
 .form-section {
@@ -112,6 +109,7 @@ body {
 
 .btn:hover {
   background-color: #6f472e;
+  color: white;
 }
 
 .register {

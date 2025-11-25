@@ -14,13 +14,12 @@ $client = new Client([
     'base_uri' => SUPABASE_URL,
     'timeout' => 10,
     'headers' => [
-        'apikey' => SUPABASE_KEY,
-        'Authorization' => 'Bearer ' . SUPABASE_KEY,
-        'Content-Type' => 'application/json',
+        'apikey'        => SUPABASE_KEY,
+        'Authorization' => 'Bearer ' . ($_SESSION['access_token'] ?? SUPABASE_KEY),
+        'Content-Type'  => 'application/json',
     ]
+
 ]);
-
-
 
 function getSupabasePublicUrl($bucket, $path)
 {
@@ -210,7 +209,7 @@ function deleteSupabaseData($table, $column, $value)
 
     $headers = [
         "apikey: " . SUPABASE_KEY,
-        "Authorization: Bearer " . SUPABASE_KEY,
+        "Authorization: Bearer " . $_SESSION['access_token'], // ⚠ penting
         "Content-Type: application/json",
         "Prefer: return=representation"
     ];
@@ -223,9 +222,106 @@ function deleteSupabaseData($table, $column, $value)
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    // Berhasil jika status 204 (No Content) atau 200
     return ($httpCode === 200 || $httpCode === 204);
 }
+
+function getProdukByKategori($kategoriDipilih)
+{
+    if ($kategoriDipilih === "Semua") {
+        return getSupabaseData("produk?select=*,kategori(nama_kategori)");
+    }
+
+    $kategoriEncoded = urlencode($kategoriDipilih);
+
+    return getSupabaseData(
+        "produk?select=*,kategori(nama_kategori)&kategori.nama_kategori=eq.$kategoriEncoded"
+    );
+}
+
+function checkoutUser($id_user, $access_token)
+{
+    // 1. Ambil data keranjang user
+    global $client;
+
+    try {
+        $response = $client->get('/rest/v1/keranjang', [
+            'headers' => [
+                'apikey'        => SUPABASE_KEY,
+                'Authorization' => 'Bearer ' . $access_token
+            ],
+            'query' => [
+                'id_user' => 'eq.' . $id_user,
+                'select'  => 'id_keranjang,id_produk,jumlah,produk(harga)'
+            ]
+        ]);
+
+        $items = json_decode($response->getBody(), true);
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'Gagal mengambil keranjang: ' . $e->getMessage()];
+    }
+
+    if (empty($items)) {
+        return ['success' => false, 'message' => 'Keranjang kosong'];
+    }
+
+    // 2. Hitung total harga
+    $total = 0;
+    foreach ($items as $i) {
+        $total += $i['produk']['harga'] * $i['jumlah'];
+    }
+
+    // 3. Buat ID transaksi
+    $id_transaksi = generateUUID();
+
+    // 4. Insert ke tabel transaksi
+    $transaksiData = [
+        'id_transaksi' => $id_transaksi,
+        'id_user'      => $id_user,
+        'total'        => $total,
+        'status'       => 'pending',
+        'tanggal'      => date('Y-m-d H:i:s')
+    ];
+
+    $insertTransaksi = insertSupabaseData('transaksi', $transaksiData);
+
+    if (!$insertTransaksi) {
+        return ['success' => false, 'message' => 'Gagal membuat transaksi'];
+    }
+
+    // 5. Insert detail setiap item
+    foreach ($items as $item) {
+        $detailData = [
+            'id_detail'     => generateUUID(),
+            'id_transaksi'  => $id_transaksi,
+            'id_produk'     => $item['id_produk'],
+            'jumlah'        => $item['jumlah'],
+            'subtotal'      => $item['produk']['harga'] * $item['jumlah']
+        ];
+
+        insertSupabaseData('detail_transaksi', $detailData);
+    }
+
+    // 6. Hapus seluruh keranjang user
+    try {
+        $client->delete('/rest/v1/keranjang?id_user=eq.' . $id_user, [
+            'headers' => [
+                'apikey'        => SUPABASE_KEY,
+                'Authorization' => 'Bearer ' . $access_token
+            ]
+        ]);
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'Transaksi berhasil, tapi gagal mengosongkan keranjang.'];
+    }
+
+    // 7. Return success
+    return [
+        'success' => true,
+        'message' => 'Checkout berhasil',
+        'id_transaksi' => $id_transaksi
+    ];
+}
+
+
 
 function banUserAuth($uid)
 {
@@ -272,4 +368,3 @@ function unbanUserAuth($uid)
         return false;
     }
 }
-

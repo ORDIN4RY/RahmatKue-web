@@ -93,70 +93,69 @@ if (isset($_GET['hapus'])) {
 // === UPDATE PRODUK ===
 if (isset($_POST['update_produk'])) {
 
-    $id_produk   = $_POST['id_produk'];
-    $nama_produk = trim($_POST['nama_produk']);
-    $deskripsi   = trim($_POST['deskripsi']);
-    $harga       = (int) $_POST['harga'];
-    $id_kategori = $_POST['id_kategori'];
+  $id_produk   = $_POST['id_produk'];
+  $nama_produk = trim($_POST['nama_produk']);
+  $deskripsi   = trim($_POST['deskripsi']);
+  $harga       = (int) $_POST['harga'];
+  $id_kategori = $_POST['id_kategori'];
 
-    if ($nama_produk === '' || $deskripsi === '' || $harga <= 0) {
-        echo "<script>alert('Semua field wajib diisi!');</script>";
+  if ($nama_produk === '' || $deskripsi === '' || $harga <= 0) {
+    echo "<script>alert('Semua field wajib diisi!');</script>";
+  } else {
+
+    // Jika user upload gambar baru → upload ke Supabase
+    if (isset($_FILES['foto_produk']) && $_FILES['foto_produk']['error'] === UPLOAD_ERR_OK) {
+
+      $tmpName  = $_FILES['foto_produk']['tmp_name'];
+      $oriName  = basename($_FILES['foto_produk']['name']);
+      $ext      = strtolower(pathinfo($oriName, PATHINFO_EXTENSION));
+      $allowed  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+      if (!in_array($ext, $allowed)) {
+        echo "<script>alert('Format gambar tidak valid!');</script>";
+        exit;
+      }
+
+      $namaFile = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $oriName);
+      $folderTujuan = __DIR__ . '/uploads/';
+      if (!is_dir($folderTujuan)) mkdir($folderTujuan, 0777, true);
+
+      $localPath = $folderTujuan . $namaFile;
+      move_uploaded_file($tmpName, $localPath);
+
+      $uploadRes = uploadToSupabaseStorage('images', $localPath, 'produk/' . $namaFile);
+      if (file_exists($localPath)) @unlink($localPath);
+
+      if ($uploadRes === false) {
+        echo "<script>alert('Gagal upload gambar ke Supabase!');</script>";
+        exit;
+      }
+
+      // URL gambar baru
+      $foto_produk = "https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/produk/$namaFile";
     } else {
-
-        // Jika user upload gambar baru → upload ke Supabase
-        if (isset($_FILES['foto_produk']) && $_FILES['foto_produk']['error'] === UPLOAD_ERR_OK) {
-
-            $tmpName  = $_FILES['foto_produk']['tmp_name'];
-            $oriName  = basename($_FILES['foto_produk']['name']);
-            $ext      = strtolower(pathinfo($oriName, PATHINFO_EXTENSION));
-            $allowed  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-            if (!in_array($ext, $allowed)) {
-                echo "<script>alert('Format gambar tidak valid!');</script>";
-                exit;
-            }
-
-            $namaFile = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $oriName);
-            $folderTujuan = __DIR__ . '/uploads/';
-            if (!is_dir($folderTujuan)) mkdir($folderTujuan, 0777, true);
-
-            $localPath = $folderTujuan . $namaFile;
-            move_uploaded_file($tmpName, $localPath);
-
-            $uploadRes = uploadToSupabaseStorage('images', $localPath, 'produk/' . $namaFile);
-            if (file_exists($localPath)) @unlink($localPath);
-
-            if ($uploadRes === false) {
-                echo "<script>alert('Gagal upload gambar ke Supabase!');</script>";
-                exit;
-            }
-
-            // URL gambar baru
-            $foto_produk = "https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/produk/$namaFile";
-
-        } else {
-            // Jika tidak upload file → gunakan foto lama
-            $foto_produk = $_POST['foto_lama'];
-        }
-
-        // Data yang akan diupdate
-        $updateData = [
-            "nama_produk" => $nama_produk,
-            "deskripsi"   => $deskripsi,
-            "harga"       => $harga,
-            "id_kategori" => $id_kategori,
-            "foto_produk" => $foto_produk
-        ];
-
-        $result = updateSupabaseData('produk', 'id_produk', $id_produk, $updateData);
-
-        if ($result) {
-            echo "<script>alert('Produk berhasil diperbarui!'); window.location='tambah-produk.php';</script>";
-            exit;
-        } else {
-            echo "<script>alert('Gagal memperbarui produk!');</script>";
-        }
+      // Jika tidak upload file → gunakan foto lama
+      $foto_produk = $_POST['foto_lama'];
     }
+
+    // Data yang akan diupdate
+    $updateData = [
+      "nama_produk" => $nama_produk,
+      "deskripsi"   => $deskripsi,
+      "harga"       => $harga,
+      "id_kategori" => $id_kategori,
+      "foto_produk" => $foto_produk
+    ];
+
+    $result = updateSupabaseData('produk', 'id_produk', $id_produk, $updateData);
+
+    if ($result) {
+      echo "<script>alert('Produk berhasil diperbarui!'); window.location='tambah-produk.php';</script>";
+      exit;
+    } else {
+      echo "<script>alert('Gagal memperbarui produk!');</script>";
+    }
+  }
 }
 
 ?>
@@ -206,6 +205,14 @@ if (isset($_POST['update_produk'])) {
     .action-buttons {
       display: flex;
       gap: 10px;
+      width: auto;
+      height: 45px;
+    }
+
+    .action-buttons p {
+      display: flex;
+      gap: 10px;
+      font-size: 15px;
     }
 
     .btn-action {
@@ -259,10 +266,13 @@ if (isset($_POST['update_produk'])) {
               <div class="col-md-6">
                 <div class="action-buttons">
                   <button type="button" class="btn btn-success btn-lg btn-action" data-bs-toggle="modal" data-bs-target="#modalTambahProduk">
-                    <i class="fas fa-plus-circle"></i> Tambah Produk
+                    <p>Tambah Produk</p>
                   </button>
                   <button type="button" class="btn btn-warning btn-lg btn-action" data-bs-toggle="modal" data-bs-target="#modalTambahKategori">
-                    <i class="fas fa-tags"></i> Tambah Kategori
+                    <p>Tambah Kategori</p>
+                  </button>
+                  <button type="button" class="btn btn-primary btn-lg btn-action" data-bs-toggle="modal" data-bs-target="#modalTambahPaket">
+                    <p>Tambah Paket</p>
                   </button>
                 </div>
               </div>
@@ -511,6 +521,83 @@ if (isset($_POST['update_produk'])) {
       </div>
     </div>
   </div>
+  <div class="modal fade" id="modalTambahPaket" tabindex="-1" aria-labelledby="modalTambahProdukLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalTambahProdukLabel">
+            <i class="fas fa-plus-circle"></i> Tambah Paket Baru
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="nama_produk" class="form-label">
+                    <i class="fas fa-box"></i> Nama Produk <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control" id="nama_produk" name="nama_produk" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="harga" class="form-label">
+                    <i class="fas fa-money-bill-wave"></i> Harga Produk <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">Rp</span>
+                    <input type="number" class="form-control" id="harga" name="harga" required>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="foto_produk" class="form-label">
+                    <i class="fas fa-image"></i> Gambar Produk <span class="text-danger">*</span>
+                  </label>
+                  <input type="file" class="form-control" id="foto_produk" name="foto_produk" accept="image/*" required>
+                  <small class="text-muted">Format: JPG, PNG, JPEG (Max 2MB)</small>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="deskripsi" class="form-label">
+                    <i class="fas fa-align-left"></i> Deskripsi Produk <span class="text-danger">*</span>
+                  </label>
+                  <textarea class="form-control" id="deskripsi" name="deskripsi" rows="5" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label for="id_kategori" class="form-label">
+                    <i class="fas fa-tags"></i> Kategori Produk <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" id="id_kategori" name="id_kategori" required>
+                    <option value="">-- Pilih Kategori --</option>
+                    <?php if (!empty($kategori)): ?>
+                      <?php foreach ($kategori as $kat): ?>
+                        <option value="<?= htmlspecialchars($kat['id_kategori']) ?>">
+                          <?= htmlspecialchars($kat['nama_kategori']) ?>
+                        </option>
+                      <?php endforeach; ?>
+                    <?php endif; ?>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Batal
+            </button>
+            <button type="submit" name="tambah" class="btn btn-success">
+              <i class="fas fa-save"></i> Simpan Produk
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal Tambah Kategori -->
   <div class="modal fade" id="modalTambahKategori" tabindex="-1" aria-labelledby="modalTambahKategoriLabel" aria-hidden="true">
@@ -529,13 +616,6 @@ if (isset($_POST['update_produk'])) {
                 <i class="fas fa-tag"></i> Nama Kategori <span class="text-danger">*</span>
               </label>
               <input type="text" class="form-control" id="nama_kategori" name="nama_kategori" placeholder="Contoh: Kue Kering" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="deskripsi_kategori" class="form-label">
-                <i class="fas fa-align-left"></i> Deskripsi Kategori
-              </label>
-              <textarea class="form-control" id="deskripsi_kategori" name="deskripsi_kategori" rows="3" placeholder="Deskripsi kategori (opsional)"></textarea>
             </div>
           </div>
           <div class="modal-footer">
@@ -557,13 +637,13 @@ if (isset($_POST['update_produk'])) {
   </a>
 
   <!-- Scripts -->
-  
-<!-- 
+
+  <!-- 
   <script src="vendor/jquery/jquery.min.js"></script>
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script> -->
 
   <!-- Core plugin JavaScript-->
-   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
 
   <!-- Custom scripts for all pages-->

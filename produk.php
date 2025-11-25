@@ -2,40 +2,45 @@
 session_start();
 require 'auth/koneksi.php';
 
-// Cek login user
+/* ============================================================
+    CEK LOGIN USER
+============================================================ */
 $isLoggedIn = isset($_SESSION['id_user']);
 $level = isset($_SESSION['level']) ? strtolower($_SESSION['level']) : null;
 
-// $data = getSupabaseData('produk?select=id_produk,nama_produk,deskripsi,harga,foto_produk,id_kategori,kategori(nama_kategori)');
+/* ============================================================
+    GET KATEGORI DARI SUPABASE
+============================================================ */
 $kategoriData = getSupabaseData('kategori');
 
-// $currentKategori = $_GET['kategori'] ?? 'Semua';
+/* ============================================================
+    AMBIL FILTER (kategori & search)
+============================================================ */
 $kategoriDipilih = $_GET['kategori'] ?? 'Semua';
 $keyword = $_GET['search'] ?? '';
 
-if ($keyword !== '') {
+/* ============================================================
+    LOGIKA FINAL AMBIL PRODUK
+============================================================ */
+if ($keyword !== "") {
+    // Jika user mencari → kategori diabaikan
     $data = searchSupabaseProduk($keyword);
-} elseif ($kategoriDipilih !== 'Semua') {
-    // Ambil produk berdasarkan kategori (filter nama_kategori)
-    $data = getSupabaseData("produk?select=*,kategori(nama_kategori)&kategori.nama_kategori=eq." . urlencode($kategoriDipilih));
 } else {
-    // Semua produk
-    $data = getSupabaseData("produk?select=*,kategori(nama_kategori)");
+    // Jika tidak mencari → filter kategori
+    $data = getProdukByKategori($kategoriDipilih);
 }
 
-// Ambil semua produk dari Supabase
-$query = "produk?select=*,kategori(nama_kategori)";
-$produk = getSupabaseData($query);
-
-
-// Pastikan keranjang tersedia
+/* ============================================================
+    KERANJANG SESSION
+============================================================ */
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Hapus item dari keranjang
+// Hapus item dari session
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus_item'])) {
     $hapus_id = $_POST['hapus_id'];
+
     foreach ($_SESSION['cart'] as $key => $item) {
         if ($item['id'] === $hapus_id) {
             unset($_SESSION['cart'][$key]);
@@ -43,19 +48,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus_item'])) {
             break;
         }
     }
+
     header("Location: produk.php?status=deleted");
     exit;
 }
 
-// Pesan notifikasi
+/* ============================================================
+    NOTIFIKASI
+============================================================ */
 $message = '';
-if (isset($_GET['status'])) {
-    if ($_GET['status'] === 'deleted') {
-        $message = "Produk berhasil dihapus dari keranjang!";
-    }
+if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
+    $message = "Produk berhasil dihapus dari keranjang!";
 }
 
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -93,36 +100,26 @@ if (isset($_GET['status'])) {
             <a class="kategori-btn <?= $kategoriDipilih === 'Semua' ? 'active' : '' ?>" href="produk.php?kategori=Semua">
                 Semua
             </a>
-            <a class="kategori-btn <?= $kategoriDipilih === 'Kue/Tart' ? 'active' : '' ?>" href="produk.php?kategori=Kue/Tart">
-                Kue/Tart
-            </a>
-            <a class="kategori-btn <?= $kategoriDipilih === 'Roti' ? 'active' : '' ?>" href="produk.php?kategori=Roti">
-                Roti
-            </a>
-            <a class="kategori-btn <?= $kategoriDipilih === 'Donat' ? 'active' : '' ?>" href="produk.php?kategori=Donat">
-                Donat
-            </a>
-            <a class="kategori-btn <?= $kategoriDipilih === 'Tradisional' ? 'active' : '' ?>" href="produk.php?kategori=Tradisional">
-                Tradisional
-            </a>
-            <a class="kategori-btn <?= $kategoriDipilih === 'Paket' ? 'active' : '' ?>" href="produk.php?kategori=Paket">
-                Paket
-            </a>
-            <a class="kategori-btn <?= $kategoriDipilih === 'Kotak/Custom' ? 'active' : '' ?>" href="produk.php?kategori=Kotak/Custom">
-                Kotak/Custom
-            </a>
+            <?php foreach ($kategoriData as $k) : ?>
+                <a class="kategori-btn <?= $kategoriDipilih === $k['nama_kategori'] ? 'active' : '' ?>"
+                    href="produk.php?kategori=<?= urlencode($k['nama_kategori']) ?>">
+                    <?= htmlspecialchars($k['nama_kategori']) ?>
+                </a>
+            <?php endforeach; ?>
         </div>
 
 
         <div class="produk-container">
             <?php if (!empty($data)) { ?>
                 <?php foreach ($data as $row) {
+
                     $id = htmlspecialchars($row['id_produk'] ?? '');
                     $nama = htmlspecialchars($row['nama_produk'] ?? 'Nama kosong');
                     $deskripsi = htmlspecialchars($row['deskripsi'] ?? '');
                     $harga = isset($row['harga']) ? number_format($row['harga'], 0, ',', '.') : '-';
                     $foto = htmlspecialchars($row['foto_produk'] ?? '');
 
+                    // URL Foto
                     if ($foto !== '') {
                         if (filter_var($foto, FILTER_VALIDATE_URL)) {
                             $imgUrl = $foto;
@@ -130,14 +127,17 @@ if (isset($_GET['status'])) {
                             $imgUrl = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
                         }
                     } else {
-                        $imgUrl = '../../assets/img/no-image.png';
+                        $imgUrl = 'assets/img/no-image.png';
                     }
+
+                    // Kategori produk (harus muncul dari Supabase join)
                     $nama_kategori = htmlspecialchars($row['kategori']['nama_kategori'] ?? 'Tanpa Kategori');
+
                 ?>
                     <div class="produk-card"
                         style="cursor: pointer;"
                         <?php if ($isLoggedIn): ?>
-                        onclick="window.location.href='produk-detail.php?id=<?= urlencode($row['id_produk']) ?>'"
+                        onclick="window.location.href='produk-detail.php?id=<?= urlencode($id) ?>'"
                         <?php else: ?>
                         data-bs-toggle="modal"
                         data-bs-target="#loginModal"
@@ -152,12 +152,15 @@ if (isset($_GET['status'])) {
                             <p class="deskripsi"><?= $deskripsi ?></p>
                             <p class="harga">Rp <?= $harga ?></p>
                         </div>
+
                     </div>
                 <?php } ?>
             <?php } else { ?>
                 <p>Tidak ada produk tersedia saat ini.</p>
             <?php } ?>
         </div>
+
+
 
         <div class="modal fade" id="loginModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">

@@ -211,6 +211,7 @@ body {
   max-width: 800px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  justify-content: center;
 }
 
 .kategori-container::-webkit-scrollbar {

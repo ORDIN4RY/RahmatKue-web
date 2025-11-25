@@ -36,13 +36,27 @@
                 </p>
                 <a href="produk.php" class="btn">Jelajahi Produk</a>
             </div>
-            <div class="toast-container position-fixed bottom-0 end-0 p-3">
-                <div id="myToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            Untuk pemesanan kue ini dilakukan secara pre order
+            <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="welcomeModalLabel">
+                                <i class="bi bi-hand-wave"></i> Selamat Datang!
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-emoji-smile text-success" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                                    <path d="M4.285 9.567a.5.5 0 0 1 .683.183A3.5 3.5 0 0 0 8 11.5a3.5 3.5 0 0 0 3.032-1.75.5.5 0 1 1 .866.5A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1-3.898-2.25.5.5 0 0 1 .183-.683M7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5m4 0c0 .828-.448 1.5-1 1.5s-1-.672-1-1.5S9.448 5 10 5s1 .672 1 1.5" />
+                                </svg>
+                            </div>
+                            <h4 class="mb-3">Terima kasih telah mengunjungi website Rahmat Kue</h4>
+                            <p class="text-muted">
+                               <b>Perhatian:</b> Pemesanan melalui website ini menggunakan sistem pre order <br>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -279,13 +293,10 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                var myToastEl = document.getElementById('myToast');
-                var myToast = new bootstrap.Toast(myToastEl, {
-                    delay: 10000 // tampil selama 4 detik
-                });
-                myToast.show();
-            });
+            window.addEventListener('DOMContentLoaded', function() {
+            const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+            welcomeModal.show();
+        });
         </script>
     </body>
 

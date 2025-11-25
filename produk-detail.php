@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 require 'auth/koneksi.php';
 
 // =====================
@@ -8,7 +9,7 @@ require 'auth/koneksi.php';
 $id_produk = $_GET['id'] ?? null;
 if (!$id_produk) die("ID Produk tidak ditemukan");
 
-// Gunakan Guzzle client untuk ambil data produk
+// Ambil produk
 try {
     $response = $client->get("/rest/v1/produk", [
         'query' => [
@@ -30,6 +31,7 @@ $harga = $product['harga'];
 $kategori = htmlspecialchars($product['kategori']['nama_kategori']);
 $foto = htmlspecialchars($product['foto_produk'] ?? 'assets/img/no-image.png');
 
+// Cek URL foto
 if (!filter_var($foto, FILTER_VALIDATE_URL)) {
     $foto = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
 }
@@ -39,9 +41,79 @@ if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_user = $_SESSION['user_id'] ?? $_SESSION['id_user'] ?? null;
 
+// ================================================
+// 2️⃣ FUNGSI UNTUK INSERT / UPDATE KERANJANG SUPABASE
+// ================================================
+function addToCartSupabase($client, $data)
+{
+    try {
+        // Cek apakah item sudah ada
+        $check = $client->get("/rest/v1/keranjang", [
+            'query' => [
+                'id_user'   => 'eq.' . $data['id_user'],
+                'id_produk' => 'eq.' . $data['id_produk'],
+                'select'    => '*'
+            ]
+        ]);
+
+        $exists = json_decode($check->getBody(), true);
+
+        // Jika sudah ada → update jumlah
+        if (!empty($exists)) {
+            $id_keranjang = $exists[0]['id_keranjang'];
+            $newQty = $exists[0]['jumlah'] + $data['jumlah'];
+
+            $client->patch("/rest/v1/keranjang?id_keranjang=eq.$id_keranjang", [
+                'json' => ['jumlah' => $newQty],
+                'headers' => ['Prefer' => 'return=representation']
+            ]);
+
+            return true;
+        }
+
+        // Jika belum ada → insert baru
+        $client->post("/rest/v1/keranjang", [
+            'json' => $data,
+            'headers' => ['Prefer' => 'return=representation']
+        ]);
+
+        return true;
+
+    } catch (Exception $e) {
+        return "❌ Gagal insert keranjang: " . $e->getMessage();
+    }
+}
+
+if (isset($_GET['hapus'])) {
+
+    $id_keranjang = $_GET['hapus'];
+
+    // Fungsi hapus
+    function hapusKeranjang($id)
+    {
+        return deleteSupabaseData("keranjang", "id", $id);
+    }
+
+    $hapus = hapusKeranjang($id_keranjang);
+
+    if ($hapus) {
+        header("Location: keranjang.php?status=deleted");
+        exit;
+    } else {
+        header("Location: keranjang.php?status=error");
+        exit;
+    }
+}
+
+
+// ===============================
+// 3️⃣ PROSES SAAT USER MENAMBAH KE KERANJANG
+// ===============================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $id_user = $_SESSION['id'];
+    
     if (empty($id_user)) {
         $_SESSION['message'] = "❌ Anda harus login terlebih dahulu.";
         header("Location: login.php?redirect=produk-detail.php?id=$id_produk");
@@ -49,8 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $quantity = (int)$_POST['quantity'];
-    $size = $_POST['size'] ?? null;
-    $wording = $_POST['wording'] ?? null;
 
     if ($quantity <= 0) {
         $_SESSION['message'] = "❌ Jumlah produk harus lebih dari 0.";
@@ -58,36 +128,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // data item ke session
+    // Tambah ke SESSION (tetap)
     $item = [
         'id' => uniqid(),
         'id_produk' => $id_produk,
         'nama' => $nama,
         'harga' => $harga,
         'foto' => $foto,
-        'quantity' => $quantity,
-        'size' => $size,
-        'wording' => $wording,
+        'quantity' => $quantity
     ];
 
-    // cek apakah item sejenis sudah ada di cart
+    // cek apakah produk sama sudah ada di session
     $found = false;
     foreach ($_SESSION['cart'] as &$cart_item) {
-        if (
-            $cart_item['id_produk'] === $id_produk &&
-            ($cart_item['size'] ?? null) === $size &&
-            ($cart_item['wording'] ?? null) === $wording
-        ) {
+        if ($cart_item['id_produk'] === $id_produk) {
             $cart_item['quantity'] += $quantity;
             $found = true;
             break;
         }
     }
+
     if (!$found) {
         $_SESSION['cart'][] = $item;
     }
 
-    // Kondisi sesuai tombol yang ditekan
+    // ========================================
+    // ⬇⬇ INSERT KE SUPABASE TABEL KERANJANG
+    // ========================================
+    $dataKeranjang = [
+        'id_user'   => $id_user,
+        'id_produk' => $id_produk, // UUID
+        'jumlah'    => $quantity,
+        'id_paket'  => null
+    ];
+
+    $result = addToCartSupabase($client, $dataKeranjang);
+
+    if ($result !== true) {
+        $_SESSION['message'] = $result;
+        header("Location: produk-detail.php?id=$id_produk");
+        exit;
+    }
+
+
+    // Tombol beli langsung
     if (isset($_POST['buy_now'])) {
         header("Location: pesan.php");
         exit;
@@ -98,16 +182,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-
 // =====================
-// 6️⃣ AMBIL PESAN NOTIFIKASI
+// 4️⃣ AMBIL PESAN NOTIFIKASI
 // =====================
 $message = '';
 if (isset($_SESSION['message'])) {
     $message = $_SESSION['message'];
     unset($_SESSION['message']);
 }
+
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -127,7 +212,7 @@ if (isset($_SESSION['message'])) {
 
     <div class="container my-5">
         <?php if (!empty($message)) : ?>
-            <div class="alert alert-<?= strpos($message, '✅') !== false ? 'success' : 'danger' ?> alert-dismissible fade show text-center" role="alert">
+            <div class="alert success-<?= strpos($message, '✅') !== false ? 'success' : 'danger' ?> alert-dismissible fade show text-center" role="alert">
                 <?= $message ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
