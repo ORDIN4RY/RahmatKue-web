@@ -9,7 +9,8 @@ function getAllUsers()
 {
     global $client;
     try {
-        $response = $client->get(SUPABASE_URL . '/rest/v1/profiles?select=*&order=created_at.desc', [
+        $response = $client->get(SUPABASE_URL . '/rest/v1/profiles?select=*&id=neq.'.
+        $_SESSION["id"].'&order=created_at.desc', [
             'headers' => [
                 'apikey' => SUPABASE_KEY,
                 'Authorization' => 'Bearer ' . SUPABASE_KEY,
@@ -34,11 +35,11 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     $id = $_GET['id'];
 
     if ($_GET['action'] == 'ban') {
-        banUserAuth($id);
+        banUser($id);
     }
 
     if ($_GET['action'] == 'unban') {
-        unbanUserAuth($id);
+        unbanUser($id);
     }
 
     header("Location: kelola-user.php");
@@ -175,7 +176,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                                                             <td><?= htmlspecialchars($user['username'] ?? '-') ?></td>
 
                                                             <td>
-                                                                <span class="badge badge-<?= ($user['level'] ?? 'User') === 'Admin' ? 'primary' : 'secondary'; ?>">
+                                                                <span class="badge badge-<?= ($user['level'] ?? 'user') === 'admin' ? 'primary' : 'secondary'; ?>">
                                                                     <?= htmlspecialchars($user['level'] ?? 'User') ?>
                                                                 </span>
                                                             </td>
@@ -191,20 +192,20 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                                                             <!-- Status User -->
                                                             <td>
                                                                 <?php if ($banStatus): ?>
-                                                                    <span class="badge bg-danger">Diblokir</span>
+                                                                    <span class="badge bg-danger" style="color:white">Diblokir</span>
                                                                 <?php else: ?>
-                                                                    <span class="badge bg-success">Aktif</span>
+                                                                    <span class="badge bg-success" style="color:white">Aktif</span>
                                                                 <?php endif; ?>
                                                             </td>
 
                                                             <td>
                                                                 <?php if ($banStatus): ?>
-                                                                    <a href="?action=ban&id=<?= $user['id'] ?>"
+                                                                    <a href="?action=unban&id=<?= $user['id'] ?>"
                                                                         class="btn btn-sm btn-success" title="Buka blokir">
                                                                         <i class="fas fa-lock-open"></i>
                                                                     </a>
                                                                 <?php else: ?>
-                                                                    <a href="?action=unban&id=<?= $user['id'] ?>"
+                                                                    <a href="?action=ban&id=<?= $user['id'] ?>"
                                                                         class="btn btn-sm btn-danger" title="Blokir user">
                                                                         <i class="fas fa-user-slash"></i>
                                                                     </a>

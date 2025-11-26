@@ -323,48 +323,54 @@ function checkoutUser($id_user, $access_token)
 
 
 
-function banUserAuth($uid)
+function banUser($uid)
 {
     try {
         $client = new Client();
 
-        $response = $client->patch(SUPABASE_URL . '/auth/v1/admin/users/' . $uid, [
+        $response = $client->patch(SUPABASE_URL . '/rest/v1/profiles?id=eq.' . $uid, [
             'headers' => [
                 'apikey' => SUPABASE_SERVICE_KEY,
                 'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY,
                 'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation'
             ],
             'json' => [
-                "ban_duration" => "1y"  // blokir selama 1 tahun
+                "is_blocked" => true
             ]
         ]);
 
-        return true;
-    } catch (Exception $e) {
-        echo $e->getMessage();
-        return false;
+        return json_decode($response->getBody(), true);
+    } catch (RequestException $e) {
+        return [
+            "error" => $e->getMessage(),
+            "response" => $e->getResponse() ? $e->getResponse()->getBody()->getContents() : null
+        ];
     }
 }
 
-function unbanUserAuth($uid)
+function unbanUser($uid)
 {
     try {
         $client = new Client();
 
-        $response = $client->patch(SUPABASE_URL . '/auth/v1/admin/users/' . $uid, [
+        $response = $client->patch(SUPABASE_URL . '/rest/v1/profiles?id=eq.' . $uid, [
             'headers' => [
-                'apikey' => SUPABASE_SERVICE_KEY,
+                'apikey' => SUPABASE_SERVICE_KEY,   
                 'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY,
                 'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation'
             ],
             'json' => [
-                "ban_duration" => "none"  // unban user
+                "is_blocked" => false
             ]
         ]);
 
-        return true;
-    } catch (Exception $e) {
-        echo $e->getMessage();
-        return false;
+        return json_decode($response->getBody(), true);
+    } catch (RequestException $e) {
+        return [
+            "error" => $e->getMessage(),
+            "response" => $e->getResponse() ? $e->getResponse()->getBody()->getContents() : null
+        ];
     }
 }
