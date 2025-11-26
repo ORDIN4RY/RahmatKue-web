@@ -11,7 +11,7 @@ define("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ
 define("SUPABASE_STORAGE_URL", SUPABASE_URL . "/storage/v1/object/public");
 
 $client = new Client([
-    'base_uri' => SUPABASE_URL,
+    'base_uri' => SUPABASE_URL, 
     'timeout' => 10,
     'headers' => [
         'apikey'        => SUPABASE_KEY,

@@ -128,6 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php if (!empty($error)) echo "<p style='color:red;'>$error</p>"; ?>
 
       <form method="POST">
+        <label for="email">Nama Lengkap</label>
+        <input type="text" name="nama_lengkap" placeholder="Masukkan nama lengkap" required />
+
+        <label for="email">Nomor Telepon</label>
+        <input type="text" name="nomor_telepon" placeholder="Masukkan nomor telepon" required />
+
         <label for="email">Email</label>
         <input type="email" name="email" placeholder="Masukkan email" required />
 

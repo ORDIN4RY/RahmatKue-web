@@ -69,12 +69,174 @@ body {
 
 .header-text .btn:hover {
   background: #3e2920;
+  color: #fff;
 }
 
 .header .icon-header img {
   width: 400px;
   border-radius: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 15px 30px rgba(101, 67, 33, 0.2);
+}
+
+.modal-header {
+  background-color: #8b4513; /* SaddleBrown */
+  border-bottom: none;
+  padding: 25px 30px 20px;
+}
+
+.modal-title {
+  color: #f5deb3; /* Wheat */
+  font-weight: 700;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-close {
+  background: transparent
+    url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23F5DEB3'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e")
+    center/1.5em auto no-repeat;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 30px;
+  text-align: center;
+  background-color: #fff8f0;
+}
+
+.welcome-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+  background-color: #d2b48c; /* Tan */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b4513;
+  font-size: 40px;
+  box-shadow: 0 8px 16px rgba(139, 69, 19, 0.15);
+  border: 3px solid #f5deb3;
+}
+
+.modal-body h4 {
+  color: #654321; /* DarkBrown */
+  margin-bottom: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.modal-body p {
+  color: #5d4037; /* Brown */
+  line-height: 1.6;
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #faf0e6; /* Linen */
+  border-radius: 10px;
+  border-left: 4px solid #a0522d; /* Sienna */
+}
+
+.preorder-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: #8b4513;
+}
+
+.preorder-note i {
+  color: #a0522d;
+}
+
+/* Animasi untuk ikon tangan */
+.wave-animation {
+  animation: wave 2s infinite;
+  transform-origin: 70% 70%;
+  display: inline-block;
+}
+
+@keyframes wave {
+  0% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(14deg);
+  }
+  20% {
+    transform: rotate(-8deg);
+  }
+  30% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Animasi untuk modal */
+.modal.fade .modal-dialog {
+  transform: translate(0, -50px);
+  transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Tombol lanjutkan custom */
+.btn-custom {
+  background-color: #a0522d; /* Sienna */
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(160, 82, 45, 0.3);
+}
+
+.btn-custom:hover {
+  background-color: #8b4513; /* SaddleBrown */
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(139, 69, 19, 0.4);
+  color: white;
+}
+
+/* Efek dekoratif */
+.modal-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, #8b4513, #d2b48c, #8b4513);
 }
 
 /* produk-terlaris */
@@ -511,7 +673,6 @@ body {
 }
 
 #testimoniCarousel .carousel-indicators button {
-  
   width: 10px;
   height: 10px;
   border-radius: 50%;

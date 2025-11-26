@@ -31,6 +31,11 @@ $harga = $product['harga'];
 $kategori = htmlspecialchars($product['kategori']['nama_kategori']);
 $foto = htmlspecialchars($product['foto_produk'] ?? 'assets/img/no-image.png');
 
+// =====================
+// TENTUKAN MINIMAL PEMBELIAN BERDASARKAN KATEGORI
+// =====================
+$min_pembelian = ($kategori === 'cake') ? 1 : 15;
+
 // Cek URL foto
 if (!filter_var($foto, FILTER_VALIDATE_URL)) {
     $foto = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
@@ -122,10 +127,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $quantity = (int)$_POST['quantity'];
 
-    if ($quantity <= 0) {
-        $_SESSION['message'] = "❌ Jumlah produk harus lebih dari 0.";
-        header("Location: produk-detail.php?id=$id_produk");
-        exit;
+    // ===============================
+    // VALIDASI MINIMAL PEMBELIAN BERDASARKAN KATEGORI
+    // ===============================
+    if ($kategori === 'cake') {
+        // Untuk kategori Kue: minimal 1
+        if ($quantity < 1) {
+            $_SESSION['message'] = "❌ Jumlah produk untuk kategori Kue minimal 1.";
+            header("Location: produk-detail.php?id=$id_produk");
+            exit;
+        }
+    } else {
+        // Untuk kategori selain Kue: minimal 15
+        if ($quantity < 15) {
+            $_SESSION['message'] = "❌ Jumlah produk untuk kategori $kategori minimal 15.";
+            header("Location: produk-detail.php?id=$id_produk");
+            exit;
+        }
     }
 
     // Tambah ke SESSION (tetap)
@@ -204,6 +222,25 @@ if (isset($_SESSION['message'])) {
     <link rel="stylesheet" href="assets/css/produk.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .min-order-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .min-order-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -212,7 +249,7 @@ if (isset($_SESSION['message'])) {
 
     <div class="container my-5">
         <?php if (!empty($message)) : ?>
-            <div class="alert success-<?= strpos($message, '✅') !== false ? 'success' : 'danger' ?> alert-dismissible fade show text-center" role="alert">
+            <div class="alert alert-<?= strpos($message, '❌') !== false ? 'danger' : 'success' ?> alert-dismissible fade show text-center" role="alert">
                 <?= $message ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -228,6 +265,19 @@ if (isset($_SESSION['message'])) {
                 <p><?= $deskripsi ?></p>
                 <h4>Rp <?= number_format($harga, 0, ',', '.') ?></h4>
                 <p><b>Kategori:</b> <?= $kategori ?></p>
+
+                <!-- Informasi Minimal Pembelian -->
+                <?php if ($kategori === 'cake'): ?>
+                    <div class="min-order-info">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Minimal Pembelian:</strong> 1 pcs (kategori kue)
+                    </div>
+                <?php else: ?>
+                    <div class="min-order-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>Minimal Pembelian:</strong> 15 pcs (kategori <?= $kategori ?>)
+                    </div>
+                <?php endif; ?>
 
                 <form method="POST">
                     <?php if ($kategori === 'Kue'): ?>
@@ -248,9 +298,18 @@ if (isset($_SESSION['message'])) {
 
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Jumlah</label>
-                        <input type="number" name="quantity" id="quantity" value="1" min="1" class="form-control" style="width: 100px;">
+                        <input type="number" 
+                               name="quantity" 
+                               id="quantity" 
+                               value="<?= $min_pembelian ?>" 
+                               min="<?= $min_pembelian ?>" 
+                               class="form-control" 
+                               style="width: 150px;"
+                               required>
+                        <small class="form-text text-muted">
+                            Minimal pembelian: <?= $min_pembelian ?> pcs
+                        </small>
                     </div>
-
 
                     <div class="d-flex gap-3 mb-3">
                         <button type="submit" name="add_to_cart" class="btn-submit">
@@ -270,6 +329,25 @@ if (isset($_SESSION['message'])) {
     <?php include 'component/footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validasi client-side untuk minimal pembelian
+        document.addEventListener('DOMContentLoaded', function() {
+            const quantityInput = document.getElementById('quantity');
+            const form = document.querySelector('form');
+            
+            form.addEventListener('submit', function(e) {
+                const minOrder = <?= $min_pembelian ?>;
+                const quantity = parseInt(quantityInput.value);
+                
+                if (quantity < minOrder) {
+                    e.preventDefault();
+                    alert('Minimal pembelian untuk produk ini adalah ' + minOrder + ' pcs');
+                    quantityInput.focus();
+                }
+            });
+        });
+    </script>
+
 </body>
 
 </html>

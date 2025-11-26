@@ -26,7 +26,7 @@
     ?>
 
     <div class="navbar" id="navbar">
-        <p>Rahmat Kue</p>
+        <p>Rahmat Bakery</p>
 
         <a href="index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Beranda</a>
         <a href="produk.php" class="<?= ($current_page == 'produk.php') ? 'active' : '' ?>">Produk</a>

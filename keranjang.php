@@ -118,14 +118,13 @@ if (isset($_SESSION['message'])) {
     <?php include 'component/navbar.php'; ?>
 
     <div class="container my-5">
-        <h2 class="text-center mb-4">Keranjang Belanja</h2>
-        <!-- 
+        <h2 class="text-center mb-4">Keranjang Pesanan</h2>
         <?php if (!empty($message)) : ?>
             <div class="alert alert-<?= strpos($message, '✅') !== false ? 'success' : 'danger' ?> alert-dismissible fade show text-center" role="alert">
                 <?= $message ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        <?php endif; ?> -->
+        <?php endif; ?>
 
         <?php if (empty($cart_items)): ?>
             <div class="text-center py-5">
@@ -250,6 +249,13 @@ if (isset($_SESSION['message'])) {
     </div><br><br><br>
 
     <script>
+        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+            var selected = document.getElementById('checkout-selected-ids').value;
+            if (!selected || selected.trim() === '') {
+                e.preventDefault();
+                alert('Anda harus memilih item untuk checkout!');
+            }
+        });
         // Data harga dan jumlah dari PHP ke JS
         const cartData =
             <?php
