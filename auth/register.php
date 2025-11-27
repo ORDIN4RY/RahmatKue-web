@@ -17,82 +17,60 @@ $client = new Client([
   'timeout'  => 15
 ]);
 
+
 /* ===============================
    PROSES REGISTER
 ================================*/
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-  $email = trim($_POST['email'] ?? '');
-  $password = trim($_POST['password'] ?? '');
+  $nama   = trim($_POST['nama_lengkap'] ?? '');
+  $phone  = trim($_POST['nomor_telepon'] ?? '');
+  $email  = trim($_POST['email'] ?? '');
+  $pass   = trim($_POST['password'] ?? '');
 
-  if ($email === '' || $password === '') {
-    $error = "❌ Email dan password wajib diisi.";
+  /* Normalisasi HP */
+  $phone = preg_replace('/[^0-9+]/', '', $phone);
+  if (substr($phone, 0, 1) === "0") {
+    $phone = "+62" . substr($phone, 1);
+  }
+
+  if ($nama === '' || $phone === '' || $email === '' || $pass === '') {
+    $error = "❌ Semua field wajib diisi.";
   } else {
 
     try {
 
       /* ===============================
-               1) SIGNUP USER
-            ================================*/
+            SIGNUP DENGAN METADATA
+      =================================*/
       $signup = $client->post('/auth/v1/signup', [
         'headers' => [
           'apikey' => $SUPABASE_ANON_KEY,
           'Content-Type' => 'application/json'
         ],
         'json' => [
-          'email' => $email,
-          'password' => $password,
-          'autoConfirm' => true
+          'email'    => $email,
+          'password' => $pass,
+          'autoConfirm' => true,
+          'data' => [
+            'full_name' => $nama,
+            'phone'     => $phone
+          ]
         ]
       ]);
 
       $signupData = json_decode($signup->getBody()->getContents(), true);
 
       if (empty($signupData['user']['id'])) {
-        $error = "❌ Signup gagal.";
+        $error = "❌ Sign up gagal dari Supabase.";
       } else {
         $user_id = $signupData['user']['id'];
 
         /* ===============================
-                   2) LOGIN UNTUK GET ACCESS TOKEN
-                ================================*/
-        $login = $client->post('/auth/v1/token?grant_type=password', [
-          'headers' => [
-            'apikey' => $SUPABASE_ANON_KEY,
-            'Content-Type' => 'application/json'
-          ],
-          'json' => [
-            'email' => $email,
-            'password' => $password
-          ]
-        ]);
-
-        $loginData = json_decode($login->getBody()->getContents(), true);
-        $token = $loginData['access_token'];
-
-        $profileUpsert = $client->request('POST', '/rest/v1/profiles', [
-          'headers' => [
-            'apikey'        => $SUPABASE_ANON_KEY,
-            'Authorization' => 'Bearer ' . $token,
-            'Content-Type'  => 'application/json',
-            'Prefer'        => 'resolution=merge-duplicates,return=minimal'
-          ],
-          'query' => ['on_conflict' => 'id'],
-          'json' => [
-            'id'    => $user_id,
-            'level' => 'user',
-            'point' => 0
-          ]
-        ]);
-
-
-        /* ===============================
-                   4) SET SESSION LOGIN
-                ================================*/
+                SET SESSION (opsional)
+        =================================*/
         $_SESSION['id_user'] = $user_id;
-        $_SESSION['email'] = $email;
-        $_SESSION['level'] = 'user';
-        $_SESSION['point'] = 0;
+        $_SESSION['email']   = $email;
 
         header("Location: login.php?status=registered");
         exit;

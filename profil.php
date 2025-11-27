@@ -32,6 +32,10 @@ if ($id_user) {
         error_log("Error mengambil alamat: " . $e->getMessage());
     }
 }
+
+$username = $_SESSION['username'] ?? 'User';
+$email = $_SESSION['email'];
+$no_hp = $_SESSION['no_hp_pengguna'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -62,10 +66,10 @@ if ($id_user) {
                         <i class="fas fa-user"></i>
                     </div>
                     <div>
-                        <div class="user-name">muhammadrafinaufa071</div>
-                        <a href="#" class="edit-profile">
+                        <div class="user-name"><?= htmlspecialchars($username) ?></div>
+                        <!-- <a href="#" class="edit-profile">
                             <i class="fas fa-pen"></i> Ubah Profil
-                        </a>
+                        </a> -->
                     </div>
                 </div>
 
@@ -120,14 +124,14 @@ if ($id_user) {
                             <div class="form-group">
                                 <div class="form-row">
                                     <label class="form-label">Nama Lengkap</label>
-                                    <input type="text" class="form-control" value="muhammadrafinaufa071" readonly>
+                                    <input type="text" class="form-control" value="<?= htmlspecialchars($username) ?>" readonly>
                                 </div>
                                 <div class="form-hint">Username hanya dapat diubah satu (1) kali.</div>
                             </div>
                             <div class="form-group">
                                 <div class="form-row">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" value="muhammadrafinaufa071@gmail.com" readonly>
+                                    <input type="email" class="form-control" value="<?= htmlspecialchars($email) ?>" readonly>
                                 </div>
                             </div>
 
@@ -136,7 +140,7 @@ if ($id_user) {
                                     <label class="form-label">Nomor Telepon</label>
                                     <div class="flex-1">
                                         <div class="d-flex align-items-center gap-2">
-                                            <input type="text" class="form-control" value="***********47" readonly>
+                                            <input type="text" class="form-control" value="<?= htmlspecialchars($no_hp) ?>" readonly>
                                             <a href="#" class="link-button">Ubah</a>
                                         </div>
                                     </div>

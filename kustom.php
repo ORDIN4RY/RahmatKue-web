@@ -1,66 +1,10 @@
-<?php
+<?php 
 session_start();
 require 'auth/koneksi.php';
 
-/* ============================================================
-    CEK LOGIN USER
-============================================================ */
-$isLoggedIn = isset($_SESSION['id_user']);
-$level = isset($_SESSION['level']) ? strtolower($_SESSION['level']) : null;
-
-/* ============================================================
-    GET KATEGORI DARI SUPABASE
-============================================================ */
-/* GET KATEGORI */
 $kategoriData = getSupabaseData('kategori');
 
-/* FILTER */
-$kategoriDipilih = $_GET['kategori'] ?? 'Semua';
-$keyword = $_GET['search'] ?? '';
-
-/* LOGIKA AMBIL PRODUK */
-if ($keyword !== "") {
-    $data = searchSupabaseProduk($keyword);
-} else {
-    $data = getProdukByKategori($kategoriDipilih);
-}
-
-
-
-/* ============================================================
-    KERANJANG SESSION
-============================================================ */
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
-}
-
-// Hapus item dari session
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus_item'])) {
-    $hapus_id = $_POST['hapus_id'];
-
-    foreach ($_SESSION['cart'] as $key => $item) {
-        if ($item['id'] === $hapus_id) {
-            unset($_SESSION['cart'][$key]);
-            $_SESSION['cart'] = array_values($_SESSION['cart']);
-            break;
-        }
-    }
-
-    header("Location: produk.php?status=deleted");
-    exit;
-}
-
-/* ============================================================
-    NOTIFIKASI
-============================================================ */
-$message = '';
-if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
-    $message = "Produk berhasil dihapus dari keranjang!";
-}
-
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -79,10 +23,10 @@ if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
     <?php include 'component/navbar.php'; ?>
 
     <section class="produk-section">
-        <h2>Produk Kami</h2>
+        <h2>Kustom Pesanan</h2>
         <p>
             Temukan berbagai pilihan kue terbaik dari Rahmat Bakery.<br>
-            Pesan dengan mudah dan nikmati cita rasa lezat kami.
+            Sesuaikan kue impian Anda dengan berbagai opsi kustomisasi yang kami tawarkan!
         </p>
         <div class="search-container">
             <form action="" method="get" class="search-form">
@@ -94,11 +38,9 @@ if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
         </div>
 
         <div class="kategori-container">
-            <a class="kategori-btn <?= $kategoriDipilih === 'Semua' ? 'active' : '' ?>"
-                href="produk.php?kategori=Semua">
+            <a class="kategori-btn <?= $kategoriDipilih === 'Semua' ? 'active' : '' ?>" href="produk.php?kategori=Semua">
                 Semua
             </a>
-
             <?php foreach ($kategoriData as $k) : ?>
                 <a class="kategori-btn <?= $kategoriDipilih === $k['nama_kategori'] ? 'active' : '' ?>"
                     href="produk.php?kategori=<?= urlencode($k['nama_kategori']) ?>">
@@ -106,8 +48,6 @@ if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
                 </a>
             <?php endforeach; ?>
         </div>
-
-
 
 
         <div class="produk-container">

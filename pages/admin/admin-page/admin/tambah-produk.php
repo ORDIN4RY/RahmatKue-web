@@ -65,10 +65,19 @@ if (isset($_POST['tambah'])) {
 // === TAMBAH KATEGORI ===
 if (isset($_POST['tambah_kategori'])) {
   $nama_kategori = trim($_POST['nama_kategori']);
+  $minimal_pembelian = trim($_POST['minimal_pembelian']);
+
   if ($nama_kategori === '') {
     echo "<script>alert('Nama kategori tidak boleh kosong!');</script>";
   } else {
-    $insertCat = insertSupabaseData('kategori', ['nama_kategori' => $nama_kategori]);
+
+    $data = [
+      'nama_kategori' => $nama_kategori,
+      'minimal_pembelian' => $minimal_pembelian
+    ];
+
+    $insertCat = insertSupabaseData('kategori', $data);
+
     if ($insertCat) {
       echo "<script>alert('Kategori berhasil ditambahkan!'); window.location='tambah-produk.php';</script>";
       exit;
@@ -78,85 +87,100 @@ if (isset($_POST['tambah_kategori'])) {
   }
 }
 
-// === HAPUS PRODUK ===
+
 if (isset($_GET['hapus'])) {
   $id_produk = $_GET['hapus'];
 
-  if (deleteSupabaseData('produk', 'id_produk', $id_produk)) {
+  $result = deleteProdukDenganRelasi($id_produk);
+
+  if ($result['success']) {
     echo "<script>alert('Produk berhasil dihapus!'); window.location='tambah-produk.php';</script>";
     exit;
   } else {
-    echo "<script>alert('Gagal menghapus produk.');</script>";
+    echo "<script>alert('Gagal menghapus produk: {$result['message']}'); console.log(`Debug: {$result['debug']}`);</script>";
   }
 }
 
+
 // === UPDATE PRODUK ===
 if (isset($_POST['update_produk'])) {
-
-  $id_produk   = $_POST['id_produk'];
+  $id_produk  = $_POST['id_produk'];
   $nama_produk = trim($_POST['nama_produk']);
   $deskripsi   = trim($_POST['deskripsi']);
   $harga       = (int) $_POST['harga'];
   $id_kategori = $_POST['id_kategori'];
 
-  if ($nama_produk === '' || $deskripsi === '' || $harga <= 0) {
-    echo "<script>alert('Semua field wajib diisi!');</script>";
-  } else {
+  // Data dasar
+  $updateData = [
+    'nama_produk' => $nama_produk,
+    'deskripsi'   => $deskripsi,
+    'harga'       => $harga,
+    'id_kategori' => $id_kategori
+  ];
 
-    // Jika user upload gambar baru → upload ke Supabase
-    if (isset($_FILES['foto_produk']) && $_FILES['foto_produk']['error'] === UPLOAD_ERR_OK) {
+  // Jika upload file baru
+  if (isset($_FILES['foto_produk']) && $_FILES['foto_produk']['error'] === UPLOAD_ERR_OK) {
 
-      $tmpName  = $_FILES['foto_produk']['tmp_name'];
-      $oriName  = basename($_FILES['foto_produk']['name']);
-      $ext      = strtolower(pathinfo($oriName, PATHINFO_EXTENSION));
-      $allowed  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    // --- HANDLE FILE BARU ---
+    $tmpName  = $_FILES['foto_produk']['tmp_name'];
+    $oriName  = basename($_FILES['foto_produk']['name']);
+    $ext      = strtolower(pathinfo($oriName, PATHINFO_EXTENSION));
 
-      if (!in_array($ext, $allowed)) {
-        echo "<script>alert('Format gambar tidak valid!');</script>";
-        exit;
-      }
-
-      $namaFile = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $oriName);
-      $folderTujuan = __DIR__ . '/uploads/';
-      if (!is_dir($folderTujuan)) mkdir($folderTujuan, 0777, true);
-
-      $localPath = $folderTujuan . $namaFile;
-      move_uploaded_file($tmpName, $localPath);
-
-      $uploadRes = uploadToSupabaseStorage('images', $localPath, 'produk/' . $namaFile);
-      if (file_exists($localPath)) @unlink($localPath);
-
-      if ($uploadRes === false) {
-        echo "<script>alert('Gagal upload gambar ke Supabase!');</script>";
-        exit;
-      }
-
-      // URL gambar baru
-      $foto_produk = "https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/produk/$namaFile";
-    } else {
-      // Jika tidak upload file → gunakan foto lama
-      $foto_produk = $_POST['foto_lama'];
-    }
-
-    // Data yang akan diupdate
-    $updateData = [
-      "nama_produk" => $nama_produk,
-      "deskripsi"   => $deskripsi,
-      "harga"       => $harga,
-      "id_kategori" => $id_kategori,
-      "foto_produk" => $foto_produk
-    ];
-
-    $result = updateSupabaseData('produk', 'id_produk', $id_produk, $updateData);
-
-    if ($result) {
-      echo "<script>alert('Produk berhasil diperbarui!'); window.location='tambah-produk.php';</script>";
+    $allowed  = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!in_array($ext, $allowed)) {
+      echo "<script>alert('Format gambar tidak didukung');</script>";
       exit;
-    } else {
-      echo "<script>alert('Gagal memperbarui produk!');</script>";
     }
+
+    $namaFile = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $oriName);
+
+    // --- PATH LOKAL HARUS ABSOLUT ---
+    $folder = __DIR__ . '/uploads/';
+    if (!is_dir($folder)) mkdir($folder, 0777, true);
+
+    $localPath = $folder . $namaFile;
+
+    // SIMPAN SEMENTARA DI LOKAL
+    if (!move_uploaded_file($tmpName, $localPath)) {
+      echo "<script>alert('Gagal memindahkan file lokal');</script>";
+      exit;
+    }
+
+    // --- UPLOAD KE SUPABASE ---
+    $upload = uploadToSupabaseStorage('images', $localPath, 'produk/' . $namaFile);
+
+
+    if ($upload === false) {
+      echo "<script>alert('Gagal upload ke Supabase');</script>";
+      exit;
+    }
+
+    // Hapus file lokal setelah sukses
+    if (file_exists($localPath)) unlink($localPath);
+
+    // simpan URL untuk database
+    $updateData['foto_produk'] =
+      "https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/produk/" . $namaFile;
+  }
+
+  // --- PROSES UPDATE KE DATABASE ---
+  $upload = uploadToSupabaseStorage(
+    'images',
+    $localPath,
+    'produk/' . $namaFile
+  );
+
+
+  if ($res) {
+    echo "<script>alert('Produk berhasil diperbarui'); window.location='tambah-produk.php';</script>";
+    exit;
+  } else {
+    echo "<script>alert('Gagal update produk');</script>";
   }
 }
+
+
+
 
 ?>
 <!DOCTYPE html>
@@ -279,6 +303,22 @@ if (isset($_POST['update_produk'])) {
             </div>
           </div>
 
+          <?php
+          // di bagian atas body setelah session_start() dan sebelum output penting
+          if (isset($_GET['deleted'])) {
+            if ($_GET['deleted'] == '1') {
+              echo '<div class="alert alert-success">Produk berhasil dihapus!</div>';
+            } else {
+              echo '<div class="alert alert-danger">Gagal menghapus produk.</div>';
+              if (!empty($_SESSION['delete_error'])) {
+                echo '<div class="small text-muted">Debug: ' . htmlspecialchars($_SESSION['delete_error']) . '</div>';
+                unset($_SESSION['delete_error']);
+              }
+            }
+          }
+          ?>
+
+
           <!-- Statistics Cards -->
           <div class="row mb-4">
             <div class="col-xl-4 col-md-6 mb-4">
@@ -341,20 +381,20 @@ if (isset($_POST['update_produk'])) {
                 <i class="fas fa-list"></i> Daftar Produk
               </h6>
               <span class="badge bg-primary">
-                <?php echo !empty($data) ? count($data) : 0; ?> Produk
+                <?= !empty($data) ? count($data) : 0; ?> Produk
               </span>
             </div>
+
             <div class="card-body">
               <?php if (!empty($data)): ?>
                 <div class="row">
+
                   <?php foreach ($data as $row):
                     $foto = htmlspecialchars($row['foto_produk'] ?? '');
                     if ($foto !== '') {
-                      if (filter_var($foto, FILTER_VALIDATE_URL)) {
-                        $imgUrl = $foto;
-                      } else {
-                        $imgUrl = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
-                      }
+                      $imgUrl = filter_var($foto, FILTER_VALIDATE_URL)
+                        ? $foto
+                        : SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
                     } else {
                       $imgUrl = '../../assets/img/no-image.png';
                     }
@@ -372,54 +412,153 @@ if (isset($_POST['update_produk'])) {
 
                     <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
                       <div class="card product-card shadow-sm">
-                        <img src="<?= $imgUrl ?>"
-                          class="product-image"
-                          alt="<?= htmlspecialchars($row['nama_produk'] ?? '') ?>"
+
+                        <img src="<?= $imgUrl ?>" class="product-image"
+                          alt="<?= htmlspecialchars($row['nama_produk']) ?>"
                           loading="lazy"
                           onerror="this.src='../../assets/img/no-image.png'">
+
                         <div class="card-body">
-                          <h5 class="card-title text-truncate" title="<?= htmlspecialchars($row['nama_produk'] ?? '') ?>">
-                            <?= htmlspecialchars($row['nama_produk'] ?? '') ?>
+                          <h5 class="card-title text-truncate"
+                            title="<?= htmlspecialchars($row['nama_produk']) ?>">
+                            <?= htmlspecialchars($row['nama_produk']) ?>
                           </h5>
-                          <p class="card-text text-muted small" style="height: 60px; overflow: hidden;">
-                            <?= htmlspecialchars($row['deskripsi'] ?? '') ?>
+
+                          <p class="card-text text-muted small"
+                            style="height: 60px; overflow: hidden;">
+                            <?= htmlspecialchars($row['deskripsi']) ?>
                           </p>
+
                           <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge bg-info text-white">
-                              <i class="fas fa-tag"></i> <?= htmlspecialchars($row['kategori']['nama_kategori'] ?? 'Tanpa Kategori') ?>
+                              <i class="fas fa-tag"></i>
+                              <?= htmlspecialchars($row['kategori']['nama_kategori'] ?? 'Tanpa Kategori') ?>
                             </span>
                           </div>
+
                           <div class="d-flex justify-content-between align-items-center">
                             <span class="badge badge-price bg-success text-white">
-                              Rp <?= isset($row['harga']) ? number_format($row['harga'], 0, ',', '.') : '-' ?>
+                              Rp <?= number_format($row['harga'], 0, ',', '.') ?>
                             </span>
                           </div>
                         </div>
+
                         <div class="card-footer bg-transparent border-top-0">
                           <div class="d-grid gap-2">
-                            <button class="btn btn-sm btn-primary" title="Edit Produk">
+
+                            <!-- BUTTON EDIT -->
+                            <button class="btn btn-sm btn-primary"
+                              data-bs-toggle="modal"
+                              data-bs-target="#modalEditProduk<?= $row['id_produk'] ?>">
                               <i class="fas fa-edit"></i> Edit
                             </button>
-                            <a href="tambah-produk.php?hapus=<?= htmlspecialchars($row['id_produk'] ?? '') ?>"
+
+                            <a href="tambah-produk.php?hapus=<?= urlencode($row['id_produk']) ?>"
                               class="btn btn-sm btn-danger"
                               onclick="return confirm('Yakin ingin menghapus produk ini?');">
                               <i class="fas fa-trash"></i> Hapus
                             </a>
+
                           </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+
+                    <!-- ========================================================= -->
+                    <!-- MODAL EDIT PRODUK — DITARUH DI DALAM FOREACH -->
+                    <!-- ========================================================= -->
+                    <div class="modal fade" id="modalEditProduk<?= $row['id_produk'] ?>" tabindex="-1">
+                      <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+
+                          <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title">
+                              <i class="fas fa-edit"></i> Edit Produk
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                          </div>
+
+                          <form method="POST" enctype="multipart/form-data">
+                            <div class="modal-body">
+
+                              <input type="hidden" name="id_produk" value="<?= $row['id_produk'] ?>">
+
+                              <div class="row">
+                                <div class="col-md-6">
+                                  <div class="mb-3">
+                                    <label class="form-label">Nama Produk</label>
+                                    <input type="text" name="nama_produk" value="<?= htmlspecialchars($row['nama_produk']) ?>" class="form-control" required>
+                                  </div>
+
+                                  <div class="mb-3">
+                                    <label class="form-label">Harga Produk</label>
+                                    <input type="number" name="harga" value="<?= $row['harga'] ?>" class="form-control" required>
+                                  </div>
+
+                                  <div class="mb-3">
+                                    <label class="form-label">Foto Produk</label><br>
+                                    <img src="<?= $imgUrl ?>" class="mb-2" style="max-height:120px;">
+                                    <input type="file" name="foto_produk" class="form-control">
+                                  </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                  <div class="mb-3">
+                                    <label class="form-label">Deskripsi Produk</label>
+                                    <textarea name="deskripsi" class="form-control" rows="5" required><?= htmlspecialchars($row['deskripsi']) ?></textarea>
+                                  </div>
+
+                                  <div class="mb-3">
+                                    <label class="form-label">Kategori Produk</label>
+                                    <select name="id_kategori" class="form-select" required>
+                                      <?php foreach ($kategori as $kat): ?>
+                                        <option value="<?= $kat['id_kategori'] ?>"
+                                          <?= ($kat['id_kategori'] == $row['id_kategori']) ? 'selected' : '' ?>>
+                                          <?= htmlspecialchars($kat['nama_kategori']) ?>
+                                        </option>
+                                      <?php endforeach; ?>
+                                    </select>
+                                  </div>
+
+                                </div>
+                              </div>
+
+                            </div>
+
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Batal
+                              </button>
+                              <button type="submit" name="update_produk" class="btn btn-success">
+                                <i class="fas fa-save"></i> Simpan Perubahan
+                              </button>
+                            </div>
+                          </form>
+
                         </div>
                       </div>
                     </div>
+                    <!-- ========================================================= -->
+
                   <?php endforeach; ?>
+
                 </div>
+
               <?php else: ?>
+
                 <div class="text-center py-5">
                   <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
                   <h4 class="text-muted">Belum Ada Produk</h4>
                   <p class="text-muted">Klik tombol "Tambah Produk" untuk menambahkan produk baru</p>
                 </div>
+
               <?php endif; ?>
+
             </div>
           </div>
+
 
         </div>
         <!-- /.container-fluid -->
@@ -521,6 +660,7 @@ if (isset($_POST['update_produk'])) {
       </div>
     </div>
   </div>
+
   <div class="modal fade" id="modalTambahPaket" tabindex="-1" aria-labelledby="modalTambahProdukLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -599,6 +739,72 @@ if (isset($_POST['update_produk'])) {
     </div>
   </div>
 
+  <div class="modal fade" id="modalEditProduk<?= $row['id_produk'] ?>" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Edit Produk</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+
+          <div class="modal-body">
+
+            <input type="hidden" name="id_produk" value="<?= $row['id_produk'] ?>">
+
+            <div class="mb-3">
+              <label class="form-label">Nama Produk</label>
+              <input type="text" class="form-control" name="nama_produk"
+                value="<?= htmlspecialchars($row['nama_produk']) ?>" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Harga</label>
+              <input type="number" class="form-control" name="harga"
+                value="<?= $row['harga'] ?>" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Deskripsi</label>
+              <textarea class="form-control" name="deskripsi" rows="4" required><?= htmlspecialchars($row['deskripsi']) ?></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Kategori</label>
+              <select class="form-select" name="id_kategori" required>
+                <option value="">-- Pilih Kategori --</option>
+
+                <?php foreach ($kategori as $kat): ?>
+                  <option value="<?= $kat['id_kategori'] ?>"
+                    <?= $kat['id_kategori'] == $row['id_kategori'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($kat['nama_kategori']) ?>
+                  </option>
+                <?php endforeach; ?>
+
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Gambar Produk</label><br>
+              <img src="<?= $imgUrl ?>" style="max-height:120px;" class="mb-2">
+              <input type="file" class="form-control" name="foto_produk" accept="image/*">
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" name="update_produk" class="btn btn-success">Simpan Perubahan</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+
   <!-- Modal Tambah Kategori -->
   <div class="modal fade" id="modalTambahKategori" tabindex="-1" aria-labelledby="modalTambahKategoriLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -616,6 +822,12 @@ if (isset($_POST['update_produk'])) {
                 <i class="fas fa-tag"></i> Nama Kategori <span class="text-danger">*</span>
               </label>
               <input type="text" class="form-control" id="nama_kategori" name="nama_kategori" placeholder="Contoh: Kue Kering" required>
+            </div>
+            <div class="mb-3">
+              <label for="minimal_pembelian" class="form-label">
+                <i class="fas fa-tag"></i> Minimal Pembelian <span class="text-danger">*</span>
+              </label>
+              <input type="number" class="form-control" id="minimal_pembelian" name="minimal_pembelian" placeholder="" required>
             </div>
           </div>
           <div class="modal-footer">

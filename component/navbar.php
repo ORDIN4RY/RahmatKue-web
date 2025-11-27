@@ -33,6 +33,7 @@
         <a href="promo.php" class="<?= ($current_page == 'promo.php') ? 'active' : '' ?>">Promo</a>
 
         <?php if ($isLoggedIn): ?>
+            <a href="kustom.php" class="<?= ($current_page == 'kustom.php') ? 'active' : '' ?>">Kustom Pesanan</a>
             <a href="keranjang.php" class="<?= ($current_page == 'keranjang.php') ? 'active' : '' ?>">Keranjang</a>
         <?php endif; ?>
 

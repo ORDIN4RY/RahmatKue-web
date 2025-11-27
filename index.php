@@ -49,7 +49,6 @@
                             <h4 class="mb-3">Terima kasih telah mengunjungi website Rahmat Kue</h4>
                             <p class="text-muted">
                                 <b>Perhatian:</b> Pemesanan melalui website ini menggunakan sistem pre order.
-                                Mohon untuk memperhatikan estimasi waktu produksi yang tertera pada setiap produk.
                             </p>
                             <div class="preorder-note">
                                 <i class="bi bi-info-circle"></i>
