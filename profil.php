@@ -34,8 +34,78 @@ if ($id_user) {
 }
 
 $username = $_SESSION['username'] ?? 'User';
-$email = $_SESSION['email'];
-$no_hp = $_SESSION['no_hp_pengguna'];
+
+$dataUser = getSupabaseData("profiles?id=eq.$id_user&select=*");
+$no_hp = $dataUser[0]['no_hp_pengguna'] ?? '';
+$email = $dataUser[0]['email'] ?? '';
+$email = $_SESSION['email'] ?? null;
+
+$alamat_rumah = getAlamatRumah($id_user);
+
+
+if (isset($_POST['ubah_password'])) {
+    $password_lama = trim($_POST['password_lama']);
+    $password_baru = trim($_POST['password_baru']);
+    $email = $_SESSION["email"] ?? null;
+
+    if (!$email) {
+        echo "<script>alert('Email tidak ditemukan dalam session!');</script>";
+        exit;
+    }
+
+    try {
+        // ============================================================
+        // 1. LOGIN ULANG UNTUK VALIDASI PASSWORD LAMA
+        // ============================================================
+        $authLogin = $client->post("/auth/v1/token?grant_type=password", [
+            'headers' => [
+                'apikey' => SUPABASE_KEY,
+                'Content-Type' => 'application/json'
+            ],
+            'json' => [
+                'email' => $email,
+                'password' => $password_lama
+            ]
+        ]);
+
+        $loginData = json_decode($authLogin->getBody(), true);
+
+        if (!isset($loginData['access_token'])) {
+            echo "<script>alert('Password lama salah!');</script>";
+            exit;
+        }
+
+        // TOKEN USER DARI LOGIN ULANG
+        $accessToken = $loginData['access_token'];
+
+        // ============================================================
+        // 2. UBAH PASSWORD MENGGUNAKAN PATCH /auth/v1/user
+        // ============================================================
+        $updatePw = $client->request("PATCH", "/auth/v1/user", [
+            'headers' => [
+                'apikey'        => SUPABASE_KEY,
+                'Authorization' => "Bearer $accessToken",
+                'Content-Type'  => 'application/json'
+            ],
+            'json' => [
+                'password' => $password_baru
+            ]
+        ]);
+
+
+        echo "<script>alert('Password berhasil diubah! Silakan login ulang.');</script>";
+        session_destroy();
+        echo "<script>window.location.href='login.php';</script>";
+        exit;
+    } catch (Exception $e) {
+        echo "<script>alert('Gagal mengubah password: " . $e->getMessage() . "');</script>";
+    }
+}
+
+
+
+$pesanan = getRiwayatPesanan($id_user);
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -81,34 +151,8 @@ $no_hp = $_SESSION['no_hp_pengguna'];
                     <a href="#" class="menu-item" onclick="showPage('profil'); return false;">Profil</a>
                     <a href="#" class="menu-item" onclick="showPage('alamat'); return false;">Alamat</a>
                     <a href="#" class="menu-item" onclick="showPage('ubah-pw'); return false;">Ubah Password</a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-title">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span>Pesanan Saya</span>
-                    </div>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-title">
-                        <i class="fas fa-bell"></i>
-                        <span>Notifikasi</span>
-                    </div>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-title">
-                        <i class="fas fa-ticket-alt"></i>
-                        <span>Voucher Saya</span>
-                    </div>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-title">
-                        <i class="fas fa-coins"></i>
-                        <span>Koin Bakery Saya</span>
-                    </div>
+                    <a href="#" class="menu-item" onclick="showPage('pesanan-saya'); return false;">Pesanan Saya</a>
+                    <a href="#" class="menu-item" onclick="showPage('voucher'); return false;">Voucher</a>
                 </div>
             </div>
 
@@ -124,7 +168,7 @@ $no_hp = $_SESSION['no_hp_pengguna'];
                             <div class="form-group">
                                 <div class="form-row">
                                     <label class="form-label">Nama Lengkap</label>
-                                    <input type="text" class="form-control" value="<?= htmlspecialchars($username) ?>" readonly>
+                                    <input type="text" class="form-control" value="<?= htmlspecialchars($username) ?>">
                                 </div>
                                 <div class="form-hint">Username hanya dapat diubah satu (1) kali.</div>
                             </div>
@@ -140,7 +184,7 @@ $no_hp = $_SESSION['no_hp_pengguna'];
                                     <label class="form-label">Nomor Telepon</label>
                                     <div class="flex-1">
                                         <div class="d-flex align-items-center gap-2">
-                                            <input type="text" class="form-control" value="<?= htmlspecialchars($no_hp) ?>" readonly>
+                                            <input type="text" class="form-control" value="<?= htmlspecialchars($no_hp ?? '') ?>">
                                             <a href="#" class="link-button">Ubah</a>
                                         </div>
                                     </div>
@@ -162,26 +206,26 @@ $no_hp = $_SESSION['no_hp_pengguna'];
                         </button>
                     </div>
 
-                    <div class="address-section-title mb-3">Alamat</div>
-
                     <!-- Address List -->
                     <div class="address-list">
                         <?php
-                        // Query untuk mengambil data alamat user
+                        // Ambil data alamat user
                         $alamat_list = [];
                         if ($id_user) {
                             try {
                                 $response = $client->get("/rest/v1/alamat", [
                                     'query' => [
                                         'id_user' => 'eq.' . $id_user,
-                                        'select' => 'id_alamat,alamat_rumah,no_hp_penetrima,name',
-                                        'order' => 'created_at.desc'
+                                        'select' => 'id_alamat, alamat_rumah, nama_lengkap, no_hp_penerima, alamat_utama',
+                                        'order'  => 'id_alamat.desc' // aman jika created_at tidak ada
                                     ]
                                 ]);
 
                                 $alamat_list = json_decode($response->getBody(), true);
                             } catch (Exception $e) {
-                                echo "<div class='alert alert-danger'>Error mengambil data alamat: " . $e->getMessage() . "</div>";
+                                echo "<div class='alert alert-danger'>
+                        Error mengambil data alamat: " . $e->getMessage() . "
+                      </div>";
                             }
                         }
                         ?>
@@ -189,52 +233,174 @@ $no_hp = $_SESSION['no_hp_pengguna'];
                         <?php if (!empty($alamat_list)): ?>
                             <?php foreach ($alamat_list as $index => $alamat): ?>
                                 <div class="address-card">
+
                                     <div class="address-header">
                                         <div>
                                             <h3 class="address-name">
-                                                <?= htmlspecialchars($alamat['name'] ?? 'Nama tidak tersedia') ?>
+                                                <?= htmlspecialchars($alamat['nama_lengkap'] ?? 'Nama tidak tersedia') ?>
                                             </h3>
+
                                             <span class="address-phone">
-                                                <?= htmlspecialchars($alamat['no_hp_penetrima'] ?? 'No HP tidak tersedia') ?>
+                                                <?= htmlspecialchars($alamat['no_hp_penerima'] ?? 'No HP tidak tersedia') ?>
                                             </span>
                                         </div>
+
                                         <div class="address-actions">
-                                            <a href="#" class="action-link" onclick="editAddress('<?= $alamat['id_alamat'] ?? '' ?>')">Ubah</a>
-                                            <?php if ($index > 0): ?>
-                                                <a href="#" class="action-link text-danger" onclick="deleteAddress('<?= $alamat['id_alamat'] ?? '' ?>')">Hapus</a>
+                                            <a href="#" class="action-link" onclick="editAddress('<?= $alamat['id_alamat'] ?>')">Ubah</a>
+
+                                            <?php if (empty($alamat['alamat_utama'])): ?>
+                                                <a href="#" class="action-link text-danger" onclick="deleteAddress('<?= $alamat['id_alamat'] ?>')">
+                                                    Hapus
+                                                </a>
                                             <?php endif; ?>
                                         </div>
                                     </div>
+
                                     <div class="address-detail">
                                         <?= nl2br(htmlspecialchars($alamat['alamat_rumah'] ?? 'Alamat tidak tersedia')) ?>
                                     </div>
+
                                     <div class="address-footer">
-                                        <?php if ($index === 0): ?>
+                                        <?php if (!empty($alamat['alamat_utama'])): ?>
                                             <span class="address-badge badge-primary">Utama</span>
                                         <?php else: ?>
-                                            <button class="default-btn" onclick="setPrimaryAddress('<?= $alamat['id_alamat'] ?? '' ?>')">
+                                            <button class="default-btn" onclick="setPrimaryAddress('<?= $alamat['id_alamat'] ?>')">
                                                 Atur sebagai utama
                                             </button>
                                         <?php endif; ?>
                                     </div>
+
                                 </div>
                             <?php endforeach; ?>
+
                         <?php else: ?>
                             <div class="text-center py-4">
                                 <p>Belum ada alamat yang tersimpan.</p>
-                                <button class="add-address-btn" onclick="showAddAddressForm()">
-                                    <i class="fas fa-plus"></i> Tambah Alamat Pertama
-                                </button>
                             </div>
                         <?php endif; ?>
                     </div>
                 </div>
+
+
                 <div id="ubah-pw-page" class="page-content" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="page-title mb-0">Ubah Password Akun Anda</h1>
+                    </div>
+
+                    <form method="POST">
+                        <div class="form-section">
+                            <div class="form-left">
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" value="<?= htmlspecialchars($email) ?>" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Password Lama</label>
+                                        <input type="password" class="form-control" name="password_lama" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Password Baru</label>
+                                        <input type="password" class="form-control" name="password_baru" required>
+                                    </div>
+                                </div>
+
+                                <button class="submit-button" type="submit" name="ubah_password">Simpan</button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+
+
+                <div id="pesanan-saya-page" class="page-content" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="page-title mb-0">Pesanan Saya</h1>
+                    </div>
+
+                    <div class="address-list">
+
+                        <?php if (!empty($pesanan)) : ?>
+                            <?php foreach ($pesanan as $trx) : ?>
+                                <div class="address-card">
+
+                                    <!-- HEADER -->
+                                    <div class="address-header">
+                                        <div>
+                                            <h3 class="address-name">
+                                                <?= $trx['alamat']['nama_penerima'] ?? 'Tanpa Nama' ?>
+                                            </h3>
+                                            <span class="address-phone">
+                                                (<?= $trx['alamat']['no_hp'] ?? '-' ?>)
+                                            </span>
+                                        </div>
+                                        <div class="address-actions">
+                                            <a href="detail-pesanan.php?id=<?= $trx['id_transaksi'] ?>" class="action-link">
+                                                Detail
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- DETAIL ALAMAT -->
+                                    <div class="address-detail">
+                                        <?= $trx['alamat']['alamat_lengkap'] ?? '-' ?><br>
+                                        <?php if (!empty($trx['nomor_pesanan'])) : ?>
+                                            Nomor Pesanan: <strong><?= $trx['nomor_pesanan'] ?></strong><br>
+                                        <?php endif; ?>
+
+                                        Total Harga:
+                                        <strong>Rp <?= number_format($trx['total_harga'], 0, ',', '.') ?></strong><br>
+
+                                        Status: <strong><?= ucfirst($trx['status']) ?></strong><br>
+
+                                        Metode Pengambilan:
+                                        <strong><?= ucfirst($trx['metode_pengambilan']) ?></strong><br>
+
+                                        <?php if ($trx['ongkir'] > 0) : ?>
+                                            Ongkir: Rp <?= number_format($trx['ongkir'], 0, ',', '.') ?><br>
+                                        <?php endif; ?>
+
+                                        <?php if ($trx['potongan'] > 0) : ?>
+                                            Potongan: -Rp <?= number_format($trx['potongan'], 0, ',', '.') ?><br>
+                                        <?php endif; ?>
+
+                                        <span class="text-muted">Dibuat: <?= date("d M Y H:i", strtotime($trx['created_at'])) ?></span>
+                                    </div>
+
+                                    <!-- FOOTER -->
+                                    <div class="address-footer">
+                                        <span class="address-badge badge-primary">
+                                            #<?= $trx['id_transaksi'] ?>
+                                        </span>
+
+                                        <button class="default-btn"
+                                            onclick="window.location.href='detail-pesanan.php?id=<?= $trx['id_transaksi'] ?>'">
+                                            Lihat Pesanan
+                                        </button>
+                                    </div>
+
+                                </div>
+                            <?php endforeach; ?>
+
+                        <?php else : ?>
+                            <p>Tidak ada riwayat pesanan.</p>
+                        <?php endif; ?>
+
+                    </div>
+
+                </div>
+
+                <div id="voucher-page" class="page-content" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <h1 class="page-title mb-0">Alamat Saya</h1>
-                        <button class="add-address-btn" onclick="showAddAddressForm()">
-                            <i class="fas fa-plus"></i> Tambah Alamat Baru
-                        </button>
                     </div>
 
                     <div class="address-section-title mb-3">Alamat</div>

@@ -3,16 +3,18 @@ include '../../../../auth/koneksi.php'; // harus menyediakan fungsi: getSupabase
 
 // === Ambil data kategori & produk dari Supabase ===
 $kategori = getSupabaseData('kategori'); // array kategori
+$varian = getSupabaseData('produk'); // array kategori
 $data = getSupabaseData('produk?select=*,kategori(nama_kategori)'); // join kategori
 
 // === TAMBAH PRODUK ===
 if (isset($_POST['tambah'])) {
   $nama_produk = trim($_POST['nama_produk']);
+  $varian = trim($_POST['varian']);
   $deskripsi   = trim($_POST['deskripsi']);
   $harga       = (int) $_POST['harga'];
   $id_kategori = $_POST['id_kategori'];
 
-  if ($nama_produk === '' || $deskripsi === '' || $harga <= 0 || empty($id_kategori)) {
+  if ($nama_produk === '' || $varian === '' || $deskripsi === '' || $harga <= 0 || empty($id_kategori)) {
     echo "<script>alert('Semua field wajib diisi!');</script>";
   } else {
     // === Upload gambar produk ===
@@ -43,6 +45,7 @@ if (isset($_POST['tambah'])) {
             // Simpan hanya nama file ke database
             $newProduct = [
               'nama_produk' => $nama_produk,
+              'varian' => $varian,
               'deskripsi'   => $deskripsi,
               'harga'       => $harga,
               'id_kategori' => $id_kategori,
@@ -106,6 +109,7 @@ if (isset($_GET['hapus'])) {
 if (isset($_POST['update_produk'])) {
   $id_produk  = $_POST['id_produk'];
   $nama_produk = trim($_POST['nama_produk']);
+  $varian = trim($_POST['varian']);
   $deskripsi   = trim($_POST['deskripsi']);
   $harga       = (int) $_POST['harga'];
   $id_kategori = $_POST['id_kategori'];
@@ -113,6 +117,7 @@ if (isset($_POST['update_produk'])) {
   // Data dasar
   $updateData = [
     'nama_produk' => $nama_produk,
+    'varian' => $varian,
     'deskripsi'   => $deskripsi,
     'harga'       => $harga,
     'id_kategori' => $id_kategori
@@ -179,9 +184,6 @@ if (isset($_POST['update_produk'])) {
   }
 }
 
-
-
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -242,6 +244,50 @@ if (isset($_POST['update_produk'])) {
     .btn-action {
       flex: 1;
     }
+
+    .product-card {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-bottom: 1px solid #f1f1f1;
+    }
+
+    .product-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .product-desc {
+      font-size: 0.85rem;
+      color: #6c757d;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .badge-sm {
+      font-size: 0.7rem;
+      margin-right: 6px;
+      padding: 5px 8px;
+    }
+
+    .price-badge {
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+
+    .btn-product {
+      font-size: 0.75rem;
+      padding: 6px;
+    }
   </style>
 </head>
 
@@ -292,8 +338,8 @@ if (isset($_POST['update_produk'])) {
                   <button type="button" class="btn btn-success btn-lg btn-action" data-bs-toggle="modal" data-bs-target="#modalTambahProduk">
                     <p>Tambah Produk</p>
                   </button>
-                  <button type="button" class="btn btn-warning btn-lg btn-action" data-bs-toggle="modal" data-bs-target="#modalTambahKategori">
-                    <p>Tambah Kategori</p>
+                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahKategori1">
+                    Tambah Kategori
                   </button>
                   <button type="button" class="btn btn-primary btn-lg btn-action" data-bs-toggle="modal" data-bs-target="#modalTambahPaket">
                     <p>Tambah Paket</p>
@@ -413,57 +459,54 @@ if (isset($_POST['update_produk'])) {
                     <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
                       <div class="card product-card shadow-sm">
 
-                        <img src="<?= $imgUrl ?>" class="product-image"
+                        <img src="<?= $imgUrl ?>"
+                          class="product-image"
                           alt="<?= htmlspecialchars($row['nama_produk']) ?>"
                           loading="lazy"
                           onerror="this.src='../../assets/img/no-image.png'">
 
                         <div class="card-body">
-                          <h5 class="card-title text-truncate"
+
+                          <h5 class="product-title text-truncate"
                             title="<?= htmlspecialchars($row['nama_produk']) ?>">
                             <?= htmlspecialchars($row['nama_produk']) ?>
                           </h5>
 
-                          <p class="card-text text-muted small"
-                            style="height: 60px; overflow: hidden;">
-                            <?= htmlspecialchars($row['deskripsi']) ?>
-                          </p>
-
-                          <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-info text-white">
-                              <i class="fas fa-tag"></i>
+                          <div class="mt-2 mb-3">
+                            <span class="badge bg-info text-white badge-sm">
                               <?= htmlspecialchars($row['kategori']['nama_kategori'] ?? 'Tanpa Kategori') ?>
                             </span>
-                          </div>
 
-                          <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge badge-price bg-success text-white">
-                              Rp <?= number_format($row['harga'], 0, ',', '.') ?>
+                            <span class="badge bg-secondary text-white badge-sm">
+                              <?= htmlspecialchars($row['varian'] ?? 'Tidak Ada') ?>
                             </span>
                           </div>
+
+                          <span class="badge bg-success text-white price-badge">
+                            Rp <?= number_format($row['harga'], 0, ',', '.') ?>
+                          </span>
+
                         </div>
 
                         <div class="card-footer bg-transparent border-top-0">
                           <div class="d-grid gap-2">
-
-                            <!-- BUTTON EDIT -->
-                            <button class="btn btn-sm btn-primary"
+                            <button class="btn btn-primary btn-product"
                               data-bs-toggle="modal"
                               data-bs-target="#modalEditProduk<?= $row['id_produk'] ?>">
                               <i class="fas fa-edit"></i> Edit
                             </button>
 
                             <a href="tambah-produk.php?hapus=<?= urlencode($row['id_produk']) ?>"
-                              class="btn btn-sm btn-danger"
+                              class="btn btn-danger btn-product"
                               onclick="return confirm('Yakin ingin menghapus produk ini?');">
                               <i class="fas fa-trash"></i> Hapus
                             </a>
-
                           </div>
                         </div>
 
                       </div>
                     </div>
+
 
 
                     <!-- ========================================================= -->
@@ -510,6 +553,17 @@ if (isset($_POST['update_produk'])) {
                                     <textarea name="deskripsi" class="form-control" rows="5" required><?= htmlspecialchars($row['deskripsi']) ?></textarea>
                                   </div>
 
+                                  <div class="mb-3">
+                                    <label class="form-label">Kategori Produk</label>
+                                    <select name="id_kategori" class="form-select" required>
+                                      <?php foreach ($kategori as $kat): ?>
+                                        <option value="<?= $kat['id_kategori'] ?>"
+                                          <?= ($kat['id_kategori'] == $row['id_kategori']) ? 'selected' : '' ?>>
+                                          <?= htmlspecialchars($kat['nama_kategori']) ?>
+                                        </option>
+                                      <?php endforeach; ?>
+                                    </select>
+                                  </div>
                                   <div class="mb-3">
                                     <label class="form-label">Kategori Produk</label>
                                     <select name="id_kategori" class="form-select" required>
@@ -635,7 +689,7 @@ if (isset($_POST['update_produk'])) {
                     <i class="fas fa-tags"></i> Kategori Produk <span class="text-danger">*</span>
                   </label>
                   <select class="form-select" id="id_kategori" name="id_kategori" required>
-                    <option value="">-- Pilih Kategori --</option>
+                    <option value="">-- Pilih Kategori Produk --</option>
                     <?php if (!empty($kategori)): ?>
                       <?php foreach ($kategori as $kat): ?>
                         <option value="<?= htmlspecialchars($kat['id_kategori']) ?>">
@@ -645,17 +699,68 @@ if (isset($_POST['update_produk'])) {
                     <?php endif; ?>
                   </select>
                 </div>
+
+                <div class="mb-3">
+                  <label for="id_kategori" class="form-label">
+                    <i class="fas fa-tags"></i> Varian Produk <span class="text-danger">*</span>
+                  </label>
+                  <select name="varian" id="varian" class="form-control" required>
+                    <option value="">-- Pilih Varian --</option>
+                    <option value="mini">Mini</option>
+                    <option value="normal">Normal</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="fas fa-times"></i> Batal
-            </button>
-            <button type="submit" name="tambah" class="btn btn-success">
-              <i class="fas fa-save"></i> Simpan Produk
-            </button>
-          </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-times"></i> Batal
+              </button>
+              <button type="submit" name="tambah" class="btn btn-success">
+                <i class="fas fa-save"></i> Simpan Produk
+              </button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade" id="modalTambahKategori1" tabindex="-1" aria-labelledby="modalTambahProdukLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalTambahProdukLabel">
+            <i class="fas fa-plus-circle"></i> Tambah Kategori Baru
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="row">
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="nama_kategori" class="form-label">
+                    <i class="fas fa-tag"></i> Nama Kategori <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control" id="nama_kategori" name="nama_kategori" placeholder="Contoh: Kue Kering" required>
+                </div>
+                <div class="mb-3">
+                  <label for="minimal_pembelian" class="form-label">
+                    <i class="fas fa-tag"></i> Minimal Pembelian <span class="text-danger">*</span>
+                  </label>
+                  <input type="number" class="form-control" id="minimal_pembelian" name="minimal_pembelian" placeholder="" required>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-times"></i> Batal
+              </button>
+              <button type="submit" name="tambah" class="btn btn-success">
+                <i class="fas fa-save"></i> Simpan Produk
+              </button>
+            </div>
         </form>
       </div>
     </div>
@@ -739,72 +844,6 @@ if (isset($_POST['update_produk'])) {
     </div>
   </div>
 
-  <div class="modal fade" id="modalEditProduk<?= $row['id_produk'] ?>" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">Edit Produk</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <form method="POST" enctype="multipart/form-data">
-
-          <div class="modal-body">
-
-            <input type="hidden" name="id_produk" value="<?= $row['id_produk'] ?>">
-
-            <div class="mb-3">
-              <label class="form-label">Nama Produk</label>
-              <input type="text" class="form-control" name="nama_produk"
-                value="<?= htmlspecialchars($row['nama_produk']) ?>" required>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Harga</label>
-              <input type="number" class="form-control" name="harga"
-                value="<?= $row['harga'] ?>" required>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Deskripsi</label>
-              <textarea class="form-control" name="deskripsi" rows="4" required><?= htmlspecialchars($row['deskripsi']) ?></textarea>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Kategori</label>
-              <select class="form-select" name="id_kategori" required>
-                <option value="">-- Pilih Kategori --</option>
-
-                <?php foreach ($kategori as $kat): ?>
-                  <option value="<?= $kat['id_kategori'] ?>"
-                    <?= $kat['id_kategori'] == $row['id_kategori'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($kat['nama_kategori']) ?>
-                  </option>
-                <?php endforeach; ?>
-
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Gambar Produk</label><br>
-              <img src="<?= $imgUrl ?>" style="max-height:120px;" class="mb-2">
-              <input type="file" class="form-control" name="foto_produk" accept="image/*">
-            </div>
-
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-            <button type="submit" name="update_produk" class="btn btn-success">Simpan Perubahan</button>
-          </div>
-
-        </form>
-      </div>
-    </div>
-  </div>
-
-
   <!-- Modal Tambah Kategori -->
   <div class="modal fade" id="modalTambahKategori" tabindex="-1" aria-labelledby="modalTambahKategoriLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -847,12 +886,6 @@ if (isset($_POST['update_produk'])) {
   <a class="scroll-to-top rounded" href="#page-top">
     <i class="fas fa-angle-up"></i>
   </a>
-
-  <!-- Scripts -->
-
-  <!-- 
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script> -->
 
   <!-- Core plugin JavaScript-->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

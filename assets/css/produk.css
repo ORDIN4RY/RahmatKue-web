@@ -96,6 +96,14 @@ body {
   color: #2c2c2c;
   line-height: 1.3;
 }
+.produk-card-content h10 {
+  font-family: "Abhaya Libre", serif;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  color: #555;
+  line-height: 1.3;
+}
 
 .produk-card-content .deskripsi {
   font-family: "Abhaya Libre", serif;
@@ -405,4 +413,46 @@ h4 {
 .btn-buy:hover {
   background-color: #5a4fcf;
   color: white;
+}
+
+/* HALAMAN KUSTOM PESANAN */
+.wadah-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: 0.3s ease;
+  border: 1px solid #eee;
+  position: relative;
+}
+
+.wadah-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+.wadah-img {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.wadah-badge {
+  position: absolute;
+  background: #ff7b00;
+  color: white;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+}
+
+.harga {
+  color: #ff4d00;
+  font-weight: bold;
+  font-size: 18px;
 }

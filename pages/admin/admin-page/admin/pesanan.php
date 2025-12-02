@@ -1,3 +1,40 @@
+<?php
+require '../../../../auth/koneksi.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
+
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+
+
+function getAllPesanan()
+{
+    global $client;
+
+    try {
+        $response = $client->get('/rest/v1/transaksi', [
+            'query' => [
+                'select' => '*',
+                'order'  => 'created_at.desc'
+            ],
+            'headers' => [
+                'apikey'        => SUPABASE_SERVICE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY
+            ]
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true) ?? [];
+
+    } catch (RequestException $e) {
+        echo "<pre>Error: " . $e->getMessage() . "</pre>";
+        if ($e->hasResponse()) {
+            echo "<pre>Response: " . $e->getResponse()->getBody()->getContents() . "</pre>";
+        }
+        return [];
+    }
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -72,11 +109,6 @@
                                                 </div>
                                             </form>
                                         </div>
-                                        <div class="col-md-6 text-right">
-                                            <button class="btn btn-success" data-toggle="modal" data-target="#addUserModal">
-                                                <i class="fas fa-plus"></i> Tambah User
-                                            </button>
-                                        </div>
                                     </div>
 
                                     <!-- Table -->
@@ -85,54 +117,45 @@
                                             <thead class="thead-light">
                                                 <tr>
                                                     <th width="5%">No</th>
-                                                    <th width="20%">Username</th>
-                                                    <th width="20%">Level</th>
-                                                    <th width="15%">Point</th>
-                                                    <th width="15%">Tanggal Daftar</th>
+                                                    <th width="20%">Nomer Pesanan</th>
+                                                    <th width="20%">Total Harga</th>
+                                                    <th width="15%">Status</th>
+                                                    <th width="10%">Metode Pengambilan</th>
+                                                    <th width="15%">Waktu Selesai</th>
                                                     <th width="15%">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <?php
+                                                // Ambil data dari Supabase
+                                                $pesanan = getAllPesanan();
                                                 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
                                                 // Filter pencarian
                                                 if ($search !== '') {
-                                                    $users = array_filter($users, function ($user) use ($search) {
+                                                    $pesanan = array_filter($pesanan, function ($user) use ($search) {
                                                         return (
-                                                            stripos($user['username'] ?? '', $search) !== false ||
-                                                            stripos($user['email'] ?? '', $search) !== false ||
-                                                            stripos($user['nama'] ?? '', $search) !== false
+                                                            stripos($user['nomor_pesanan'] ?? '', $search) !== false
                                                         );
                                                     });
                                                 }
 
                                                 // Tampilkan hasil
-                                                if (!empty($users)):
+                                                if (!empty($pesanan)):
                                                     $no = 1;
-                                                    foreach ($users as $user):
+                                                    foreach ($pesanan as $user):
                                                 ?>
                                                         <tr>
                                                             <td><?= $no++; ?></td>
-                                                            <td><?= htmlspecialchars($user['username'] ?? '-') ?></td>
+
+                                                            <td><?= htmlspecialchars($user['nomor_pesanan'] ?? '-') ?></td>
+                                                            <td><?= htmlspecialchars($user['total_harga'] ?? '-') ?></td>
+                                                            <td><?= htmlspecialchars($user['status'] ?? '-') ?></td>
+                                                            <td><?= htmlspecialchars($user['metode_pengambilan'] ?? '-') ?></td>
+                                                            <td><?= htmlspecialchars($user['waktu_selesai'] ?? '-') ?></td>
                                                             <td>
-                                                                <span class="badge badge-<?= ($user['level'] ?? 'User') === 'Admin' ? 'primary' : 'secondary'; ?>">
-                                                                    <?= htmlspecialchars($user['level'] ?? 'User') ?>
-                                                                </span>
-                                                            </td>
-                                                            <td><?= htmlspecialchars($user['point'] ?? '0') ?></td>
-                                                            <td>
-                                                                <?= !empty($user['created_at'])
-                                                                    ? date('d/m/Y', strtotime($user['created_at']))
-                                                                    : '-' ?>
-                                                            </td>
-                                                            <td>
-                                                                <button class="btn btn-sm btn-warning" title="Edit">
-                                                                    <i class="fas fa-edit"></i>
-                                                                </button>
-                                                                <button class="btn btn-sm btn-danger" title="Hapus">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
+                                                                <i class="bi bi-x-square-fill" title="batal"></i>
+                                                                <i class="bi bi-info-circle-fill" title="detail"></i>
                                                             </td>
                                                         </tr>
                                                     <?php
@@ -151,7 +174,6 @@
                                                     </tr>
                                                 <?php endif; ?>
                                             </tbody>
-
                                         </table>
                                     </div>
                                 </div>

@@ -1,10 +1,12 @@
-<?php 
+<?php
 session_start();
 require 'auth/koneksi.php';
 
-$kategoriData = getSupabaseData('kategori');
+$promoItem = getSupabaseData('promo');
 
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -23,10 +25,10 @@ $kategoriData = getSupabaseData('kategori');
     <?php include 'component/navbar.php'; ?>
 
     <section class="produk-section">
-        <h2>Produk Promo Kami</h2>
+        <h2>Produk Promo</h2>
         <p>
             Temukan berbagai pilihan kue terbaik dari Rahmat Bakery.<br>
-            dengan harga spesial promo yang menggoda selera!
+            Nikmati penawaran spesial kami dengan produk-produk promo yang menggoda selera!
         </p>
         <div class="search-container">
             <form action="" method="get" class="search-form">
@@ -37,70 +39,34 @@ $kategoriData = getSupabaseData('kategori');
             </form>
         </div>
 
-        <div class="kategori-container">
-            <a class="kategori-btn <?= $kategoriDipilih === 'Semua' ? 'active' : '' ?>" href="produk.php?kategori=Semua">
-                Semua
-            </a>
-            <?php foreach ($kategoriData as $k) : ?>
-                <a class="kategori-btn <?= $kategoriDipilih === $k['nama_kategori'] ? 'active' : '' ?>"
-                    href="produk.php?kategori=<?= urlencode($k['nama_kategori']) ?>">
-                    <?= htmlspecialchars($k['nama_kategori']) ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
-
-
         <div class="produk-container">
-            <?php if (!empty($data)) { ?>
-                <?php foreach ($data as $row) {
+            <?php if (!empty($promoItem)): ?>
+                <?php foreach ($promoItem as $row): ?>
 
-                    $id = htmlspecialchars($row['id_produk'] ?? '');
-                    $nama = htmlspecialchars($row['nama_produk'] ?? 'Nama kosong');
-                    $deskripsi = htmlspecialchars($row['deskripsi'] ?? '');
-                    $harga = isset($row['harga']) ? number_format($row['harga'], 0, ',', '.') : '-';
-                    $foto = htmlspecialchars($row['foto_produk'] ?? '');
+                    <div class="wadah-card">
+                        <p><?= htmlspecialchars($row['nama']) ?></p>
+                        <p><?= htmlspecialchars($row['deskripsi']) ?></p>
+                        <p><?= htmlspecialchars($row['nilai_diskon']) ?></p>
+                        <p><?= htmlspecialchars($row['tgl_berakhir']) ?></p>
+                        
+                        <!-- <img
+                            src="<?= !empty($row['foto_wadah'])
+                                        ? htmlspecialchars($row['foto_wadah'])
+                                        : 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?q=80&w=600' ?>"
+                            alt="Foto <?= htmlspecialchars($row['nama_wadah']) ?>"
+                            class="wadah-img"> -->
 
-                    // URL Foto
-                    if ($foto !== '') {
-                        if (filter_var($foto, FILTER_VALIDATE_URL)) {
-                            $imgUrl = $foto;
-                        } else {
-                            $imgUrl = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
-                        }
-                    } else {
-                        $imgUrl = 'assets/img/no-image.png';
-                    }
-
-                    // Kategori produk (harus muncul dari Supabase join)
-                    $nama_kategori = htmlspecialchars($row['kategori']['nama_kategori'] ?? 'Tanpa Kategori');
-
-                ?>
-                    <div class="produk-card"
-                        style="cursor: pointer;"
-                        <?php if ($isLoggedIn): ?>
-                        onclick="window.location.href='produk-detail.php?id=<?= urlencode($id) ?>'"
-                        <?php else: ?>
-                        data-bs-toggle="modal"
-                        data-bs-target="#loginModal"
-                        <?php endif; ?>>
-
-                        <div class="produk-image-wrapper">
-                            <img src="<?= $imgUrl ?>" alt="<?= $nama ?>" onerror="this.src='assets/img/no-image.png';" loading="lazy">
-                        </div>
-
-                        <div class="produk-card-content">
-                            <h3><?= $nama ?></h3>
-                            <p class="deskripsi"><?= $deskripsi ?></p>
-                            <p class="harga">Rp <?= $harga ?></p>
-                        </div>
+                        <!-- <p class="harga">Rp <?= number_format($row['harga_wadah'], 0, ',', '.') ?></p> -->
 
                     </div>
-                <?php } ?>
-            <?php } else { ?>
-                <p>Tidak ada produk tersedia saat ini.</p>
-            <?php } ?>
-        </div>
 
+
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p class="text-danger">Tidak ada data wadah.</p>
+            <?php endif; ?>
+
+        </div>
 
 
         <div class="modal fade" id="loginModal" tabindex="-1">
@@ -125,71 +91,6 @@ $kategoriData = getSupabaseData('kategori');
     <?php include 'component/footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // Update cart when modal is opened
-        const cartModal = document.getElementById('cartModal');
-        if (cartModal) {
-            cartModal.addEventListener('show.bs.modal', loadCart);
-        }
-
-        // Function to load cart contents
-        async function loadCart() {
-            try {
-                const response = await fetch('auth/get_cart.php');
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    updateCartDisplay(data);
-                } else {
-                    throw new Error(data.message);
-                }
-            } catch (error) {
-                console.error('Error loading cart:', error);
-                showEmptyCart();
-            }
-        }
-
-        // Function to update cart display
-        function updateCartDisplay(data) {
-            const cartItems = document.getElementById('cartItems');
-            const emptyCart = document.getElementById('emptyCart');
-            const cartTotal = document.getElementById('cartTotal');
-            const checkoutBtn = document.getElementById('checkoutBtn');
-
-            if (data.items && data.items.length > 0) {
-                // Show items
-                cartItems.innerHTML = data.items.map(item => `
-                    <div class="cart-item">
-                        <div>
-                            <span class="fw-bold">${item.nama}</span>
-                            ${item.size ? `<br><small>Size: ${item.size}cm</small>` : ''}
-                            ${item.wording ? `<br><small>Wording: ${item.wording}</small>` : ''}
-                        </div>
-                        <div class="text-end">
-                            <span>${item.quantity}x</span>
-                            <span class="ms-2">Rp ${new Intl.NumberFormat('id-ID').format(item.subtotal)}</span>
-                        </div>
-                    </div>
-                `).join('');
-
-                cartTotal.textContent = data.formattedTotal;
-                cartItems.style.display = 'block';
-                emptyCart.style.display = 'none';
-                checkoutBtn.style.display = 'inline-block';
-            } else {
-                showEmptyCart();
-            }
-        }
-
-        // Function to show empty cart state
-        function showEmptyCart() {
-            document.getElementById('cartItems').style.display = 'none';
-            document.getElementById('emptyCart').style.display = 'block';
-            document.getElementById('cartTotal').textContent = '0';
-            document.getElementById('checkoutBtn').style.display = 'none';
-        }
-    </script>
 </body>
 
 </html>

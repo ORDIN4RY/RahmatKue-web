@@ -11,20 +11,40 @@ $level = isset($_SESSION['level']) ? strtolower($_SESSION['level']) : null;
 /* ============================================================
     GET KATEGORI DARI SUPABASE
 ============================================================ */
-/* GET KATEGORI */
 $kategoriData = getSupabaseData('kategori');
 
 /* FILTER */
 $kategoriDipilih = $_GET['kategori'] ?? 'Semua';
 $keyword = $_GET['search'] ?? '';
 
+/* ============================================================
+    LOGIKA MENGAMBIL PRODUK & PAKET
+============================================================ */
 /* LOGIKA AMBIL PRODUK */
 if ($keyword !== "") {
-    $data = searchSupabaseProduk($keyword);
+
+    // Gunakan search yang menampilkan PRODUK + PAKET
+    $result = searchSupabaseAll($keyword);
+} elseif (strtolower($kategoriDipilih) === 'paket') {
+
+    // Jika kategori = Paket → ambil paket saja
+    $paket = getSupabaseData('paket');
+    $produk = [];
+
+    $result = [
+        "produk" => [],
+        "paket"  => $paket
+    ];
 } else {
-    $data = getProdukByKategori($kategoriDipilih);
+
+    // Default ambil produk per kategori
+    $result = getProdukByKategori($kategoriDipilih);
 }
 
+
+
+$produk = $result["produk"] ?? [];
+$paket  = $result["paket"] ?? [];
 
 
 /* ============================================================
@@ -34,7 +54,7 @@ if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Hapus item dari session
+// Hapus item dari keranjang
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hapus_item'])) {
     $hapus_id = $_POST['hapus_id'];
 
@@ -59,6 +79,7 @@ if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
 }
 
 ?>
+
 
 
 <!DOCTYPE html>
@@ -108,59 +129,95 @@ if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
         </div>
 
 
-
-
         <div class="produk-container">
-            <?php if (!empty($data)) { ?>
-                <?php foreach ($data as $row) {
 
-                    $id = htmlspecialchars($row['id_produk'] ?? '');
+            <!-- ============== PRODUK ============== -->
+            <?php if (!empty($produk)) { ?>
+                <?php foreach ($produk as $row) {
+
+                    $id   = htmlspecialchars($row['id_produk'] ?? '');
                     $nama = htmlspecialchars($row['nama_produk'] ?? 'Nama kosong');
                     $deskripsi = htmlspecialchars($row['deskripsi'] ?? '');
                     $harga = isset($row['harga']) ? number_format($row['harga'], 0, ',', '.') : '-';
+                    $varian = !empty($row['varian']) ? htmlspecialchars($row['varian']) : 'Tidak ada varian';
+
+                    // Perbaikan: foto tidak ditimpa diskon
                     $foto = htmlspecialchars($row['foto_produk'] ?? '');
+                    $diskon = htmlspecialchars($row['diskon'] ?? '');
 
-                    // URL Foto
-                    if ($foto !== '') {
-                        if (filter_var($foto, FILTER_VALIDATE_URL)) {
-                            $imgUrl = $foto;
-                        } else {
-                            $imgUrl = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
-                        }
-                    } else {
-                        $imgUrl = 'assets/img/no-image.png';
-                    }
-
-                    // Kategori produk (harus muncul dari Supabase join)
-                    $nama_kategori = htmlspecialchars($row['kategori']['nama_kategori'] ?? 'Tanpa Kategori');
-
+                    // URL Foto Produk
+                    $imgUrl = (!empty($foto))
+                        ? (filter_var($foto, FILTER_VALIDATE_URL)
+                            ? $foto
+                            : SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto))
+                        : 'assets/img/no-image.png';
                 ?>
-                    <div class="produk-card"
-                        style="cursor: pointer;"
+
+                    <div class="produk-card" style="cursor: pointer;"
                         <?php if ($isLoggedIn): ?>
                         onclick="window.location.href='produk-detail.php?id=<?= urlencode($id) ?>'"
                         <?php else: ?>
-                        data-bs-toggle="modal"
-                        data-bs-target="#loginModal"
+                        data-bs-toggle="modal" data-bs-target="#loginModal"
                         <?php endif; ?>>
 
                         <div class="produk-image-wrapper">
-                            <img src="<?= $imgUrl ?>" alt="<?= $nama ?>" onerror="this.src='assets/img/no-image.png';" loading="lazy">
+                            <img src="<?= $imgUrl ?>" alt="<?= $nama ?>"
+                                onerror="this.src='assets/img/no-image.png';" loading="lazy">
                         </div>
 
                         <div class="produk-card-content">
                             <h3><?= $nama ?></h3>
-                            <p class="deskripsi"><?= $deskripsi ?></p>
                             <p class="harga">Rp <?= $harga ?></p>
+                            <h10>Varian: <b><?= $varian ?></b></h10>
                         </div>
-
                     </div>
                 <?php } ?>
-            <?php } else { ?>
-                <p>Tidak ada produk tersedia saat ini.</p>
             <?php } ?>
-        </div>
 
+            <!-- ============== PAKET ============== -->
+            <?php if (!empty($paket)) { ?>
+                <?php foreach ($paket as $row) {
+
+                    $id   = htmlspecialchars($row['id_paket'] ?? '');
+                    $nama = htmlspecialchars($row['nama_paket'] ?? 'Paket');
+                    $deskripsi = htmlspecialchars($row['deskripsi'] ?? '');
+                    $harga = isset($row['harga_paket']) ? number_format($row['harga_paket'], 0, ',', '.') : '-';
+                    $foto = htmlspecialchars($row['foto_paket'] ?? '');
+
+                    // URL Foto Paket (gunakan folder yang sama dengan produk agar konsisten)
+                    $imgUrl = (!empty($foto))
+                        ? (filter_var($foto, FILTER_VALIDATE_URL)
+                            ? $foto
+                            : SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto))
+                        : 'assets/img/no-image.png';
+
+                ?>
+                    <div class="produk-card paket-card" style="cursor: pointer;"
+                        <?php if ($isLoggedIn): ?>
+                        onclick="window.location.href='paket-detail.php?id=<?= urlencode($id) ?>'"
+                        <?php else: ?>
+                        data-bs-toggle="modal" data-bs-target="#loginModal"
+                        <?php endif; ?>>
+
+                        <div class="produk-image-wrapper">
+                            <img src="<?= $imgUrl ?>" alt="<?= $nama ?>"
+                                onerror="this.src='assets/img/no-image.png';" loading="lazy">
+                        </div>
+
+                        <div class="produk-card-content">
+                            <h3><?= $nama ?> <span class="badge bg-success">Paket</span></h3>
+                            <p class="harga">Rp <?= $harga ?></p>
+                            <small><?= $deskripsi ?></small>
+                        </div>
+                    </div>
+                <?php } ?>
+            <?php } ?>
+
+            <?php if (empty($produk) && empty($paket)): ?>
+                <p>Tidak ada produk atau paket tersedia saat ini.</p>
+            <?php endif; ?>
+
+        </div>
 
 
         <div class="modal fade" id="loginModal" tabindex="-1">

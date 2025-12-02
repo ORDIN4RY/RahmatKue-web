@@ -6,35 +6,31 @@ require 'auth/koneksi.php';
 // =====================
 // 1️⃣ CEK & AMBIL PRODUK DARI SUPABASE
 // =====================
-$id_produk = $_GET['id'] ?? null;
-if (!$id_produk) die("ID Produk tidak ditemukan");
+$id_paket = $_GET['id'] ?? null;
+if (!$id_paket) die("ID Produk tidak ditemukan");
 
 // Ambil produk
 try {
-    $response = $client->get("/rest/v1/produk", [
+    $response = $client->get("/rest/v1/paket", [
         'query' => [
-            'id_produk' => 'eq.' . $id_produk,
+            'id_paket' => 'eq.' . $id_paket,
             'select' => '*,kategori(nama_kategori)'
         ]
     ]);
-    $product = json_decode($response->getBody(), true);
-    if (empty($product)) die("Produk tidak ditemukan");
-    $product = $product[0];
+    $productPaket = json_decode($response->getBody(), true);
+    if (empty($productPaket)) die("Produk tidak ditemukan");
+    $productPaket = $productPaket[0];
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
 }
 
 // Format data
-$nama = htmlspecialchars($product['nama_produk']);
-$deskripsi = htmlspecialchars($product['deskripsi']);
-$harga = $product['harga'];
-$kategori = htmlspecialchars($product['kategori']['nama_kategori']);
-$foto = htmlspecialchars($product['foto_produk'] ?? 'assets/img/no-image.png');
+$nama = htmlspecialchars($productPaket['nama_paket']);
+$harga = $productPaket['harga_paket'];
+$deskripsi = htmlspecialchars($productPaket['deskripsi']);
+$diskon = htmlspecialchars($productPaket['diskon']);
+$foto = htmlspecialchars($productPaket['foto_paket'] ?? 'assets/img/no-image.png');
 
-// =====================
-// TENTUKAN MINIMAL PEMBELIAN BERDASARKAN KATEGORI
-// =====================
-$min_pembelian = ($kategori === 'cake') ? 1 : 15;
 
 // Cek URL foto
 if (!filter_var($foto, FILTER_VALIDATE_URL)) {
@@ -56,8 +52,8 @@ function addToCartSupabase($client, $data)
         // Cek apakah item sudah ada
         $check = $client->get("/rest/v1/keranjang", [
             'query' => [
-                'id_user'   => 'eq.' . $data['id_user'],
-                'id_produk' => 'eq.' . $data['id_produk'],
+                'id_user' => 'eq.' . $data['id_user'],
+                'id_wadah' => 'eq.' . $data['id_wadah'],
                 'select'    => '*'
             ]
         ]);
@@ -120,37 +116,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($id_user)) {
         $_SESSION['message'] = "❌ Anda harus login terlebih dahulu.";
-        header("Location: login.php?redirect=produk-detail.php?id=$id_produk");
+        header("Location: login.php?redirect=produk-detail.php?id=$id_paket");
         exit;
     }
 
     $quantity = (int)$_POST['quantity'];
 
-    // ===============================
-    // VALIDASI MINIMAL PEMBELIAN BERDASARKAN KATEGORI
-    // ===============================
-    if ($kategori === 'cake') {
-        // Untuk kategori Kue: minimal 1
-        if ($quantity < 1) {
-            $_SESSION['message'] = "❌ Jumlah produk untuk kategori Kue minimal 1.";
-            header("Location: produk-detail.php?id=$id_produk");
-            exit;
-        }
-    } else {
-        // Untuk kategori selain Kue: minimal 15
-        if ($quantity < 15) {
-            $_SESSION['message'] = "❌ Jumlah produk untuk kategori $kategori minimal 15.";
-            header("Location: produk-detail.php?id=$id_produk");
-            exit;
-        }
-    }
 
     // Tambah ke SESSION (tetap)
     $item = [
         'id' => uniqid(),
-        'id_produk' => $id_produk,
-        'nama' => $nama,
-        'harga' => $harga,
+        'id_wadah' => $id_wad,
+        'nama_paket' => $nama,
+        'harga_paket' => $harga,
+        'deskripsi' => $deskripsi,
+        'diskon' => $diskon,
         'foto' => $foto,
         'quantity' => $quantity
     ];
@@ -158,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // cek apakah produk sama sudah ada di session
     $found = false;
     foreach ($_SESSION['cart'] as &$cart_item) {
-        if ($cart_item['id_produk'] === $id_produk) {
+        if ($cart_item['id_paket'] === $id_paket) {
             $cart_item['quantity'] += $quantity;
             $found = true;
             break;
@@ -174,19 +154,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ========================================
     $dataKeranjang = [
         'id_user'   => $id_user,
-        'id_produk' => $id_produk, // UUID
-        'jumlah'    => $quantity,
-        'id_paket'  => null
+        'id_wadah' => $id_wadah, // UUID
+        'jumlah'    => $quantity
     ];
 
     $result = addToCartSupabase($client, $dataKeranjang);
 
     if ($result !== true) {
         $_SESSION['message'] = $result;
-        header("Location: produk-detail.php?id=$id_produk");
+        header("Location: paket-detail.php?id=$id_paket");
         exit;
     }
-
 
     // Tombol beli langsung
     if (isset($_POST['buy_now'])) {
@@ -194,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     } else {
         $_SESSION['message'] = "🛒 Produk berhasil ditambahkan ke keranjang!";
-        header("Location: produk-detail.php?id=$id_produk");
+        header("Location: produk-detail.php?id=$id_paket");
         exit;
     }
 }
@@ -291,22 +269,7 @@ if (isset($_SESSION['message'])) {
                 <?php endif; ?>
 
                 <form method="POST">
-                    <?php if ($kategori === 'Kue'): ?>
-                        <div class="mb-3">
-                            <label for="size" class="form-label">Ukuran</label>
-                            <select name="size" id="size" class="form-select">
-                                <option value="16">Round 16 cm</option>
-                                <option value="20">Round 20 cm</option>
-                                <option value="24">Round 24 cm</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="wording" class="form-label">Tulisan di kue</label>
-                            <input type="text" name="wording" id="wording" class="form-control" maxlength="25" placeholder="Max. 25 karakter">
-                        </div>
-                    <?php endif; ?>
-
+                
                     <div class="mb-3">
                         <label for="quantity" class="form-label">Jumlah</label>
                         <input type="number"

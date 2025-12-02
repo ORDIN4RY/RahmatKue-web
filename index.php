@@ -25,7 +25,7 @@
             <img src="./assets/img/bg-header.png" alt="">
             <div class="header-text">
                 <h1>Selamat Datang di <br>
-                    Rahmat Kue !
+                    Rahmat Bakery !
                 </h1>
                 Kami hadir dengan beragam pilihan kue lezat dan layanan katering terbaik untuk setiap momen spesial Anda. <br>
                 Semua dibuat dari bahan berkualitas dan sentuhan cinta. <br>
@@ -46,7 +46,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <h4 class="mb-3">Terima kasih telah mengunjungi website Rahmat Kue</h4>
+                            <h4 class="mb-3">Terima kasih telah mengunjungi website Rahmat Bakery</h4>
                             <p class="text-muted">
                                 <b>Perhatian:</b> Pemesanan melalui website ini menggunakan sistem pre order.
                             </p>

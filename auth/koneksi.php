@@ -21,6 +21,7 @@ $client = new Client([
 
 ]);
 
+
 function getSupabasePublicUrl($bucket, $path)
 {
     // pastikan sesuai struktur folder dan bucket di Supabase
@@ -42,47 +43,70 @@ function getSupabaseData($table)
 }
 
 // ✅ Insert data ke tabel Supabase
+// function insertSupabaseData($table, $data)
+// {
+//     $url = SUPABASE_URL . "/rest/v1/" . $table;
+
+//     $headers = [
+//         "apikey: " . SUPABASE_KEY,
+//         "Authorization: Bearer " . SUPABASE_KEY,
+//         "Content-Type: application/json",
+//         // ✅ Pastikan Supabase mengembalikan data hasil insert (bukan cuma status)
+//         "Prefer: return=representation"
+//     ];
+
+//     $ch = curl_init($url);
+//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//     curl_setopt($ch, CURLOPT_POST, true);
+//     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+//     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+//     $response = curl_exec($ch);
+//     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+//     $error = curl_error($ch);
+//     curl_close($ch);
+
+//     // ✅ Jika cURL error (misalnya koneksi gagal)
+//     if ($error) {
+//         error_log("cURL Error: " . $error);
+//         return false;
+//     }
+
+//     // ✅ Cek status HTTP
+//     if (in_array($httpCode, [200, 201])) {
+//         $decoded = json_decode($response, true);
+//         if (!empty($decoded)) {
+//             // kembalikan data hasil insert (misal id_keranjang)
+//             return $decoded[0];
+//         }
+//         return true;
+//     } else {
+//         // ❌ Simpan log error untuk debugging
+//         error_log("Insert gagal ke tabel '$table'. HTTP Code: $httpCode. Response: $response");
+//         return false;
+//     }
+// }
+
 function insertSupabaseData($table, $data)
 {
-    $url = SUPABASE_URL . "/rest/v1/" . $table;
+    $client = new Client([
+        'base_uri' => SUPABASE_URL
+    ]);
 
-    $headers = [
-        "apikey: " . SUPABASE_KEY,
-        "Authorization: Bearer " . SUPABASE_KEY,
-        "Content-Type: application/json",
-        // ✅ Pastikan Supabase mengembalikan data hasil insert (bukan cuma status)
-        "Prefer: return=representation"
-    ];
+    try {
+        $response = $client->request('POST', "/rest/v1/$table?select=*", [
+            'headers' => [
+                'Authorization' => 'Bearer ' . SUPABASE_KEY,
+                'apikey'        => SUPABASE_KEY,
+                'Content-Type'  => 'application/json',
+                'Prefer'        => 'return=representation'
+            ],
+            'body' => json_encode($data)
+        ]);
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
-
-    // ✅ Jika cURL error (misalnya koneksi gagal)
-    if ($error) {
-        error_log("cURL Error: " . $error);
-        return false;
-    }
-
-    // ✅ Cek status HTTP
-    if (in_array($httpCode, [200, 201])) {
-        $decoded = json_decode($response, true);
-        if (!empty($decoded)) {
-            // kembalikan data hasil insert (misal id_keranjang)
-            return $decoded[0];
-        }
-        return true;
-    } else {
-        // ❌ Simpan log error untuk debugging
-        error_log("Insert gagal ke tabel '$table'. HTTP Code: $httpCode. Response: $response");
-        return false;
+        return json_decode($response->getBody(), true);
+    } catch (Exception $e) {
+        return ["error" => $e->getMessage()];
     }
 }
 
@@ -252,8 +276,6 @@ function uploadToSupabaseStorage($folder, $localPath, $fileName)
     }
 }
 
-
-
 /**
  * Cari data produk berdasarkan nama (mengandung keyword)
  */
@@ -263,13 +285,54 @@ function searchSupabaseProduk($keyword)
 
     $response = $client->get("/rest/v1/produk", [
         'query' => [
-            'nama_produk' => 'ilike.%' . $keyword . '%',
-            'select' => 'id_produk,nama_produk,harga,foto_produk'
+            'select' => 'id_produk,nama_produk,harga,foto_produk,varian',
+            'nama_produk' => 'ilike.%' . $keyword . '%'
         ]
     ]);
 
     return json_decode($response->getBody(), true);
 }
+
+function searchSupabaseAll($keyword)
+{
+    global $client;
+
+    $keywordFilter = 'ilike.%' . $keyword . '%';
+
+    /* ======================
+       1. CARI PRODUK
+    ====================== */
+    $responseProduk = $client->get("/rest/v1/produk", [
+        'query' => [
+            'select' => 'id_produk,nama_produk,harga,foto_produk,varian',
+            'nama_produk' => $keywordFilter
+        ]
+    ]);
+
+    $produk = json_decode($responseProduk->getBody(), true);
+
+
+    /* ======================
+       2. CARI PAKET
+    ====================== */
+    $responsePaket = $client->get("/rest/v1/paket", [
+        'query' => [
+            'select' => 'id_paket,nama_paket,harga_paket,foto_paket,deskripsi',
+            'nama_paket' => $keywordFilter
+        ]
+    ]);
+
+    $paket = json_decode($responsePaket->getBody(), true);
+
+
+    /* RETURN GABUNGAN */
+    return [
+        "produk" => $produk,
+        "paket"  => $paket
+    ];
+}
+
+
 
 function deleteSupabaseData($table, $column, $value)
 {
@@ -351,6 +414,65 @@ function deleteProdukDenganRelasi($id_produk)
     ];
 }
 
+// Profil
+function getRiwayatPesanan($id_user)
+{
+    global $client;
+
+    try {
+        $response = $client->get('/rest/v1/transaksi', [
+            'query' => [
+                'select' => '*',
+                'id_user' => 'eq.' . $id_user
+            ]
+        ]);
+
+        return json_decode($response->getBody(), true);
+
+    } catch (Exception $e) {
+        return [];
+    }
+}
+
+function getAlamatRumah($id_user) {
+    // Pastikan id_user tidak kosong
+    if (!$id_user) {
+        return null;
+    }
+
+    $url = "https://fsiuefdwcbdhunfhbiwl.supabase.co/rest/v1/alamat";
+    $client = new \GuzzleHttp\Client();
+
+    try {
+        $response = $client->request('GET', $url, [
+            'headers' => [
+                'apikey'        => SUPABASE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_KEY
+            ],
+            'query' => [
+                'id_user' => "eq.$id_user",
+                'select'  => 'alamat_rumah'
+            ]
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+
+        // Jika tidak ada data
+        if (empty($data)) {
+            return null;
+        }
+
+        return $data[0]['alamat_rumah'];
+
+    } catch (Exception $e) {
+        echo "Error mengambil alamat: " . $e->getMessage();
+        return null;
+    }
+}
+
+
+
+
 function getSupabaseDataByID($table, $column, $value)
 {
     global $client, $SUPABASE_URL, $SUPABASE_KEY;
@@ -373,22 +495,61 @@ function getSupabaseDataByID($table, $column, $value)
     }
 }
 
+function getPaket()
+{
+    global $client;
+
+    $response = $client->get("/rest/v1/paket", [
+        'query' => [
+            'select' => 'id_paket,nama_paket,harga_paket,deskripsi,foto_paket,diskon'
+        ]
+    ]);
+
+    return json_decode($response->getBody(), true);
+}
+
 
 function getProdukByKategori($kategoriDipilih)
 {
     global $client;
 
-    // Jika kategori = Semua → tampilkan semua produk
+    /* ========================
+       1. Jika kategori = Semua
+       → Produk + Paket
+    ========================== */
     if ($kategoriDipilih === "Semua") {
-        $response = $client->get("/rest/v1/produk", [
-            'query' => [
-                'select' => 'id_produk,nama_produk,harga,foto_produk'
-            ]
-        ]);
-        return json_decode($response->getBody(), true);
+
+        // Ambil semua produk
+        $produk = json_decode($client->get("/rest/v1/produk", [
+            'query' => ['select' => 'id_produk,nama_produk,harga,foto_produk,varian']
+        ])->getBody(), true);
+
+        // Ambil semua paket
+        $paket = getPaket();
+
+        // Gabungkan keduanya
+        return [
+            "produk" => $produk,
+            "paket"  => $paket
+        ];
     }
 
-    // AMBIL ID KATEGORI DARI TABEL KATEGORI
+    /* ========================
+       2. Jika kategori = Paket
+       → Tampilkan paket saja
+    ========================== */
+    if ($kategoriDipilih === "Paket") {
+        return [
+            "produk" => [],
+            "paket"  => getPaket()
+        ];
+    }
+
+    /* ========================
+       3. Jika kategori biasa
+       → Produk by kategori
+    ========================== */
+
     $respKategori = $client->get("/rest/v1/kategori", [
         'query' => [
             'nama_kategori' => 'eq.' . $kategoriDipilih,
@@ -399,21 +560,33 @@ function getProdukByKategori($kategoriDipilih)
     $kategoriData = json_decode($respKategori->getBody(), true);
 
     if (empty($kategoriData)) {
-        return []; // Tidak ada kategori ditemukan
+        return ["produk" => [], "paket" => []];
     }
 
     $id_kategori = $kategoriData[0]['id_kategori'];
 
-    // AMBIL PRODUK BERDASARKAN id_kategori
-    $response = $client->get("/rest/v1/produk", [
+    $produk = json_decode($client->get("/rest/v1/produk", [
         'query' => [
             'id_kategori' => 'eq.' . $id_kategori,
-            'select' => 'id_produk,nama_produk,harga,foto_produk'
+            'select' => 'id_produk,nama_produk,harga,foto_produk,varian'
         ]
-    ]);
+    ])->getBody(), true);
 
-    return json_decode($response->getBody(), true);
+    return [
+        "produk" => $produk,
+        "paket"  => []  // kategori biasa tidak menampilkan paket
+    ];
 }
+
+
+
+function getWadah()
+{
+    return getSupabaseData(
+        'wadah?select=id_wadah,nama_wadah,deskripsi,foto_wadah,kapasitas,harga_wadah,varian'
+    ) ?? [];
+}
+
 
 
 function checkoutUser($id_user, $access_token)

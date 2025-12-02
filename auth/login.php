@@ -47,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       } else {
 
         $access_token = $body['access_token'];
-        $user_id = $body['user']['id'];
+        $user_id      = $body['user']['id'];
+
+        $_SESSION['email'] = $email;
 
         // 2. AMBIL DATA PROFILE
         $profileUrl = "/rest/v1/profiles?id=eq.$user_id&select=*";
@@ -63,18 +65,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!empty($profiles)) {
 
-          // 3. CEK APAKAH DIBLOKIR
+          // 3. CEK BLOKIR
           if (!empty($profiles[0]['is_blocked'])) {
+            
             echo "<script>alert('Akun Anda diblokir. Hubungi Admin'); window.location='login.php';</script>";
             exit;
           }
 
-          // 4. SIMPAN SESSION
+          // 4. SIMPAN SESSION PROFIL
           foreach ($profiles[0] as $key => $val) {
             $_SESSION[$key] = $val;
           }
+
           $_SESSION['access_token'] = $access_token;
-          $_SESSION['user'] = $user_id;
+          $_SESSION['id_user']      = $user_id;
 
           $level = strtolower($profiles[0]['level'] ?? 'user');
 
@@ -82,12 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $toastType = "success";
 
           echo "<script>
-                        setTimeout(function() {
-                            window.location.href = '" . ($level === 'admin'
+                setTimeout(function() {
+                  window.location.href = '" . ($level === 'admin'
             ? "../pages/admin/admin-page/admin/dashboard-admin2.php"
             : "../produk.php") . "';
-                        }, 1200);
-                    </script>";
+                }, 1200);
+          </script>";
         } else {
           $toastMessage = "Profile tidak ditemukan.";
           $toastType = "danger";
@@ -97,6 +101,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       if ($e->hasResponse()) {
         $err = json_decode($e->getResponse()->getBody()->getContents(), true);
+
+        // 🔥 NOTIFIKASI JWT EXPIRED — (SATU-SATUNYA PERUBAHAN BESAR)
+        if (($err["message"] ?? "") === "JWT expired") {
+          $toastMessage = "Sesi login Anda telah berakhir. Silakan logout dan login kembali.";
+          $toastType = "warning";
+
+          echo "<script>
+            alert('Sesi login Anda telah berakhir. Silakan logout dan login kembali.');
+            window.location.href = 'logout.php';
+          </script>";
+          exit;
+        }
+
+        // ERROR BIASA
         $toastMessage = $err['msg'] ?? "Login gagal. Periksa kembali email dan password.";
       } else {
         $toastMessage = "Tidak dapat terhubung ke server Supabase.";
@@ -106,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
   }
 }
+
 ?>
 
 
