@@ -1,112 +1,226 @@
 <?php
-include 'auth/koneksi.php';
+session_start();
+require 'auth/koneksi.php';
 
-// ===== VALIDASI WAJIB =====
+// =========================
+// VALIDASI USER
+// =========================
 $id_user = $_POST['id_user'] ?? null;
 if (!$id_user) {
+    error_log("ERROR: id_user tidak terkirim");
     die("ERROR: id_user tidak terkirim");
 }
 
+// =========================
+// AMBIL INPUT
+// =========================
 $id_alamat          = $_POST['id_alamat'] ?? null;
 $metode_pengambilan = $_POST['metode_pengambilan'] ?? null;
 $waktu_selesai      = $_POST['waktu_selesai'] ?? null;
 $catatan            = $_POST['catatan'] ?? '';
 $id_voucher         = $_POST['id_voucher'] ?? null;
 
-// ==========================
-// HITUNG SUBTOTAL KERANJANG
-// ==========================
-$subtotal = 0;
-
-if (isset($_POST['keranjang']) && is_array($_POST['keranjang'])) {
-    foreach ($_POST['keranjang'] as $item) {
-        $harga = $item['harga'] ?? 0;
-        $qty   = $item['qty'] ?? 0;
-        $subtotal += ($harga * $qty);
-    }
+// =========================
+// VALIDASI INPUT WAJIB
+// =========================
+if (!$metode_pengambilan) {
+    error_log("ERROR: Metode pengambilan tidak dipilih");
+    die("ERROR: Metode pengambilan wajib dipilih");
 }
 
-// ==========================
-// HITUNG ONGKIR + TOTAL
-// ==========================
-$ongkir = ($metode_pengambilan === "diantar") ? 25000 : 0;
-$total  = $subtotal + $ongkir;
-
-// ==========================
-// JIKA METODE = DIAMBIL → ALAMAT = NULL
-// ==========================
-if ($metode_pengambilan === "diambil") {
-    $id_alamat = null;
+if (empty($id_alamat)) {
+    error_log("ERROR: id_alamat tidak boleh null untuk metode '$metode_pengambilan'");
+    die("ERROR: Alamat wajib dipilih untuk melanjutkan pesanan");
 }
 
-// =============================
-// HAPUS ITEM KERANJANG YANG DICHECKOUT
-// =============================
-// =============================
-// HAPUS ITEM KERANJANG YANG DICHECKOUT
-// =============================
+if (!$waktu_selesai) {
+    error_log("ERROR: Waktu selesai tidak diisi");
+    die("ERROR: Waktu selesai wajib diisi");
+}
+
+// =========================
+// AMBIL ID KERANJANG
+// =========================
 $selected_ids = $_POST['selected_ids'] ?? '';
-
-if (!empty($selected_ids)) {
-
-    $ids = explode(',', $selected_ids);
-
-    foreach ($ids as $idKeranjang) {
-        deleteSupabaseData('keranjang', 'id_keranjang', $idKeranjang);
-    }
+if (empty($selected_ids)) {
+    error_log("ERROR: Tidak ada item dipilih");
+    die("Tidak ada item dipilih");
 }
 
+$ids = array_filter(array_map('trim', explode(',', $selected_ids)));
+if (empty($ids)) {
+    error_log("ERROR: Keranjang tidak valid");
+    die("Keranjang tidak valid");
+}
 
-
-// ==========================
-// HITUNG DP MINIMAL = SETENGAH TOTAL
-// ==========================
-$dp_minimal = ceil($total / 2);
-
-// ==========================
-// DATA TRANSAKSI
-// ==========================
-$dataTransaksi = [
-    'id_user'            => $id_user,
-    'id_alamat'          => $id_alamat,
-    'metode_pengambilan' => $metode_pengambilan,
-    'waktu_selesai'      => $waktu_selesai,
-    'total_harga'        => $total,
-    'dp_minimal'         => $dp_minimal,
-    'catatan'            => $catatan,
-    'id_voucher'         => $id_voucher,
-    'status'             => "Menunggu Pembayaran"
+// =========================
+// AMBIL DATA KERANJANG
+// =========================
+$query = [
+    "id_keranjang" => "in.(" . implode(',', $ids) . ")",
+    "select" => "id_keranjang,id_user,jumlah,id_produk,id_paket,
+                 produk(nama_produk,harga,foto_produk),
+                 paket(nama_paket,harga_paket,foto_paket)"
 ];
 
-// ==========================
-// INSERT KE SUPABASE
-// ==========================
-$insert = insertSupabaseData('transaksi', $dataTransaksi);
+$data = getSupabaseData("keranjang", $query);
 
-// Validasi response
-if (!is_array($insert)) {
-    die("❌ Supabase error: Response bukan array");
+if (!is_array($data) || empty($data)) {
+    error_log("ERROR: Gagal load keranjang atau data kosong. Query: " . json_encode($query));
+    die("Gagal load keranjang atau data kosong");
 }
 
-if (isset($insert['message'])) {
-    echo "❌ Gagal membuat transaksi:<br>";
-    print_r($insert);
-    exit;
+// =========================
+// HITUNG TOTAL PRODUK
+// =========================
+$total_harga = 0;
+
+foreach ($data as &$item) {
+
+    $qty = (int)$item['jumlah'];
+
+    if (!empty($item['id_paket'])) {
+        $paket = $item['paket'];
+        $harga = isset($paket[0])
+            ? (float)$paket[0]['harga_paket']
+            : (float)($paket['harga_paket'] ?? 0);
+    } else {
+        $produk = $item['produk'];
+        $harga = isset($produk[0])
+            ? (float)$produk[0]['harga']
+            : (float)($produk['harga'] ?? 0);
+    }
+
+    $subtotal = $harga * $qty;
+
+    // ✅ SIMPAN UNTUK INSERT DETAIL
+    $item['_harga'] = $harga;
+    $item['_subtotal'] = $subtotal;
+
+    // ✅ TAMBAH TOTAL TRANSAKSI
+    $total_harga += $subtotal;
+}
+unset($item); // WAJIB DI PHP
+
+
+// Fallback dari POST jika perhitungan ulang gagal (untuk menghindari total_harga = 0)
+if ($total_harga == 0) {
+    $total_harga = $_POST['total_harga'] ?? 0;
+    error_log("WARNING: Total harga dari perhitungan ulang 0, menggunakan fallback dari POST: $total_harga");
 }
 
-if (empty($insert)) {
-    die("❌ Supabase tidak mengembalikan data. Cek tabel anda.");
+// Validasi total_harga tidak boleh 0
+if ($total_harga <= 0) {
+    error_log("ERROR: Total harga tidak valid: $total_harga");
+    die("ERROR: Total harga tidak valid. Periksa data keranjang.");
 }
 
-// Ambil ID transaksi
-$idTransaksi = $insert[0]['id_transaksi'] ?? null;
+// =========================
+// TENTUKAN ONGKIR
+// =========================
+$ongkir = ($metode_pengambilan === "diantar") ? 25000 : 0;
+$total_harga += $ongkir;
 
-if (!$idTransaksi) {
-    echo "❌ Gagal mendapatkan ID transaksi:<br>";
-    print_r($insert);
-    exit;
+// =========================
+// DP MINIMAL 50% TOTAL
+// =========================
+$dp_minimal = ceil($total_harga * 0.5);
+
+// Validasi dp_minimal tidak boleh 0
+if ($dp_minimal <= 0) {
+    error_log("ERROR: DP minimal tidak valid: $dp_minimal");
+    die("ERROR: DP minimal tidak valid.");
 }
 
-// Redirect
+// =========================
+// INSERT DATA TRANSAKSI
+// =========================
+$dataTransaksi = [
+    'id_user'           => $id_user,
+    'id_alamat'         => $id_alamat,  // Sekarang selalu ada, tidak null
+    'metode_pengambilan' => $metode_pengambilan,
+    'waktu_selesai'     => $waktu_selesai,
+    'total_harga'       => $total_harga,
+    'dp_minimal'        => $dp_minimal,
+    'catatan'           => $catatan,
+    'ongkir'            => $ongkir,
+    'id_voucher'        => $id_voucher,
+    'status'            => "Menunggu Pembayaran"
+];
+
+$insert = insertSupabaseData("transaksi", $dataTransaksi);
+
+if (!is_array($insert) || empty($insert[0]['id_transaksi'])) {
+    error_log("ERROR: Gagal membuat transaksi. Response: " . json_encode($insert));
+    die("Gagal membuat transaksi");
+}
+
+$idTransaksi = $insert[0]['id_transaksi'];
+
+// =========================
+// INSERT DETAIL TRANSAKSI (FINAL FIX)
+// =========================
+foreach ($data as $item) {
+
+    $qty = (int)$item['jumlah'];
+
+    // =========================
+    // JIKA PAKET
+    // =========================
+    if (!empty($item['id_paket'])) {
+
+        $harga = (int)($item['paket']['harga_paket'] ?? 0);
+        $subtotal = $harga * $qty;
+
+        $detail = [
+            "id_transaksi" => $idTransaksi,
+            "id_paket"     => $item['id_paket'],
+            "jumlah"       => $qty,
+            "subtotal"     => $subtotal
+        ];
+
+        $insertDetail = insertSupabaseData("detail_transaksi_paket", $detail);
+    }
+
+    // =========================
+    // JIKA PRODUK
+    // =========================
+    else {
+
+        $harga = (int)($item['produk']['harga'] ?? 0);
+        $subtotal = $harga * $qty;
+
+        $detail = [
+            "id_transaksi" => $idTransaksi,
+            "id_produk"    => $item['id_produk'],
+            "jumlah"       => $qty,
+            "subtotal"     => $subtotal
+        ];
+
+        $insertDetail = insertSupabaseData("detail_transaksi_produk", $detail);
+    }
+
+    // ✅ DEBUG WAJIB
+    error_log("DETAIL FIX FINAL: " . json_encode($detail));
+
+    if (!$insertDetail) {
+        error_log("❌ GAGAL INSERT DETAIL: " . json_encode($detail));
+    }
+}
+
+// =========================
+// HAPUS KERANJANG
+// =========================
+foreach ($ids as $idKeranjang) {
+    $delete = deleteSupabaseData("keranjang", "id_keranjang", $idKeranjang);
+    if (!$delete) {
+        error_log("WARNING: Gagal hapus keranjang ID: $idKeranjang");
+        // Lanjutkan, tapi log error
+    }
+}
+
+// ========================= 
+// REDIRECT
+// =========================
 header("Location: produk.php?id=" . $idTransaksi);
 exit;

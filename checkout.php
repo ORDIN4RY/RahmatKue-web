@@ -9,6 +9,7 @@ if (!isset($_SESSION['id'])) {
 }
 
 $id_user        = $_SESSION['id'];
+$id_alamat = $_POST['id_alamat'] ?? null;
 $access_token   = $_SESSION['access_token'] ?? null;
 
 // ==========================
@@ -29,7 +30,7 @@ try {
         ],
         'query' => [
             "id_keranjang" => "in.(" . implode(",", $selected_ids) . ")",
-            "select"       => "id_keranjang,id_produk,jumlah,produk(nama_produk,harga,foto_produk)"
+            'select' => 'id_keranjang,id_produk,id_paket,jumlah,produk(nama_produk,harga,foto_produk),paket(nama_paket,harga_paket,foto_paket)'
         ]
     ]);
 
@@ -41,15 +42,44 @@ try {
 // ==========================
 // HITUNG TOTAL SUBTOTAL
 // ==========================
-$subtotal = 0;
+$total_harga = 0;
+
 foreach ($checkout_items as $item) {
-    $subtotal += $item['produk']['harga'] * $item['jumlah'];
+    $harga = !empty($item['produk'])
+        ? ($item['produk']['harga'] ?? 0)  // Fallback ke 0 jika null
+        : ($item['paket']['harga_paket'] ?? 0);  // Fallback ke 0 jika null
+
+    $total_harga += ($harga * $item['jumlah']);
 }
+
+// DP minimal (pastikan total_harga > 0)
+$dp_minimal = ($total_harga > 0) ? ceil($total_harga * 0.5) : 0;
 
 // ==========================
 // AMBIL ALAMAT USER
 // ==========================
-$alamat = getSupabaseData('alamat');
+$alamat = getAlamatCheckout($id_user);
+
+// Jika tidak ada alamat, redirect ke profil
+if (empty($alamat)) {
+    header("Location: profil.php?error=no_address");
+    exit;
+}
+
+// Cari alamat utama untuk auto-select, atau yang pertama
+$selected_id_alamat = null;
+$selected_address_text = 'Belum dipilih';
+foreach ($alamat as $a) {
+    if (!empty($a['alamat_utama']) && $a['alamat_utama'] == 1) {
+        $selected_id_alamat = $a['id_alamat'];
+        $selected_address_text = htmlspecialchars($a['nama_lengkap']) . ' — ' . htmlspecialchars($a['alamat_rumah']) . ' (Utama)';
+        break;
+    }
+}
+if (!$selected_id_alamat && !empty($alamat)) {
+    $selected_id_alamat = $alamat[0]['id_alamat'];
+    $selected_address_text = htmlspecialchars($alamat[0]['nama_lengkap']) . ' — ' . htmlspecialchars($alamat[0]['alamat_rumah']);
+}
 
 // ==========================
 // AMBIL DATA VOUCHER
@@ -71,7 +101,6 @@ try {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="id">
 
@@ -81,6 +110,7 @@ try {
     <title>Checkout - Rahmat Kue</title>
     <link rel="icon" type="image/x-icon" href="assets/img/icon.png">
     <link rel="stylesheet" href="./assets/css/checkout.css">
+    <link rel="stylesheet" href="./assets/css/profil.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -118,13 +148,20 @@ try {
             <!-- Hidden fields -->
             <input type="hidden" name="selected_ids" value="<?= htmlspecialchars($_GET['selected_ids'] ?? '') ?>">
             <input type="hidden" name="id_user" value="<?= $_SESSION['id'] ?>">
-            <input type="hidden" name="subtotal" value="<?= $total ?>">
-            <input type="hidden" name="subtotal" value="<?= $subtotal ?>">
+
+            <!-- NILAI YANG BENAR (tidak lagi NULL) -->
+            <input type="hidden" id="total_harga" name="total_harga" value="<?= $total_harga ?>">
+            <input type="hidden" id="dp_minimal" name="dp_minimal" value="<?= $dp_minimal ?>">
+
+            <!-- Hidden untuk id_alamat -->
+            <input type="hidden" name="id_alamat" id="selected_id_alamat" value="<?= htmlspecialchars($selected_id_alamat) ?>">
+
             <?php foreach ($checkout_items as $item): ?>
-                <input type="hidden" name="keranjang[<?= $item['id_keranjang'] ?>][harga]" value="<?= $item['produk']['harga'] ?>">
+                <input type="hidden"
+                    name="keranjang[<?= $item['id_keranjang'] ?>][harga]"
+                    value="<?= !empty($item['paket']) ? ($item['paket']['harga_paket'] ?? 0) : ($item['produk']['harga'] ?? 0) ?>">
                 <input type="hidden" name="keranjang[<?= $item['id_keranjang'] ?>][qty]" value="<?= $item['jumlah'] ?>">
             <?php endforeach; ?>
-
 
             <div class="row">
 
@@ -137,14 +174,48 @@ try {
                             <i class="bi bi-geo-alt-fill"></i> Alamat Pengiriman
                         </h5>
 
-                        <select class="form-select" name="id_alamat" required>
-                            <option value="">Pilih Alamat Anda</option>
-                            <?php foreach ($alamat as $kat): ?>
-                                <option value="<?= $kat['id_alamat'] ?>">
-                                    <?= htmlspecialchars($kat['alamat_rumah']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="address-selection">
+                            <button type="button" class="btn btn-outline-primary" 
+                                data-bs-toggle="modal" data-bs-target="#addressModal">
+                                <i class="fas fa-map-marker-alt"></i> Pilih Alamat
+                            </button>
+                            <p id="selected_address_text" class="mt-2 text-muted">
+                                <?= $selected_address_text ?>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Modal untuk Pilih Alamat -->
+                    <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="addressModalLabel">Pilih Alamat Pengiriman</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <?php foreach ($alamat as $a): ?>
+                                            <div class="col-md-6 mb-3">
+                                                <div class="card address-card" data-id="<?= htmlspecialchars($a['id_alamat']) ?>" 
+                                                     onclick="selectAddress('<?= htmlspecialchars($a['id_alamat']) ?>', '<?= htmlspecialchars($a['nama_lengkap']) ?> — <?= htmlspecialchars($a['alamat_rumah']) ?><?= !empty($a['alamat_utama']) ? ' (Utama)' : '' ?>')">
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">
+                                                            <?= htmlspecialchars($a['nama_lengkap']) ?>
+                                                            <?= !empty($a['alamat_utama']) ? '<span class="badge bg-primary">Utama</span>' : '' ?>
+                                                        </h6>
+                                                        <p class="card-text"><?= htmlspecialchars($a['alamat_rumah']) ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- METODE PENGAMBILAN -->
@@ -179,35 +250,6 @@ try {
                             </label>
                         </div>
                     </div>
-
-                    <!-- METODE PEMBAYARAN -->
-                    <!-- <div class="form-card">
-                        <h5 class="section-title">
-                            <i class="fas fa-credit-card"></i> Metode Pembayaran
-                        </h5>
-
-                        <div class="payment-method">
-                            <input type="radio" name="metode_pembayaran" value="dp" id="dp" checked>
-                            <label for="dp">
-                                <div class="payment-icon"><i class="fas fa-university"></i></div>
-                                <div class="payment-info">
-                                    <div class="payment-name">DP (Minimal 50%)</div>
-                                    <input type="text" name="dp_minimal" placeholder="Masukkan nominal DP" class="form-control">
-                                </div>
-                            </label>
-                        </div>
-
-                        <div class="payment-method">
-                            <input type="radio" name="metode_pembayaran" value="lunas" id="lunas">
-                            <label for="lunas">
-                                <div class="payment-icon"><i class="fas fa-wallet"></i></div>
-                                <div class="payment-info">
-                                    <div class="payment-name">Lunas</div>
-                                    <div class="payment-desc">Bayar penuh</div>
-                                </div>
-                            </label>
-                        </div>
-                    </div> -->
 
                     <!-- TANGGAL SELESAI -->
                     <div class="form-card">
@@ -259,30 +301,34 @@ try {
                         </h5>
 
                         <?php
-                        $subtotal = 0;
                         foreach ($checkout_items as $item):
-                            $produk = $item['produk'];
-                            $foto = $produk['foto_produk'] ?? 'assets/img/no-image.png';
-
+                            if (!empty($item['produk'])) {
+                                $nama = $item['produk']['nama_produk'];
+                                $harga = $item['produk']['harga'] ?? 0;
+                                $foto = $item['produk']['foto_produk'] ?? 'assets/img/no-image.png';
+                            } else {
+                                $nama = $item['paket']['nama_paket'];
+                                $harga = $item['paket']['harga_paket'] ?? 0;
+                                $foto = $item['paket']['foto_paket'] ?? 'assets/img/no-image.png';
+                            }
                             if (!filter_var($foto, FILTER_VALIDATE_URL)) {
                                 $foto = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
                             }
-
-                            $item_total = $produk['harga'] * $item['jumlah'];
-                            $subtotal += $item_total;
                         ?>
                             <div class="product-item">
                                 <div class="product-image">
-                                    <img src="<?= $foto ?>" alt="<?= htmlspecialchars($produk['nama_produk']) ?>">
+                                    <img src="<?= $foto ?>" alt="<?= htmlspecialchars($nama) ?>">
                                 </div>
+
                                 <div class="product-details">
-                                    <div class="product-name"><?= htmlspecialchars($produk['nama_produk']) ?></div>
+                                    <div class="product-name"><?= htmlspecialchars($nama) ?></div>
                                     <div class="product-quantity">
-                                        Qty: <?= $item['jumlah'] ?> × Rp<?= number_format($produk['harga'], 0, ',', '.') ?>
+                                        Qty: <?= $item['jumlah'] ?> × Rp<?= number_format($harga, 0, ',', '.') ?>
                                     </div>
                                 </div>
+
                                 <div class="product-price">
-                                    Rp<?= number_format($item_total, 0, ',', '.') ?>
+                                    Rp<?= number_format($harga * $item['jumlah'], 0, ',', '.') ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -290,7 +336,7 @@ try {
                         <div class="price-summary">
                             <div class="price-row">
                                 <span>Subtotal Produk</span>
-                                <span>Rp<?= number_format($subtotal, 0, ',', '.') ?></span>
+                                <span>Rp<?= number_format($total_harga, 0, ',', '.') ?></span>
                             </div>
                             <div class="price-row">
                                 <span>Ongkos Kirim</span>
@@ -302,14 +348,8 @@ try {
                             </div>
                             <div class="price-row total">
                                 <span>Total Pembayaran</span>
-                                <span>Rp<?= number_format($subtotal, 0, ',', '.') ?></span>
+                                <span>Rp<?= number_format($total_harga, 0, ',', '.') ?></span>
                             </div>
-                            <!-- 
-                            <div class="alert alert-info mt-3">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>DP Minimal (50%):</strong>
-                                Rp<?= number_format($subtotal * 0.5, 0, ',', '.') ?>
-                            </div> -->
                         </div>
 
                         <button type="submit" class="btn-checkout">
@@ -321,36 +361,56 @@ try {
                         </div>
                     </div>
                 </div>
-
             </div>
         </form>
     </div>
 
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Simple validation before submit
+        // Fungsi untuk pilih alamat di modal
+        function selectAddress(id, text) {
+            document.getElementById('selected_id_alamat').value = id;
+            document.getElementById('selected_address_text').innerText = 'Dipilih: ' + text;
+            // Tutup modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addressModal'));
+            if (modal) modal.hide();
+        }
+
+        // Validasi form
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-            const idAlamat = document.querySelector('input[name="id_alamat"]').value;
+            const idAlamat = document.getElementById('selected_id_alamat').value;
             const metodePengambilan = document.querySelector('input[name="metode_pengambilan"]:checked').value;
 
-            // Validasi alamat jika pilih "antar"
-            if (metodePengambilan === 'antar' && !idAlamat) {
+            if (!idAlamat) {
                 e.preventDefault();
-                alert('Anda harus menambahkan alamat terlebih dahulu untuk metode pengiriman "Diantar". Silakan tambah alamat di halaman profil.');
-                return false;
+                alert('Silakan pilih alamat sebelum melanjutkan.');
+                return;
             }
 
-            // Validasi waktu
             const waktuSelesai = document.querySelector('input[name="waktu_selesai"]').value;
             if (!waktuSelesai) {
                 e.preventDefault();
                 alert('Mohon pilih tanggal dan waktu pengambilan pesanan');
-                return false;
+                return;
             }
+ 
+            // Logging untuk debugging
+            console.log('Form submitted with id_alamat:', idAlamat, 'metode:', metodePengambilan);
         });
     </script>
 
+    <!-- CSS Tambahan untuk Modal -->
+    <style>
+        .address-card {
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .address-card:hover {
+            border-color: #007bff;
+        }
+        .address-selection {
+            margin-bottom: 1rem;
+        }
+    </style>
 </body>
-
 </html>

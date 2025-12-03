@@ -37,6 +37,19 @@ function getSupabaseData($table)
         $data = json_decode($response->getBody(), true);
         return $data;
     } catch (Exception $e) {
+
+        $msg = $e->getMessage();
+
+        if (strpos($msg, "JWT expired") !== false) {
+            echo "<script>
+            alert('Sesi Anda telah berakhir, silakan login kembali.');
+            window.location.href = 'auth/login.php';
+        </script>";
+            exit;
+        }
+
+        die("Error saat mengambil promo: " . $msg);
+
         echo "Error saat mengambil data dari Supabase: " . $e->getMessage();
         return [];
     }
@@ -463,13 +476,39 @@ function getRiwayatPesanan($id_user)
         ]);
 
         return json_decode($response->getBody(), true);
-
     } catch (Exception $e) {
         return [];
     }
 }
 
-function getAlamatRumah($id_user) {
+function getAlamatCheckout($id_user)
+{
+    global $client;
+
+    try {
+        $response = $client->get('/rest/v1/alamat', [
+            'headers' => [
+                'apikey'        => SUPABASE_KEY,
+                'Authorization' => 'Bearer ' . $_SESSION['access_token']
+            ],
+            'query' => [
+                'select' => '*',
+                'id_user' => 'eq.' . $id_user
+            ]
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+        error_log("getAlamatCheckout: id_user=$id_user, data=" . json_encode($data));  // Log hasil
+        return $data;
+    } catch (Exception $e) {
+        error_log("ERROR getAlamatCheckout: " . $e->getMessage());  // Log error
+        return [];
+    }
+}
+
+
+function getAlamatRumah($id_user)
+{
     // Pastikan id_user tidak kosong
     if (!$id_user) {
         return null;
@@ -498,14 +537,11 @@ function getAlamatRumah($id_user) {
         }
 
         return $data[0]['alamat_rumah'];
-
     } catch (Exception $e) {
         echo "Error mengambil alamat: " . $e->getMessage();
         return null;
     }
 }
-
-
 
 
 function getSupabaseDataByID($table, $column, $value)
@@ -614,7 +650,6 @@ function getProdukByKategori($kategoriDipilih)
 }
 
 
-
 function getWadah()
 {
     return getSupabaseData(
@@ -623,12 +658,11 @@ function getWadah()
 }
 
 
-
 function checkoutUser($id_user, $access_token)
 {
-    // 1. Ambil data keranjang user
     global $client;
 
+    // --- 1. Ambil keranjang user ---
     try {
         $response = $client->get('/rest/v1/keranjang', [
             'headers' => [
@@ -637,10 +671,10 @@ function checkoutUser($id_user, $access_token)
             ],
             'query' => [
                 'id_user' => 'eq.' . $id_user,
-                'select'  => 'id_keranjang,id_produk,jumlah,produk(harga)'
+                'select'  => 'id_keranjang,id_produk,id_paket,jumlah,
+                              produk(harga), paket(harga_paket)'
             ]
         ]);
-
         $items = json_decode($response->getBody(), true);
     } catch (Exception $e) {
         return ['success' => false, 'message' => 'Gagal mengambil keranjang: ' . $e->getMessage()];
@@ -650,44 +684,63 @@ function checkoutUser($id_user, $access_token)
         return ['success' => false, 'message' => 'Keranjang kosong'];
     }
 
-    // 2. Hitung total harga
-    $total = 0;
-    foreach ($items as $i) {
-        $total += $i['produk']['harga'] * $i['jumlah'];
+    // --- 2. Hitung total harga ---
+    $total_harga = 0;
+
+    foreach ($items as $item) {
+        if (!empty($item['paket'])) {
+            $total_harga += $item['paket']['harga_paket'] * $item['jumlah'];
+        } else {
+            $total_harga += $item['produk']['harga'] * $item['jumlah'];
+        }
     }
 
-    // 3. Buat ID transaksi
+    // --- 3. Hitung DP minimal (50%) ---
+    $dp_minimal = ceil($total_harga * 0.5);
+
+    // --- 4. Ambil alamat utama user ---
+    $alamatUtama = getAlamatCheckout($id_user);
+    $id_alamat = !empty($alamatUtama) ? $alamatUtama[0]['id_alamat'] : null;
+
+    // --- 5. Buat transaksi baru ---
     $id_transaksi = generateUUID();
 
-    // 4. Insert ke tabel transaksi
-    $transaksiData = [
-        'id_transaksi' => $id_transaksi,
-        'id_user'      => $id_user,
-        'total'        => $total,
-        'status'       => 'pending',
-        'tanggal'      => date('Y-m-d H:i:s')
+    $dataTransaksi = [
+        'id_transaksi'      => $id_transaksi,
+        'id_user'           => $id_user,
+        'id_alamat'         => $id_alamat,
+        'metode_pengambilan' => 'diambil', // default
+        'total_harga'       => $total_harga,
+        'dp_minimal'        => $dp_minimal,
+        'status'            => 'Menunggu Pembayaran',
+        'tanggal'           => date('Y-m-d H:i:s')
     ];
 
-    $insertTransaksi = insertSupabaseData('transaksi', $transaksiData);
+    $insert = insertSupabaseData('transaksi', $dataTransaksi);
 
-    if (!$insertTransaksi) {
+    if (!$insert) {
         return ['success' => false, 'message' => 'Gagal membuat transaksi'];
     }
 
-    // 5. Insert detail setiap item
+    // --- 6. Insert detail item ---
     foreach ($items as $item) {
+        $harga = !empty($item['paket'])
+            ? $item['paket']['harga_paket']
+            : $item['produk']['harga'];
+
         $detailData = [
             'id_detail'     => generateUUID(),
             'id_transaksi'  => $id_transaksi,
             'id_produk'     => $item['id_produk'],
+            'id_paket'      => $item['id_paket'],
             'jumlah'        => $item['jumlah'],
-            'subtotal'      => $item['produk']['harga'] * $item['jumlah']
+            'subtotal'      => $harga * $item['jumlah']
         ];
 
         insertSupabaseData('detail_transaksi', $detailData);
     }
 
-    // 6. Hapus seluruh keranjang user
+    // --- 7. Hapus keranjang ---
     try {
         $client->delete('/rest/v1/keranjang?id_user=eq.' . $id_user, [
             'headers' => [
@@ -696,16 +749,16 @@ function checkoutUser($id_user, $access_token)
             ]
         ]);
     } catch (Exception $e) {
-        return ['success' => false, 'message' => 'Transaksi berhasil, tapi gagal mengosongkan keranjang.'];
+        return ['success' => false, 'message' => 'Transaksi berhasil, tetapi gagal hapus keranjang.'];
     }
 
-    // 7. Return success
     return [
         'success' => true,
         'message' => 'Checkout berhasil',
         'id_transaksi' => $id_transaksi
     ];
 }
+
 
 function banUser($uid)
 {

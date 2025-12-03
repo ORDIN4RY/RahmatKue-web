@@ -42,6 +42,83 @@ $email = $_SESSION['email'] ?? null;
 
 $alamat_rumah = getAlamatRumah($id_user);
 
+// --- Blok Kode untuk Menambah Alamat Baru ---
+
+if (isset($_POST['ubah_no_hp'])) {
+    // Pastikan ID pengguna tersedia
+    $id_user = $_SESSION['id'] ?? null;
+
+    if (!$id_user) {
+        echo "<script>alert('Sesi pengguna tidak ditemukan. Silakan login ulang.');</script>";
+        exit;
+    }
+
+    $no_hp_baru = trim($_POST['no_hp_baru']);
+
+    // Validasi input
+    if (empty($no_hp_baru)) {
+        echo "<script>alert('Nomor HP baru wajib diisi.');</script>";
+    } elseif (!preg_match('/^[0-9]{10,15}$/', $no_hp_baru)) {
+        echo "<script>alert('Format Nomor HP tidak valid.');</script>";
+    } else {
+        $dataUpdate = [
+            'no_hp_pengguna' => $no_hp_baru
+        ];
+        $filter = [
+            "id" => "eq.$id_user"
+        ];
+
+
+        // Panggil fungsi updateSupabaseData yang telah direvisi
+        $updateResult = updateSupabaseData("profiles", $dataUpdate, $filter);
+
+
+        // Cek apakah update berhasil (asumsi updateSupabaseData mengembalikan array jika berhasil)
+        if (is_array($updateResult)) {
+            echo "<script>alert('Nomor HP berhasil diperbarui.'); window.location.href='profil.php';</script>";
+            exit;
+        } else {
+            // Tampilkan pesan error yang lebih detail dari fungsi updateSupabaseData
+            echo "<script>alert('Gagal memperbarui Nomor HP: {$updateResult}');</script>";
+        }
+    }
+}
+
+
+if (isset($_POST['tambah_alamat'])) {
+
+    $id_user        = $_SESSION['id_user']; // atau POST, sesuai flow kamu
+    $nama_lengkap   = $_POST['nama_lengkap'] ?? '';
+    $no_hp          = $_POST['no_hp_penerima'] ?? '';
+    $alamat_rumah   = $_POST['alamat_rumah'] ?? '';
+    $detail_lain    = $_POST['detail_lain'] ?? '';
+    $latitude       = $_POST['latitude'] ?? null;
+    $longitude      = $_POST['longitude'] ?? null;
+
+    if (!$nama_lengkap || !$no_hp || !$alamat_rumah) {
+        die("Semua field wajib diisi!");
+    }
+
+    // DATA UNTUK DITAMBAHKAN
+    $dataInsert = [
+        "id_user"       => $id_user,
+        "nama_lengkap" => $nama_lengkap,
+        "no_hp_penerima" => $no_hp,
+        "alamat_rumah" => $alamat_rumah,
+        "detail_lain"   => $detail_lain,
+        "latitude"      => $latitude,
+        "longitude"     => $longitude
+    ];
+
+    $insert = insertSupabaseData("alamat", $dataInsert);
+
+    if ($insert) {
+        header("Location: pilih_alamat.php?success=1");
+        exit;
+    } else {
+        echo "Gagal menambahkan alamat";
+    }
+}
 
 if (isset($_POST['ubah_password'])) {
     $password_lama = trim($_POST['password_lama']);
@@ -107,6 +184,8 @@ if (isset($_POST['ubah_password'])) {
 $pesanan = getRiwayatPesanan($id_user);
 
 ?>
+
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -117,8 +196,13 @@ $pesanan = getRiwayatPesanan($id_user);
     <link rel="stylesheet" href="./assets/css/profil.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
     <style>
-
+        .sidebar {
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+        }
     </style>
 </head>
 
@@ -179,31 +263,32 @@ $pesanan = getRiwayatPesanan($id_user);
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <div class="form-row">
-                                    <label class="form-label">Nomor Telepon</label>
-                                    <div class="flex-1">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <input type="text" class="form-control" value="<?= htmlspecialchars($no_hp ?? '') ?>">
-                                            <a href="#" class="link-button">Ubah</a>
+                            <form action="" method="POST">
+                                <input type="hidden" name="ubah_no_hp" value="1">
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Nomor Telepon</label>
+                                        <div class="flex-1">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <input type="text" id="no_hp_baru" name="no_hp_baru" value="<?= htmlspecialchars($no_hp ?? '') ?>" required readonly>
+                                                <button type="button" class="link-button" onclick="enableEditHP()">Ubah</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <button class="submit-button">Simpan</button>
+                                <button class="submit-button" type="submit">Simpan</button>
+                            </form>
                         </div>
 
                     </div>
                 </div>
 
+
                 <!-- Alamat Page -->
                 <div id="alamat-page" class="page-content" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h1 class="page-title mb-0">Alamat Saya</h1>
-                        <button class="add-address-btn" onclick="showAddAddressForm()">
-                            <i class="fas fa-plus"></i> Tambah Alamat Baru
-                        </button>
+                        <a style="text-decoration: none;" href="#" class="add-address-btn" onclick="showPage('tambah-alamat'); return false;"><i class="fas fa-plus"></i>Tambah Alamat Baru</a>
                     </div>
 
                     <!-- Address List -->
@@ -281,6 +366,62 @@ $pesanan = getRiwayatPesanan($id_user);
                     </div>
                 </div>
 
+
+                <div id="tambah-alamat-page" class="page-content" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="page-title mb-0">Tambah Alamat Anda</h1>
+                    </div>
+
+                    <form method="POST">
+                        <div class="form-section">
+                            <div class="form-left">
+                                <input type="hidden" name="tambah_alamat" value="1">
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Nama Lengkap</label>
+                                        <input type="text" name="nama_lengkap" id="nama_lengkap" class="form-control" placeholder="Masukkan nama lengkap">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Nomor Hp Penerima</label>
+                                        <input type="text" name="no_hp_penerima" id="no_hp_penerima" class="form-control" placeholder="Masukkan nomor hp penerima">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Alamat Rumah</label>
+                                        <input type="text" name="alamat_rumah" id="alamat_rumah" class="form-control" placeholder="Masukkan alamat rumah lengkap">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Detail Alamat (opsional)</label>
+                                        <input type="text" name="detail_lain" id="detail_lain" class="form-control" placeholder="Masukkan detail alamat seperti kode pos, patokan, dll.">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Pilih Lokasi Pada Map</label>
+                                    <button type="button" class="btn btn-primary mb-2" onclick="centerUserLocation()">
+                                        Pusatkan Lokasi Saya
+                                    </button>
+
+                                    <div id="map"
+                                        style="width: 70%; height: 250px; border-radius: 10px; border: 1px solid #ddd;"></div>
+
+                                    <!-- Input Hidden untuk disimpan ke DB -->
+                                    <input type="hidden" name="latitude" id="lat">
+                                    <input type="hidden" name="longitude" id="lng">
+                                </div>
+                                <button class="submit-button" type="submit">Simpan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
 
                 <div id="ubah-pw-page" class="page-content" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -456,7 +597,83 @@ $pesanan = getRiwayatPesanan($id_user);
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
     <script>
+        // Lokasi default (Jember)
+        let defaultJember = [113.687, -8.172];
+
+        // Inisialisasi map
+        var map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://tiles.openfreemap.org/styles/liberty',
+            center: defaultJember,
+            zoom: 13
+        });
+
+        // Buat marker draggable
+        var marker = new maplibregl.Marker({
+                draggable: true,
+                color: "#007BFF"
+            })
+            .setLngLat(defaultJember)
+            .addTo(map);
+
+        // Update input hidden
+        function updateInputs(lngLat) {
+            document.getElementById('lat').value = lngLat.lat;
+            document.getElementById('lng').value = lngLat.lng;
+        }
+
+        // Set nilai awal
+        updateInputs({
+            lat: defaultJember[1],
+            lng: defaultJember[0]
+        });
+
+        // Saat marker digeser
+        marker.on('dragend', () => updateInputs(marker.getLngLat()));
+
+        // Saat klik map → pindahkan marker
+        map.on('click', e => {
+            marker.setLngLat(e.lngLat);
+            updateInputs(e.lngLat);
+        });
+
+        // Fungsi pusatkan ke lokasi user
+        function centerUserLocation() {
+            if (!navigator.geolocation) {
+                alert("Browser tidak mendukung GPS.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    let userLng = pos.coords.longitude;
+                    let userLat = pos.coords.latitude;
+
+                    map.flyTo({
+                        center: [userLng, userLat],
+                        zoom: 15,
+                        essential: true
+                    });
+
+                    marker.setLngLat([userLng, userLat]);
+                    updateInputs({
+                        lat: userLat,
+                        lng: userLng
+                    });
+                },
+                err => {
+                    alert("Tidak bisa mendapatkan lokasi. Pastikan GPS aktif.");
+                }
+            );
+        }
+
+        function enableEditHP() {
+            document.getElementById('no_hp_baru').removeAttribute('readonly');
+            document.getElementById('no_hp_baru').focus();
+        }
+
         function showPage(pageName) {
             // Hide all pages
             document.querySelectorAll('.page-content').forEach(page => {

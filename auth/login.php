@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           // 3. CEK BLOKIR
           if (!empty($profiles[0]['is_blocked'])) {
-            
+
             echo "<script>alert('Akun Anda diblokir. Hubungi Admin'); window.location='login.php';</script>";
             exit;
           }

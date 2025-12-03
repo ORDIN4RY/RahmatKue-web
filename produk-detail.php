@@ -299,14 +299,7 @@ if (isset($_SESSION['message'])) {
 
                 <form method="POST">
                     <?php if ($kategori === 'Kue'): ?>
-                        <div class="mb-3">
-                            <label for="size" class="form-label">Ukuran</label>
-                            <select name="size" id="size" class="form-select">
-                                <option value="16">Round 16 cm</option>
-                                <option value="20">Round 20 cm</option>
-                                <option value="24">Round 24 cm</option>
-                            </select>
-                        </div>
+
 
                         <div class="mb-3">
                             <label for="wording" class="form-label">Tulisan di kue</label>
@@ -339,7 +332,10 @@ if (isset($_SESSION['message'])) {
                             </button>
                         </form>
                     </div>
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
                 </form>
             </div>
         </div>
