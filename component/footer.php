@@ -32,7 +32,7 @@
         .footer-main {
             display: grid;
             grid-template-columns: auto 1fr 1.2fr 1.5fr;
-            gap: 2rem;
+            gap: 1.5rem; /* Mengurangi gap dari 2rem ke 1.5rem untuk mengurangi jarak antar kolom */
             padding-bottom: 2.5rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             align-items: start;
@@ -187,21 +187,21 @@
         }
 
         .social-icons {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Mengubah menjadi grid dengan 3 kolom untuk membuat 2 baris (baris 1: 3 ikon, baris 2: 2 ikon) */
             gap: 0.6rem;
         }
 
         .social-icons a {
-            width: 36px;
-            height: 36px;
+            width: 48px; /* Memperbesar dari 36px ke 48px */
+            height: 48px; /* Memperbesar dari 36px ke 48px */
             display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(255, 255, 255, 0.1);
             color: white;
             border-radius: 50%;
-            font-size: 0.95rem;
+            font-size: 1.2rem; /* Memperbesar dari 0.95rem ke 1.2rem */
             transition: all 0.3s ease;
             text-decoration: none;
             border: 2px solid transparent;
@@ -301,6 +301,10 @@
 
             .footer-maps iframe {
                 height: 220px;
+            }
+
+            .social-icons {
+                grid-template-columns: repeat(2, 1fr); /* Di mobile, ubah ke 2 kolom untuk 3 baris jika perlu */
             }
         }
     </style>
