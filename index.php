@@ -37,7 +37,9 @@
         </section>
 
         <section class="produk-terlaris">
-            <center><h1>Produk Terlaris</h1></center>
+            <div class="container text-center">
+                <h2 class="produk-title produk-title-animate mb-4">Produk Terlaris!</h2>
+        <p class="produk-subtitle mb-5">Temukan ragam produk yang selalu menjadi pilihan utama para pelanggan</p>
 
             <div id="carouselKue" class="carousel slide" data-bs-ride="carousel" data-bs-interval="2000">
                 <div class="carousel-inner">
@@ -141,13 +143,52 @@
             </div>
         </section>
 
+ <section id="promo" class="promo-section py-5">
+    <div class="container text-center">
+       <h2 class="promo-title promo-title-animate mb-4">Promo Event Spesial!</h2>
+        <p class="promo-subtitle mb-5">Dapatkan penawaran menarik untuk berbagai acara istimewa Anda</p>
+
+        <div class="row g-4 justify-content-center">
+
+            <!-- Card Promo 1 - Promo Ulang Tahun -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="promo-card">
+                    <img src="./assets/img/promo-natal.png" class="promo-img" alt="Promo Ulang Tahun">
+                    <h5 class="mt-3">Promo Natal</h5>
+                    <p class="promo-desc">Lengkapi moment natal kalian bersama keluarga dengan pormo spesial natal kue bolu jadul hanya 80k saja.</p>
+                    <p class="promo-price">Rp. 80.000</p>
+                </div>
+            </div>
+
+            <!-- Card Promo 2 - Promo Wedding -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="promo-card">
+                    <img src="./assets/img/promo-pernikahan.png" class="promo-img" alt="Promo Pernikahan">
+                    <h5 class="mt-3">Promo Pernikahan</h5>
+                    <p class="promo-desc">Lengkapi moment istimewa anda dengan promo spesial potonngan harga kue pernikahan hanya 100k  </p>
+                    <p class="promo-price">Rp. 100.000</p>
+                </div>
+            </div>
+
+            <!-- Card Promo 3 - Promo Lebaran -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
+                <div class="promo-card">
+                    <img src="./assets/img/promo-lebaran.png" class="promo-img" alt="Promo Lebaran">
+                    <h5 class="mt-3">Promo Lebaran</h5>
+                    <p class="promo-desc">Hampers kue basah & kering premium untuk moment kebersamaan</p>
+                    <p class="promo-price">Rp. 70.000</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
         <section class="tentang">
             <div class="icon-tentang"><img src="./assets/img/tentang-foto.jpeg" alt="" srcset="" style="position: relative; z-index: 2;"></div>
             <div class="tentang-text">
-                <h1>Tentang Kami</h1>
-                <p>Rahmat Kue adalah toko kue yang telah berdiri sejak 8 Februari.
-                    2007 di Kecamatan Tanggul, Kabupaten Jember, Jawa Timur.
+                <h1 class="tentang-title">Tentang Kami</h1>
+                <p>Rahmat Kue adalah toko kue yang telah berdiri sejak 2 Januari
+                    2005 di Kecamatan Tanggul, Kabupaten Jember, Jawa Timur.
                     Kami menghadirkan beragam pilihan kue lezat serta layanan katering berkualitas untuk melengkapi
                     berbagai momen spesial Anda.
                     Mulai dari kue tradisional hingga kue modern dan tart, semua produk kami dibuat dari bahan-bahan pilihan dengan
@@ -157,8 +198,9 @@
             </div>
         </section>
 
-        <section class="layanan-section">
-            <h1>Layanan Rahmat Kue</h1>
+   <section class="layanan-section">
+            <h1 class="layanan-title">Layanan Rahmat Kue</h1>
+            <p>Nikmati berbagai layanan unggulan yang siap memenuhi kebutuhan pemesanan Anda</p>
             <div class="layanan-container">
 
                 <!-- Card 1 -->
@@ -170,7 +212,6 @@
                         <p>Hidangan lezat untuk berbagai acara, dari rapat hingga perayaan besar.
                              Menu fleksibel dan bisa disesuaikan dengan kebutuhan tamu Anda.
                         </p>
-                        <a href="produk.php?kategori=custom" class="btn-layanan">Hubungi Kami</a>
                     </div>
                 </div>
 
@@ -183,7 +224,6 @@
                         <p>Paket siap dipakai untuk ulang tahun, arisan, lamaran, hingga acara spesial lainnya.
                              Praktis, lengkap, dan siap meramaikan momen Anda.
                         </p>
-                        <a href="produk.php?kategori=paket" class="btn-layanan">Hubungi Kami</a>
                     </div>
                 </div>
 
@@ -196,7 +236,6 @@
                         <p>Pilihan kue tradisional, modern, donat, cake dan tart premium. 
                             Selalu segar dan cocok untuk hadiah, suguhan, atau perayaan.
                         </p>
-                        <a href="produk.php" class="btn-layanan">Hubungi Kami</a>
                     </div>
                 </div>
 
@@ -204,6 +243,88 @@
         </section>
 
         <?php include 'component/footer.php'; ?>
+
+        
+<script>
+    // Animasi untuk Tentang Kami (bisa reset)
+    function checkTentangAnimation() {
+        const title = document.querySelector('.tentang-title');
+        if (!title) return;
+        
+        const rect = title.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.8 && rect.bottom >= 0;
+        
+        if (isVisible) {
+            title.classList.add('animate');
+        } else {
+            title.classList.remove('animate');
+        }
+    }
+    
+    // Animasi untuk Layanan (bisa reset)
+    function checkLayananAnimation() {
+        const title = document.querySelector('.layanan-title');
+        if (!title) return;
+        
+        const rect = title.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.8 && rect.bottom >= 0;
+        
+        if (isVisible) {
+            title.classList.add('animate');
+        } else {
+            title.classList.remove('animate');
+        }
+    }
+    
+    // Animasi untuk Produk Terlaris (bisa reset)
+    function checkProdukAnimation() {
+        const title = document.querySelector('.produk-title-animate');
+        if (!title) return;
+        
+        const rect = title.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.8 && rect.bottom >= 0;
+        
+        if (isVisible) {
+            title.classList.add('animate');
+        } else {
+            title.classList.remove('animate');
+        }
+    }
+    
+    // Animasi untuk Promo (bisa reset)
+    function checkPromoAnimation() {
+        const title = document.querySelector('.promo-title-animate');
+        if (!title) return;
+        
+        const rect = title.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.8 && rect.bottom >= 0;
+        
+        if (isVisible) {
+            title.classList.add('animate');
+        } else {
+            title.classList.remove('animate');
+        }
+    }
+    
+    // Event listeners
+    window.addEventListener('scroll', function() {
+        checkTentangAnimation();
+        checkLayananAnimation();
+        checkProdukAnimation();
+        checkPromoAnimation();
+    });
+    
+    window.addEventListener('load', function() {
+        checkTentangAnimation();
+        checkLayananAnimation();
+        checkProdukAnimation();
+        checkPromoAnimation();
+    });
+</script>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
