@@ -20,7 +20,7 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 30px;
-  background: transparent;
+  background: #FFF3EA;
   transition: background 0.3s, backdrop-filter 0.3s;
   z-index: 999;
 }

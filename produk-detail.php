@@ -251,6 +251,13 @@ if (isset($_SESSION['message'])) {
             border-radius: 4px;
             font-size: 0.9rem;
         }
+
+        .foto-produk {
+             width: 100%;
+             height: 50vh;
+             object-fit: cover;
+             object-position: center;
+        }
     </style>
 </head>
 
@@ -268,7 +275,7 @@ if (isset($_SESSION['message'])) {
 
         <div class="row align-items-center">
             <div class="col-md-6">
-                <img src="<?= $foto ?>" alt="<?= $nama ?>" class="img-fluid rounded">
+                <img class="foto-produk" src="<?= $foto ?>" alt="<?= $nama ?>" class="img-fluid rounded">
             </div>
 
             <div id="produk-detail-form" class="col-md-6">
