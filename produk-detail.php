@@ -340,7 +340,6 @@ if (isset($_SESSION['message'])) {
                         </form>
                     </div>
 
-                    <p class="wishlist"><i class="bi bi-heart"></i> Tambahkan ke wishlist</p>
                 </form>
             </div>
         </div>
