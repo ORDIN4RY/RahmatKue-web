@@ -362,7 +362,7 @@
                 <div class="footer-maps-social">
                     <div class="footer-social-icons">
                         <div class="social-icons">
-                            <a href="#" aria-label="Instagram" title="Instagram">
+                            <a href="https://www.instagram.com/ordin4ry.team?igsh=YzN5OHlnOWU5dnY1" aria-label="Instagram" title="Instagram">
                                 <i class="fab fa-instagram"></i>
                             </a>
                             <a href="#" aria-label="TikTok" title="TikTok">
@@ -371,7 +371,7 @@
                             <a href="#" aria-label="Facebook" title="Facebook">
                                 <i class="fab fa-facebook"></i>
                             </a>
-                            <a href="#" aria-label="YouTube" title="YouTube">
+                            <a href="https://youtube.com/@ahmadhananto6464?si=qR50LhKHNcV81qd-" aria-label="YouTube" title="YouTube">
                                 <i class="fab fa-youtube"></i>
                             </a>
                             <a href="#" aria-label="WhatsApp" title="WhatsApp">
