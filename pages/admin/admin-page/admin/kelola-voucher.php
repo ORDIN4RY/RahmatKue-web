@@ -123,11 +123,10 @@ if (isset($_POST['nama_voucher_edit'])) {
     exit;
 }
 
-if (isset($_GET['delete_voucher'])) {
-    $id = $_GET['delete_voucher'];
+if (isset($_POST['id_voucher_delete'])) {
+    $id = $_POST['id_voucher_delete'];
 
     $result = deleteVoucher($id);
-
     if ($result['success']) {
         $_SESSION['success'] = "Voucher berhasil dihapus!";
     } else {
@@ -560,7 +559,7 @@ if (isset($_GET['get_voucher_by_id'])) {
                                 </div>
                             </div>
 
-                            <button class="btn-custom btn-primary-custom" data-toggle="modal" data-target="#addVoucher">
+                            <button class="btn-custom btn-primary" data-toggle="modal" data-target="#addVoucher">
                                 <i class="fas fa-plus"></i> Tambah Voucher
                             </button>
                         </div>
@@ -583,7 +582,7 @@ if (isset($_GET['get_voucher_by_id'])) {
                                     $searchTerm = $_GET['search'] ?? null;
                                     $vouchers = getVoucher($searchTerm);
 
-                                    
+
                                     if (!empty($vouchers)):
                                         foreach ($vouchers as $voucher):
 
@@ -624,8 +623,11 @@ if (isset($_GET['get_voucher_by_id'])) {
 
                                         <tr>
                                             <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
-                                                Belum ada voucher. Klik tombol "Tambah Voucher" untuk membuat voucher baru.
+                                                <?= $searchTerm !== ''
+                                                    ? 'Tidak ada hasil untuk pencarian "' . htmlspecialchars($searchTerm) . '"'
+                                                    : 'Belum ada voucher. Klik tombol "Tambah Voucher" untuk membuat voucher baru.' ?>
                                             </td>
+
                                         </tr>
 
                                     <?php endif; ?>
@@ -657,7 +659,7 @@ if (isset($_GET['get_voucher_by_id'])) {
     <!-- End of Page Wrapper -->
     <!-- contextMenu -->
     <div id="contextMenu" class="dropdown-menu">
-        <p></p>
+        <!-- <p></p> -->
         <button class="dropdown-item" id="btnEdit">
             <i class="fas fa-edit"></i>
             Edit</button>
@@ -691,24 +693,32 @@ if (isset($_GET['get_voucher_by_id'])) {
         </div>
     </div>
 
-    <div class="modal fade" id="deleteVoucher" tabindex="-1" role="dialog"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
+    <!-- Asumsi struktur modal deleteVoucher -->
+<div class="modal fade" id="deleteVoucher" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="POST"> <!-- Tambahkan form dengan method POST -->
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">hapus voucher</h5>
+                    <h5 class="modal-title">Konfirmasi Hapus Voucher</h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="../../../auth/logout.php">Logout</a>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin menghapus voucher ini?
+                    <!-- Hidden input yang diisi oleh JavaScript -->
+                    <input type="hidden" name="id_voucher_delete" id="id_voucher_delete"> 
                 </div>
-            </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal" type="reset" id="closeBtn">Batal</button>
+                    <!-- Tombol yang akan mengirimkan form -->
+                    <button class="btn btn-danger" type="submit">Hapus Permanen</button> 
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
 
     <div class="modal fade" id="addVoucher" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -774,7 +784,7 @@ if (isset($_GET['get_voucher_by_id'])) {
                                     </div>
 
                                     <div class="form-group col-md-6">
-                                        <label>Minimal Pembelian</label>
+                                        <label>Minimal Pembelian (Rp)</label>
                                         <input type="number" class="form-control" name="minimal_pembelian" min="0" value="0">
                                     </div>
 
@@ -1003,8 +1013,15 @@ if (isset($_GET['get_voucher_by_id'])) {
         document.querySelector('#editVoucher .close').addEventListener('click', function() {
             $('#editVoucher').modal('hide');
         });
-        document.querySelector('#closeBtn').addEventListener('click', function() {
+        document.querySelector('#editVoucher #closeBtn').addEventListener('click', function() {
             $('#editVoucher').modal('hide');
+        });
+
+        document.querySelector('#deleteVoucher .close').addEventListener('click', function() {
+            $('#deleteVoucher').modal('hide');
+        });
+        document.querySelector('#deleteVoucher #closeBtn').addEventListener('click', function() {
+            $('#deleteVoucher').modal('hide');
         });
 
 
@@ -1017,11 +1034,13 @@ if (isset($_GET['get_voucher_by_id'])) {
         let pressTimer;
 
         function showMenu(x, y, row) {
-            selectedRow = row;
-            menu.style.left = x + "px";
-            menu.style.top = y + "px";
-            menu.style.display = "block";
-            menu.querySelector('p').textContent = selectedRow.getAttribute('data-id');
+            if (row.getAttribute('data-id') != null) {
+                selectedRow = row;
+                menu.style.left = x + "px";
+                menu.style.top = y + "px";
+                menu.style.display = "block";
+                // menu.querySelector('p').textContent = selectedRow.getAttribute('data-id');
+            }
         }
 
         // Hide menu on click anywhere
@@ -1108,11 +1127,17 @@ if (isset($_GET['get_voucher_by_id'])) {
         // Saat tombol HAPUS di klik
 
         document.getElementById("btnDelete").addEventListener("click", function() {
-            if (confirm("Yakin ingin menghapus voucher ini?")) {
+            const id = selectedRow.getAttribute("data-id");
+            menu.style.display = "none";
+            document.getElementById("id_voucher_delete").value = id;
 
-                menu.style.display = "none";
-                window.location.href = "?delete_voucher=" + selectedRow.getAttribute('data-id');
-            }
+            $("#deleteVoucher").modal("show");
+
+            // if (confirm("Yakin ingin menghapus voucher ini?")) {
+
+            //     menu.style.display = "none";
+            //     window.location.href = "?delete_voucher=" + selectedRow.getAttribute('data-id');
+            // }
         });
 
         document.getElementById("filterStatus").addEventListener("change", function() {

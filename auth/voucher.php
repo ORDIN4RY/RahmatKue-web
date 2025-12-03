@@ -233,27 +233,6 @@ function deleteVoucher($id_voucher)
 
     try {
         // ===============================
-        // 1. Ambil foto untuk dihapus dari storage
-        // ===============================
-        $old = $client->get(
-            SUPABASE_URL . "/rest/v1/voucher?id_voucher=eq.$id_voucher&select=foto",
-            [
-                'headers' => [
-                    'apikey'        => SUPABASE_SERVICE_KEY,
-                    'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY
-                ]
-            ]
-        );
-
-        $oldData = json_decode($old->getBody()->getContents(), true);
-        $fotoUrl = $oldData[0]["foto"] ?? null;
-
-        // Ekstrak file name dari URL
-        if ($fotoUrl && strpos($fotoUrl, "/voucher/") !== false) {
-            $path = explode("/voucher/", $fotoUrl)[1];
-        }
-
-        // ===============================
         // 2. Hapus kategori relasi
         // ===============================
         $client->delete(
@@ -278,21 +257,6 @@ function deleteVoucher($id_voucher)
                 ]
             ]
         );
-
-        // ===============================
-        // 4. Hapus file foto dari storage (opsional)
-        // ===============================
-        if (!empty($path)) {
-            $client->delete(
-                SUPABASE_URL . "/storage/v1/object/images/voucher/$path",
-                [
-                    'headers' => [
-                        'apikey'        => SUPABASE_SERVICE_KEY,
-                        'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY
-                    ]
-                ]
-            );
-        }
 
         return ["success" => true];
 
