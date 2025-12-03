@@ -20,11 +20,17 @@
         case 'tambah-produk.php':
             $page_title = 'Kelola Produk';
             break;
+        case 'kelola-paket.php':
+            $page_title = 'Kelola Paket';
+            break;
         case 'kelola-user.php':
             $page_title = 'Kelola User';
             break;
         case 'kelola-voucher.php':
             $page_title = 'Kelola Voucher';
+            break;
+        case 'laporan.php':
+            $page_title = 'Laporan';
             break;
         default:
             $page_title = 'Halaman Admin';
