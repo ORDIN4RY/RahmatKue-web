@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           echo "<script>
                 setTimeout(function() {
                   window.location.href = '" . ($level === 'admin'
-            ? "../pages/admin/admin-page/admin/dashboard-admin2.php"
+            ? "../pages/admin/admin-page/admin/index.php"
             : "../produk.php") . "';
                 }, 1200);
           </script>";

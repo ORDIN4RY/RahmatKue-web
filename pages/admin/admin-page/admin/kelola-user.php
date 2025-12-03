@@ -9,8 +9,8 @@ function getAllUsers()
 {
     global $client;
     try {
-        $response = $client->get(SUPABASE_URL . '/rest/v1/profiles?select=*&id=neq.'.
-        $_SESSION["id"].'&order=created_at.desc', [
+        $response = $client->get(SUPABASE_URL . '/rest/v1/profiles?select=*&id=neq.' .
+            $_SESSION["id"] . '&order=created_at.desc', [
             'headers' => [
                 'apikey' => SUPABASE_KEY,
                 'Authorization' => 'Bearer ' . SUPABASE_KEY,
@@ -33,14 +33,26 @@ function getAllUsers()
 
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $id = $_GET['id'];
+    $aksi = $_GET['action'];
 
-    if ($_GET['action'] == 'ban') {
-        banUser($id);
+    switch ($aksi) {
+        case 'ban':
+            banUser($id);
+            break;
+        case 'unban':
+            unbanUser($id);
+            break;
+        case 'promote':
+
+            break;
+        case 'demote':
+
+            break;
+        default:
+            # code...
+            break;
     }
 
-    if ($_GET['action'] == 'unban') {
-        unbanUser($id);
-    }
 
     header("Location: kelola-user.php");
     exit();
@@ -70,6 +82,13 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
 
     <!-- Custom styles for this template-->
     <link href="../css/sb-admin-2.min.css" rel="stylesheet">
+    <style>
+        #contextMenu {
+            position: absolute;
+            display: none;
+            z-index: 9999;
+        }
+    </style>
 
 </head>
 
@@ -134,17 +153,18 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
 
 
                                     <!-- Table -->
-                                    <div class="table-responsive">
+                                    <div class="table-responsive" id="myTable">
                                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
                                             <thead class="thead-light">
                                                 <tr>
                                                     <th width="5%">No</th>
-                                                    <th width="20%">Username</th>
-                                                    <th width="20%">Level</th>
-                                                    <th width="15%">Point</th>
+                                                    <th width="20%">Nama Lengkap</th>
+                                                    <th width="20%">Email</th>
+                                                    <th width="20%">no telp</th>
+                                                    <th width="10%">Point</th>
+                                                    <th width="10%">Status</th>
                                                     <th width="15%">Tanggal Daftar</th>
-                                                    <th width="15%">Status</th>
-                                                    <th width="15%">Aksi</th>
+                                                    <!-- <th width="15%">Aksi</th> -->
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -170,24 +190,25 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                                                     foreach ($users as $user):
                                                         $banStatus = isset($user['is_blocked']) ? (bool)$user['is_blocked'] : false;
                                                 ?>
-                                                        <tr>
+                                                        <tr data-id="<?= $user['id'] ?>" data-blocked="<?= $banStatus ?>"
+                                                            data-is-admin="<?= (bool) ($user['level'] === 'admin') ?>">
                                                             <td><?= $no++; ?></td>
-
-                                                            <td><?= htmlspecialchars($user['username'] ?? '-') ?></td>
 
                                                             <td>
                                                                 <span class="badge badge-<?= ($user['level'] ?? 'user') === 'admin' ? 'primary' : 'secondary'; ?>">
                                                                     <?= htmlspecialchars($user['level'] ?? 'User') ?>
                                                                 </span>
+                                                                <?= htmlspecialchars($user['username'] ?? '-') ?>
                                                             </td>
+                                                            <td><?= $user['email'] ?></td>
+                                                            <td><?= $user['no_hp_pengguna'] ?></td>
+                                                            <!-- <td>
+                                                                <span class="badge badge-<?= ($user['level'] ?? 'user') === 'admin' ? 'primary' : 'secondary'; ?>">
+                                                                    <?= htmlspecialchars($user['level'] ?? 'User') ?>
+                                                                </span>
+                                                            </td> -->
 
                                                             <td><?= htmlspecialchars($user['point'] ?? '0') ?></td>
-
-                                                            <td>
-                                                                <?= !empty($user['created_at'])
-                                                                    ? date('d/m/Y', strtotime($user['created_at']))
-                                                                    : '-' ?>
-                                                            </td>
 
                                                             <!-- Status User -->
                                                             <td>
@@ -197,20 +218,26 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                                                                     <span class="badge bg-success" style="color:white">Aktif</span>
                                                                 <?php endif; ?>
                                                             </td>
-
                                                             <td>
-                                                                <?php if ($banStatus): ?>
-                                                                    <a href="?action=unban&id=<?= $user['id'] ?>"
-                                                                        class="btn btn-sm btn-success" title="Buka blokir">
-                                                                        <i class="fas fa-lock-open"></i>
-                                                                    </a>
-                                                                <?php else: ?>
-                                                                    <a href="?action=ban&id=<?= $user['id'] ?>"
-                                                                        class="btn btn-sm btn-danger" title="Blokir user">
-                                                                        <i class="fas fa-user-slash"></i>
-                                                                    </a>
-                                                                <?php endif; ?>
+                                                                <?= !empty($user['created_at'])
+                                                                    ? date('d/m/Y', strtotime($user['created_at']))
+                                                                    : '-' ?>
                                                             </td>
+
+
+                                                            <!-- <td>
+                                                                    <?php if ($banStatus): ?>
+                                                                        <a href="?action=unban&id=<?= $user['id'] ?>"
+                                                                            class="btn btn-sm btn-success" title="Buka blokir">
+                                                                            <i class="fas fa-lock-open"></i>
+                                                                        </a>
+                                                                    <?php else: ?>
+                                                                        <a href="?action=ban&id=<?= $user['id'] ?>"
+                                                                            class="btn btn-sm btn-danger" title="Blokir user">
+                                                                            <i class="fas fa-user-slash"></i>
+                                                                        </a>
+                                                                    <?php endif; ?>
+                                                                </td> -->
                                                         </tr>
                                                     <?php
                                                     endforeach;
@@ -252,6 +279,17 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
 
         </div>
         <!-- End of Content Wrapper -->
+
+        <!-- contextMenu -->
+        <div id="contextMenu" class="dropdown-menu">
+            <!-- <p></p> -->
+            <button class="dropdown-item text-warning" id="btnAdmin">
+                <i class="fas fa-arrow-up"></i>
+                Jadikan admin</button>
+            <button class="dropdown-item text-danger" id="btnEdit">
+                <i class="fas fa-shield"></i>
+                Blokir user</button>
+        </div>
 
     </div>
     <!-- End of Page Wrapper -->
@@ -328,21 +366,112 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     </div>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
-    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
 
     <!-- Custom scripts for all pages-->
-    <script src="js/sb-admin-2.min.js"></script>
+    <script src="../js/sb-admin-2.min.js"></script>
 
-    <!-- Page level plugins -->
-    <script src="vendor/chart.js/Chart.min.js"></script>
+    <script>
+        const table = document.getElementById("myTable");
+        const menu = document.getElementById("contextMenu");
 
-    <!-- Page level custom scripts -->
-    <script src="js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
+
+        let selectedRow = null;
+        let pressTimer;
+
+        function showMenu(x, y, row) {
+            if (row.getAttribute('data-id') != null) {
+                selectedRow = row;
+                const isBlocked = row.getAttribute('data-blocked') === "1";
+                const isAdmin = row.getAttribute('data-is-admin') === "1";
+
+                // Ubah isi tombol berdasarkan status
+                const btnEdit = document.getElementById("btnEdit");
+                const btnAdmin = document.getElementById("btnAdmin")
+
+                if (isBlocked) {
+                    btnEdit.innerHTML = '<i class="fas fa-unlock"></i> Buka blokir user';
+                    btnEdit.classList.remove("text-danger");
+                    btnEdit.classList.add("text-success");
+
+                    // arahkan ke action unban
+                    btnEdit.onclick = () => {
+                        window.location.href = `?action=unban&id=${row.getAttribute('data-id')}`;
+                    };
+                } else {
+                    btnEdit.innerHTML = '<i class="fas fa-ban"></i> Blokir user';
+                    btnEdit.classList.remove("text-success");
+                    btnEdit.classList.add("text-danger");
+
+                    // arahkan ke action ban
+                    btnEdit.onclick = () => {
+                        window.location.href = `?action=ban&id=${row.getAttribute('data-id')}`;
+                    };
+                }
+
+                if (isAdmin) {
+                    btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> demote user';
+                    btnAdmin.classList.remove("text-warning");
+                    btnAdmin.classList.add("text-danger");
+                    btnEdit.disabled = 'true'
+                    btnEdit.classList.add("text-muted")
+                    // arahkan ke action unban
+                    btnAdmin.onclick = () => {
+                        window.location.href = `?action=demote&id=${row.getAttribute('data-id')}`;
+                    };
+                } else {
+                    btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> promote user';
+                    btnAdmin.classList.remove("text-danger");
+                    btnAdmin.classList.add("text-warning");
+                    btnEdit.disable = 'false'
+                    btnEdit.classList.remove("text-muted")
+
+                    // arahkan ke action ban
+                    btnAdmin.onclick = () => {
+                        window.location.href = `?action=promote&id=${row.getAttribute('data-id')}`;
+                    };
+                }
+
+
+                menu.style.left = x + "px";
+                menu.style.top = y + "px";
+                menu.style.display = "block";
+                // menu.querySelector('p').textContent = selectedRow.getAttribute('data-id');
+            }
+        }
+
+        // Hide menu on click anywhere
+        document.addEventListener("click", () => menu.style.display = "none");
+
+        // Right click event (Desktop)
+        table.addEventListener("contextmenu", function(e) {
+            e.preventDefault();
+            const row = e.target.closest("tr");
+            if (!row) return;
+
+            showMenu(e.pageX, e.pageY, row);
+        });
+
+        // Long press for Mobile
+        table.addEventListener("touchstart", function(e) {
+            const row = e.target.closest("tr");
+            if (!row) return;
+
+            pressTimer = setTimeout(() => {
+                const touch = e.touches[0];
+                showMenu(touch.pageX, touch.pageY, row);
+            }, 600); // tahan 0.6 detik
+        });
+
+        table.addEventListener("touchend", function() {
+            clearTimeout(pressTimer);
+        });
+    </script>
+
 
 </body>
 

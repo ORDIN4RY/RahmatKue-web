@@ -183,6 +183,8 @@ if (isset($_GET['get_voucher_by_id'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
         rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 
     <!-- Custom styles for this template-->
     <link href="../css/sb-admin-2.min.css" rel="stylesheet">
@@ -660,7 +662,7 @@ if (isset($_GET['get_voucher_by_id'])) {
     <!-- contextMenu -->
     <div id="contextMenu" class="dropdown-menu">
         <!-- <p></p> -->
-        <button class="dropdown-item" id="btnEdit">
+        <button class="dropdown-item text-warning" id="btnEdit">
             <i class="fas fa-edit"></i>
             Edit</button>
         <button class="dropdown-item text-danger" id="btnDelete">
@@ -694,30 +696,30 @@ if (isset($_GET['get_voucher_by_id'])) {
     </div>
 
     <!-- Asumsi struktur modal deleteVoucher -->
-<div class="modal fade" id="deleteVoucher" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form method="POST"> <!-- Tambahkan form dengan method POST -->
-                <div class="modal-header">
-                    <h5 class="modal-title">Konfirmasi Hapus Voucher</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    Apakah Anda yakin ingin menghapus voucher ini?
-                    <!-- Hidden input yang diisi oleh JavaScript -->
-                    <input type="hidden" name="id_voucher_delete" id="id_voucher_delete"> 
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal" type="reset" id="closeBtn">Batal</button>
-                    <!-- Tombol yang akan mengirimkan form -->
-                    <button class="btn btn-danger" type="submit">Hapus Permanen</button> 
-                </div>
-            </form>
+    <div class="modal fade" id="deleteVoucher" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST"> <!-- Tambahkan form dengan method POST -->
+                    <div class="modal-header">
+                        <h5 class="modal-title">Konfirmasi Hapus Voucher</h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Apakah Anda yakin ingin menghapus voucher ini?
+                        <!-- Hidden input yang diisi oleh JavaScript -->
+                        <input type="hidden" name="id_voucher_delete" id="id_voucher_delete">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button" data-dismiss="modal" type="reset" id="closeBtn">Batal</button>
+                        <!-- Tombol yang akan mengirimkan form -->
+                        <button class="btn btn-danger" type="submit">Hapus Permanen</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
 
     <div class="modal fade" id="addVoucher" tabindex="-1" aria-hidden="true">
@@ -825,7 +827,7 @@ if (isset($_GET['get_voucher_by_id'])) {
 
                                 <div class="form-group">
                                     <label>Kategori (Optional)</label>
-                                    <select multiple class="form-control" name="id_kategori[]">
+                                    <select multiple class="form-control" name="id_kategori[]" id="list_kategori">
                                         <?php foreach ($kateg as $kat) : ?>
                                             <option value="<?= $kat['id_kategori'] ?>"><?= $kat['nama_kategori'] ?></option>
                                         <?php endforeach; ?>
@@ -997,6 +999,7 @@ if (isset($_GET['get_voucher_by_id'])) {
     <!-- Bootstrap core JavaScript-->
     <script src="../vendor/jquery/jquery.min.js"></script>
     <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Core plugin JavaScript-->
     <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
@@ -1024,6 +1027,21 @@ if (isset($_GET['get_voucher_by_id'])) {
             $('#deleteVoucher').modal('hide');
         });
 
+        $(document).ready(function() {
+            $('#list_kategori').select2({
+                placeholder: "Pilih satu atau lebih kategori",
+                dropdownParent: $('#addVoucher'),
+                width:'100%',
+                height: '200px'
+            });
+
+            $('#edit_list_kategori').select2({
+                placeholder: "Pilih satu atau lebih kategori",
+                dropdownParent: $('#editVoucher'),
+                width:'100%',
+                height: '200px'
+            });
+        });
 
 
         const table = document.getElementById("myTable");
@@ -1094,23 +1112,13 @@ if (isset($_GET['get_voucher_by_id'])) {
 
                     document.getElementById("edit_jenis_voucher").value = v.jenis_voucher;
 
-                    // kategori multiple
-                    const selectKategori = document.getElementById("edit_list_kategori");
-
                     const kategoriList = v.voucher_kategori_id_voucher_fkey || [];
+                    const selectedIds = kategoriList.map(k => k.id_kategori);
 
-                    // reset selection
-                    for (let opt of selectKategori.options) {
-                        opt.selected = false;
-                    }
+                    // Set nilai Select2 menggunakan jQuery
+                    $('#edit_list_kategori').val(selectedIds).trigger('change');
+                    // ...
 
-                    kategoriList.forEach(k => {
-                        for (let opt of selectKategori.options) {
-                            if (opt.value === k.id_kategori) {
-                                opt.selected = true;
-                            }
-                        }
-                    });
 
                     document.getElementById("edit_preview_foto").src = v.foto;
 
@@ -1119,12 +1127,8 @@ if (isset($_GET['get_voucher_by_id'])) {
                 })
                 .catch(err => console.error(err));
 
-
-
         });
 
-
-        // Saat tombol HAPUS di klik
 
         document.getElementById("btnDelete").addEventListener("click", function() {
             const id = selectedRow.getAttribute("data-id");
@@ -1133,11 +1137,6 @@ if (isset($_GET['get_voucher_by_id'])) {
 
             $("#deleteVoucher").modal("show");
 
-            // if (confirm("Yakin ingin menghapus voucher ini?")) {
-
-            //     menu.style.display = "none";
-            //     window.location.href = "?delete_voucher=" + selectedRow.getAttribute('data-id');
-            // }
         });
 
         document.getElementById("filterStatus").addEventListener("change", function() {
@@ -1155,7 +1154,6 @@ if (isset($_GET['get_voucher_by_id'])) {
             });
         });
 
-        // Di dalam tag <script>
         $('#editVoucher').on('hidden.bs.modal', function() {
             // Reset form ketika modal ditutup
             $('#formEditVoucher')[0].reset();
@@ -1168,6 +1166,24 @@ if (isset($_GET['get_voucher_by_id'])) {
                     path: url.href
                 }, '', url.href);
             }
+        });
+
+        $('#addVoucher').on('hidden.bs.modal', function() {
+            // Reset form
+            $('#formAddVoucher')[0].reset();
+
+            // Reset Select2: Hapus semua pilihan yang tersisa
+            $('#list_kategori').val(null).trigger('change');
+        });
+
+        $('#list_kategori').select2({
+            placeholder: "Pilih satu atau lebih kategori",
+            dropdownParent: $('#addVoucher') // Penting agar dropdown tidak terpotong oleh modal
+        });
+
+        $('#edit_list_kategori').select2({
+            placeholder: "Pilih satu atau lebih kategori",
+            dropdownParent: $('#editVoucher') // Penting agar dropdown tidak terpotong oleh modal
         });
     </script>
 
