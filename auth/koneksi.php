@@ -356,6 +356,7 @@ function deleteSupabaseData($table, $column, $value)
     return ($httpCode === 200 || $httpCode === 204);
 }
 
+
 function deleteProdukDenganRelasi($id_produk)
 {
     // Hapus dulu relasi di detail_paket
@@ -413,6 +414,40 @@ function deleteProdukDenganRelasi($id_produk)
         "debug" => $responseProduk
     ];
 }
+
+// function deletePaket($id_paket)
+//     {
+//         // UUID tidak pakai kutip
+//         $url = SUPABASE_URL . "/rest/v1/paket?id_paket=eq.$id_paket";
+
+//         $headers = [
+//             "apikey: " . SUPABASE_SERVICE_KEY,
+//             "Authorization: Bearer " . SUPABASE_SERVICE_KEY,
+//             "Content-Type: application/json",
+//             "Prefer: return=representation, count=exact"
+//         ];
+
+//         $ch = curl_init($url);
+//         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+//         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+//         $response = curl_exec($ch);
+//         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+//         curl_close($ch);
+
+//         error_log("DELETE URL: $url");
+//         error_log("RESPONSE: $response");
+//         error_log("HTTP: $httpCode");
+
+
+//         return [
+//             "success" => ($httpCode === 200 || $httpCode === 204),
+//             "message" => "HTTP $httpCode",
+//             "debug" => $response
+//         ];
+//     }
+
 
 // Profil
 function getRiwayatPesanan($id_user)
