@@ -334,85 +334,277 @@ body {
   padding: 0;
 }
 
-/* Produk Detail */
+/* ==========================================
+   PRODUK DETAIL PAGE - RAHMAT BAKERY
+   Professional Marketplace Design
+   ========================================== */
 
+/* Background */
+body {
+  background-color: #faf8f6;
+}
+
+/* Container */
+.container {
+  max-width: 1280px;
+  padding: 40px 20px;
+}
+
+/* Image Produk */
+.foto-produk {
+  width: 100%;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  background: white;
+  border: 1px solid #f0ebe5;
+}
+
+/* Product Info Box */
+#produk-detail-form {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0ebe5;
+}
+
+/* Title */
 h2 {
   font-weight: 700;
+  color: #2d1810;
+  font-size: 2rem;
+  margin-bottom: 12px;
 }
 
+/* Price */
 h4 {
-  font-weight: 600;
-  color: #222;
+  font-weight: 800;
+  color: #2d1810;
+  font-size: 2.25rem;
+  margin: 0 0 20px 0;
 }
 
-.img-fluid {
+/* Description */
+#produk-detail-form > p:first-of-type {
+  color: #6b5d52;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+/* Category Badge */
+#produk-detail-form > p:nth-of-type(2) {
+  display: inline-block;
+  background: #f5f0eb;
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+#produk-detail-form > p:nth-of-type(2) b {
+  color: #6b5d52;
+}
+
+/* Info Box - Hijau (minimal 1) */
+.min-order-info {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-left: 4px solid #4caf50;
+  color: #2e7d32;
+  padding: 16px 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-#produk-detail-form {
-  padding-left: 20px;
+.min-order-info i {
+  color: #4caf50;
+  font-size: 1.3rem;
 }
 
+.min-order-warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left: 4px solid #ff9800;
+  color: #e65100;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.min-order-warning i {
+  color: #ff9800;
+  font-size: 1.3rem;
+}
+
+/* Form Label */
+.form-label {
+  font-weight: 600;
+  color: #2d1810;
+  margin-bottom: 10px;
+  display: block;
+}
+
+/* Input & Select */
+.form-control,
+.form-select {
+  border-radius: 12px;
+  border: 2px solid #e5ddd5;
+  padding: 14px 18px;
+  font-size: 1rem;
+  background: #fafaf9;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #8b6f47;
+  box-shadow: 0 0 0 4px rgba(139, 111, 71, 0.08);
+  outline: none;
+  background: white;
+}
+
+/* Quantity Input */
+input[type="number"] {
+  max-width: 180px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Button Container */
+.d-flex.gap-3 {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Tambah ke Keranjang Button */
 .btn-submit {
-  background-color: #5a4fcf;
+  background: linear-gradient(135deg, #8b6f47 0%, #6d5636 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  transition: 0.3s;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(139, 111, 71, 0.25);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
 }
 
 .btn-submit:hover {
-  background-color: #473dc0;
+  background: linear-gradient(135deg, #6d5636 0%, #5a4528 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 111, 71, 0.35);
 }
 
-.form-control,
-.form-select {
-  border-radius: 8px;
-}
-
-.wishlist {
-  margin-top: 10px;
-  color: #555;
-  cursor: pointer;
-}
-
-.wishlist i {
-  color: #999;
-}
-
-.badge-custom {
-  background-color: #e6e6e6;
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-size: 0.9rem;
-  margin-right: 5px;
-}
-
-.quantity-group {
-  display: flex;
-  align-items: center;
-  max-width: 150px;
-}
-
-.quantity-group input {
-  text-align: center;
-  margin: 0 8px;
-}
-
-.btn-buy {
-  background-color: white;
-  border: 1px solid #5a4fcf;
-  color: #5a4fcf;
-  border-radius: 8px;
-  padding: 10px 20px;
-  transition: 0.3s;
-}
-
-.btn-buy:hover {
-  background-color: #5a4fcf;
+/* Beli Sekarang Button */
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
   color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.25);
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.35);
+}
+
+/* Alert Messages */
+.alert {
+  border-radius: 14px;
+  padding: 18px 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+  border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #000000;
+  border-left: 4px solid #000000;
+}
+
+/* ==========================================
+   RESPONSIVE - MOBILE
+   ========================================== */
+@media (max-width: 992px) {
+  #produk-detail-form {
+    padding: 30px 25px;
+    margin-top: 30px;
+  }
+  
+  .foto-produk {
+    height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.75rem;
+  }
+  
+  h4 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 20px 15px;
+  }
+  
+  #produk-detail-form {
+    padding: 25px 20px;
+  }
+  
+  .foto-produk {
+    height: 300px;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h4 {
+    font-size: 1.75rem;
+  }
+  
+  .d-flex.gap-3 {
+    flex-direction: column;
+  }
+  
+  .btn-submit,
+  .btn-success {
+    width: 100%;
+  }
+  
+  input[type="number"] {
+    max-width: 100%;
+  }
 }
 
 /* HALAMAN KUSTOM PESANAN */
