@@ -1,7 +1,7 @@
 <ul class="navbar-nav sidebar sidebar-dark accordion sticky-sidebar" id="accordionSidebar" style="background-color: #8E5E48;">
   
   <!-- Sidebar - Brand -->
-  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard-admin2.php">
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
     <div class="sidebar-brand-icon">
       <img src="../../../../assets/img/logo-remove.png" alt="" style="width: 40px;">
     </div>
@@ -52,8 +52,8 @@
     }
   </style>
   <!-- Nav Item - Dashboard -->
-  <li class="nav-item <?= sidebar_active('dashboard-admin2.php') ?>">
-    <a class="nav-link" href="dashboard-admin2.php">
+  <li class="nav-item <?= sidebar_active('index.php') ?>">
+    <a class="nav-link" href="index.php">
       <i class="bi bi-house-door-fill"></i>
       <span>Beranda</span></a>
   </li>

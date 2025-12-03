@@ -1,5 +1,170 @@
-<?php 
+<?php
 session_start();
+
+require '../../../../auth/koneksi.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
+require '../../../../auth/voucher.php';
+
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+
+
+function getVoucher($searchTerm = null)
+{
+    global $client;
+
+    // Siapkan payload untuk RPC
+    $payload = [];
+    if ($searchTerm) {
+        // Jika ada istilah pencarian, tambahkan ke payload
+        $payload = [
+            'search_term' => $searchTerm
+        ];
+    }
+
+    try {
+        $response = $client->post('/rest/v1/rpc/get_voucher_with_claims', [
+            'headers' => [
+                'apikey'        => SUPABASE_SERVICE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY,
+                'Content-Type'  => 'application/json' // Penting untuk RPC dengan payload
+            ],
+
+            'body' => json_encode($payload) // Kirim payload yang berisi search_term
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true) ?? [];
+    } catch (RequestException $e) {
+        // ... (kode error handling Anda)
+        echo "<pre>Error: " . $e->getMessage() . "</pre>";
+        if ($e->hasResponse()) {
+            echo "<pre>Response: " . $e->getResponse()->getBody()->getContents() . "</pre>";
+        }
+        return [];
+    }
+}
+
+
+function voucherStats()
+{
+    global $client;
+
+    try {
+        $response = $client->post('/rest/v1/rpc/get_voucher_stats', [
+            'headers' => [
+                'apikey'        => SUPABASE_SERVICE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY
+            ],
+
+            'body' => json_encode([]) // RPC membutuhkan payload kosong
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true) ?? [];
+    } catch (RequestException $e) {
+        echo "<pre>Error: " . $e->getMessage() . "</pre>";
+        if ($e->hasResponse()) {
+            echo "<pre>Response: " . $e->getResponse()->getBody()->getContents() . "</pre>";
+        }
+        return [];
+    }
+}
+
+function loadKategori()
+{
+    global $client;
+    try {
+        $response = $client->get(SUPABASE_URL . '/rest/v1/kategori', [
+            'headers' => [
+                'apikey' => SUPABASE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_KEY,
+                'Content-Type'  => 'application/json'
+            ],
+        ]);
+
+        $body = $response->getBody()->getContents();
+        $data = json_decode($body, true);
+
+
+        return $data ?? [];
+    } catch (RequestException $e) {
+        echo "<pre>Request error: " . $e->getMessage() . "</pre>";
+        if ($e->hasResponse()) {
+            echo "<pre>Response: " . $e->getResponse()->getBody()->getContents() . "</pre>";
+        }
+        return [];
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nama_voucher_add'])) {
+
+    $result = addVoucher($_POST, $_FILES);
+
+    if ($result['success']) {
+        $_SESSION['success'] = "Voucher berhasil ditambahkan!";
+    } else {
+        $_SESSION['error'] = "Gagal menambahkan voucher: " . $result['error'];
+    }
+
+    header("Location: kelola-voucher.php");
+    exit;
+}
+
+if (isset($_POST['nama_voucher_edit'])) {
+    $result = updateVoucher($_POST['id_voucher'], $_POST, $_FILES);
+
+    if ($result['success']) {
+        $_SESSION['success'] = "Voucher berhasil diupdate!";
+    } else {
+        $_SESSION['error'] = $result['error'];
+    }
+
+    header("Location: kelola-voucher.php");
+    exit;
+}
+
+if (isset($_GET['delete_voucher'])) {
+    $id = $_GET['delete_voucher'];
+
+    $result = deleteVoucher($id);
+
+    if ($result['success']) {
+        $_SESSION['success'] = "Voucher berhasil dihapus!";
+    } else {
+        $_SESSION['error'] = $result['error'];
+    }
+
+    header("Location: kelola-voucher.php");
+    exit;
+}
+
+if (isset($_GET['get_voucher_by_id'])) {
+    header("Content-Type: application/json; charset=UTF-8");
+    error_reporting(0);
+
+    $id = $_GET['get_voucher_by_id'];
+
+    // gunakan RELATION NAME sesuai FK: voucher_kategori_id_voucher_fkey
+    $url = SUPABASE_URL . "/rest/v1/voucher?select=*,voucher_kategori_id_voucher_fkey(id_kategori)&id_voucher=eq.$id";
+
+    try {
+        $response = $client->get($url, [
+            "headers" => [
+                "apikey" => SUPABASE_KEY,
+                "Authorization" => "Bearer " . SUPABASE_KEY
+            ]
+        ]);
+
+        echo $response->getBody()->getContents();
+    } catch (Exception $e) {
+        echo json_encode(["error" => $e->getMessage()]);
+    }
+
+    exit;
+}
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,21 +189,8 @@ session_start();
     <link href="../css/sb-admin-2.min.css" rel="stylesheet">
 
     <style>
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin: 0;
-            color: #333;
+        body {
+            overflow-x: hidden;
         }
 
         .user-info {
@@ -236,56 +388,6 @@ session_start();
             gap: 5px;
         }
 
-        .modal-custom {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-custom.active {
-            display: flex;
-        }
-
-        .modal-content-custom {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header-custom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-header-custom h2 {
-            margin: 0;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-        }
-
-        .close-modal:hover {
-            color: #333;
-        }
-
         .card-header-custom {
             display: flex;
             justify-content: space-between;
@@ -295,6 +397,76 @@ session_start();
 
         .card-header-custom h2 {
             margin: 0;
+        }
+
+        #contextMenu {
+            position: absolute;
+            display: none;
+            z-index: 9999;
+        }
+
+        /* Layout filter */
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Bootstrap-like form-select-sm */
+        .form-select-sm-custom {
+            padding: 4px 8px;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: #fff;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-select-sm-custom:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, .25);
+        }
+
+        /* ===== BADGES (mirip bootstrap) ===== */
+        .badge {
+            display: inline-block;
+            padding: 0.35em 0.6em;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            border-radius: 0.375rem;
+            text-transform: uppercase;
+        }
+
+        .bg-success {
+            background-color: #198754;
+        }
+
+        .bg-danger {
+            background-color: #dc3545;
+        }
+
+        .bg-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        /* Optional biar tabel lebih rapi */
+        table tbody tr td {
+            vertical-align: middle;
+            padding: 8px;
         }
     </style>
 
@@ -316,99 +488,147 @@ session_start();
             <div id="content">
 
                 <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-                    <!-- Sidebar Toggle (Topbar) -->
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
-
-                    <!-- Topbar Navbar -->
-                    <ul class="navbar-nav ml-auto">
-                        <!-- Nav Item - User Information -->
-                        <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Douglas McGee</span>
-                                <img class="img-profile rounded-circle"
-                                    src="img/undraw_profile.svg">
-                            </a>
-                            <!-- Dropdown - User Information -->
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Profile
-                                </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Settings
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
-                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Logout
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
-                </nav>
+                <?php include '../../../../component/topbar.php'; ?>
                 <!-- End of Topbar -->
 
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                    <!-- Page Heading -->
-                    <div class="header">
-                        <h1>Kelola Voucher</h1>
-                    </div>
 
                     <!-- Statistics -->
                     <div class="stats-container">
+                        <?php
+
+                        $voucherStat = voucherStats();
+
+                        // var_dump($voucherStat[0]);
+
+                        // die;
+
+                        ?>
                         <div class="stat-card blue">
                             <h3>Total Voucher</h3>
-                            <div class="number" id="totalVouchers">0</div>
+                            <div class="number" id="totalVouchers"><?= $voucherStat[0]['jumlah_voucher'] ?></div>
                         </div>
                         <div class="stat-card green">
                             <h3>Voucher Aktif</h3>
-                            <div class="number" id="activeVouchers">0</div>
+                            <div class="number" id="activeVouchers"><?= $voucherStat[0]['voucher_aktif'] ?></div>
                         </div>
                         <div class="stat-card orange">
                             <h3>Akan Datang</h3>
-                            <div class="number" id="upcomingVouchers">0</div>
+                            <div class="number" id="upcomingVouchers"><?= $voucherStat[0]['voucher_akan_datang'] ?></div>
                         </div>
                         <div class="stat-card red">
                             <h3>Expired</h3>
-                            <div class="number" id="expiredVouchers">0</div>
+                            <div class="number" id="expiredVouchers"><?= $voucherStat[0]['voucher_expired'] ?></div>
                         </div>
                     </div>
 
                     <!-- Voucher List -->
                     <div class="content-card">
                         <div class="card-header-custom">
-                            <h2>Daftar Voucher</h2>
-                            <button class="btn-custom btn-primary-custom" onclick="openModal()">
+                            <div>
+                                <form method="GET" action="">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="search"
+                                            placeholder="Cari berdasarkan nama"
+                                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="fas fa-search"></i> Cari
+                                            </button>
+                                            <?php if (isset($_GET['search']) && $_GET['search'] != ''): ?>
+                                                <a href="?" class="btn btn-secondary">
+                                                    <i class="fas fa-times"></i> Reset
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-auto">
+                                    <label for="filterStatus" class="col-form-label fw-bold">Filter Status:</label>
+                                </div>
+                                <div class="col-auto">
+                                    <select id="filterStatus" class="form-select form-select-sm form-select-sm-custom">
+                                        <option value="all">Semua</option>
+                                        <option value="aktif">Aktif</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="akan datang">Akan Datang</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="btn-custom btn-primary-custom" data-toggle="modal" data-target="#addVoucher">
                                 <i class="fas fa-plus"></i> Tambah Voucher
                             </button>
                         </div>
 
-                        <div class="table-container">
-                            <table class="custom-table">
+                        <div class="table-container table-responsive">
+                            <table class="custom-table text-center table-bordered table-hover" id="myTable" width="100%" cellspacing="0">
                                 <thead>
                                     <tr>
-                                        <th>Kode Voucher</th>
                                         <th>Nama Voucher</th>
+                                        <th>Harga tukar</th>
+                                        <th>Status</th>
+                                        <th>jumlah klaim</th>
                                         <th>Tanggal Mulai</th>
                                         <th>Tanggal Berakhir</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="voucherTable">
-                                    <tr>
-                                        <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
-                                            Belum ada voucher. Klik tombol "Tambah Voucher" untuk membuat voucher baru.
-                                        </td>
-                                    </tr>
+
+                                    <?php
+                                    $searchTerm = $_GET['search'] ?? null;
+                                    $vouchers = getVoucher($searchTerm);
+
+                                    
+                                    if (!empty($vouchers)):
+                                        foreach ($vouchers as $voucher):
+
+                                            $today = date('Y-m-d');
+                                            $start  = $voucher['tgl_mulai'];
+                                            $end    = $voucher['tgl_berakhir'];
+
+                                            if ($end < $today) {
+                                                // sudah lewat
+                                                $status = "expired";
+                                                $badge = "badge-danger-custom";
+                                            } elseif ($start > $today) {
+                                                // belum mulai
+                                                $status = "akan datang";
+                                                $badge = "badge-warning-custom";
+                                            } else {
+                                                // sedang berlaku
+                                                $status = "aktif";
+                                                $badge = "badge-success-custom";
+                                            }
+                                    ?>
+
+                                            <tr class="text-center" data-id="<?= $voucher['id_voucher'] ?>" data-status="<?= $status ?>">
+                                                <td><?= $voucher['nama_voucher'] ?></td>
+                                                <td><?= $voucher['poin_tukar'] ?></td>
+                                                <td><span class="badge-custom <?= $badge ?>">
+                                                        <?= $status ?>
+                                                    </span></td>
+                                                <td><?= $voucher['jumlah_klaim'] ?></td>
+                                                <td><?= $voucher['tgl_mulai'] ?></td>
+                                                <td><?= $voucher['tgl_berakhir'] ?></td>
+
+                                            </tr>
+                                        <?php
+                                        endforeach;
+
+                                    else: ?>
+
+                                        <tr>
+                                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
+                                                Belum ada voucher. Klik tombol "Tambah Voucher" untuk membuat voucher baru.
+                                            </td>
+                                        </tr>
+
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -435,56 +655,17 @@ session_start();
 
     </div>
     <!-- End of Page Wrapper -->
-
-    <!-- Modal Form -->
-    <div id="voucherModal" class="modal-custom">
-        <div class="modal-content-custom">
-            <div class="modal-header-custom">
-                <h2 id="modalTitle">Tambah Voucher</h2>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
-            </div>
-            <form id="voucherForm" onsubmit="handleSubmit(event)">
-                <input type="hidden" id="editIndex">
-
-                <div class="form-group">
-                    <label>Nama Voucher *</label>
-                    <input type="text" id="nama_voucher" required placeholder="Contoh: Diskon Hari Raya">
-                </div>
-
-                <div class="form-group">
-                    <label>Kode Voucher *</label>
-                    <input type="text" id="kode_voucher" required placeholder="Contoh: HARIRAYA2024">
-                </div>
-
-                <div class="form-group">
-                    <label>Tanggal Mulai *</label>
-                    <input type="date" id="tgl_mulai" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Tanggal Berakhir *</label>
-                    <input type="date" id="tgl_berakhir" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Deskripsi</label>
-                    <textarea id="deskripsi" placeholder="Deskripsi singkat tentang voucher"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Syarat & Ketentuan</label>
-                    <textarea id="syarat_ketentuan"
-                        placeholder="Syarat dan ketentuan penggunaan voucher"></textarea>
-                </div>
-
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
-        </div>
+    <!-- contextMenu -->
+    <div id="contextMenu" class="dropdown-menu">
+        <p></p>
+        <button class="dropdown-item" id="btnEdit">
+            <i class="fas fa-edit"></i>
+            Edit</button>
+        <button class="dropdown-item text-danger" id="btnDelete">
+            <i class="fas fa-trash"></i>
+            Hapus</button>
     </div>
-
+    <!-- Modal Form -->
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
@@ -510,6 +691,299 @@ session_start();
         </div>
     </div>
 
+    <div class="modal fade" id="deleteVoucher" tabindex="-1" role="dialog"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">hapus voucher</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-primary" href="../../../auth/logout.php">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addVoucher" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Voucher Baru</h5>
+                    <button class="close" type="button" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <form id="formAddVoucher" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <!-- NAV TAB -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#tabInfo">Info Utama</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#tabPengaturan">Pengaturan</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#tabLainnya">Kategori & Foto</a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+
+                            <!-- TAB 1 -->
+                            <div class="tab-pane fade show active" id="tabInfo">
+                                <div class="form-group">
+                                    <label>Nama Voucher</label>
+                                    <input type="text" class="form-control" name="nama_voucher_add" required>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Tanggal Mulai</label>
+                                        <input type="date" class="form-control" name="tgl_mulai" required>
+                                    </div>
+
+                                    <div class="form-group col-md-6">
+                                        <label>Tanggal Berakhir</label>
+                                        <input type="date" class="form-control" name="tgl_berakhir" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Deskripsi</label>
+                                    <textarea class="form-control" name="deskripsi" rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- TAB 2 -->
+                            <div class="tab-pane fade" id="tabPengaturan">
+
+                                <div class="form-row">
+
+                                    <div class="form-group col-md-6">
+                                        <label>Poin Tukar</label>
+                                        <input type="number" class="form-control" name="poin_tukar" min="0" value="0">
+                                    </div>
+
+                                    <div class="form-group col-md-6">
+                                        <label>Minimal Pembelian</label>
+                                        <input type="number" class="form-control" name="minimal_pembelian" min="0" value="0">
+                                    </div>
+
+                                </div>
+
+                                <div class="form-row">
+
+                                    <div class="form-group col-md-4">
+                                        <label>Persentase Potongan (%)</label>
+                                        <input type="number" class="form-control" name="persentase_potongan" min="0" max="100" value="0">
+                                    </div>
+
+                                    <div class="form-group col-md-8">
+                                        <label>Maksimal Potongan (Rp)</label>
+                                        <input type="number" class="form-control" name="maksimal_potongan" min="0" value="0">
+                                    </div>
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Jenis Voucher</label>
+                                    <select class="form-control" name="jenis_voucher" required>
+                                        <option value="">Pilih Jenis Voucher</option>
+                                        <option value="diskon">Diskon</option>
+                                        <option value="ongkir">Ongkir</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- TAB 3 -->
+                            <div class="tab-pane fade" id="tabLainnya">
+
+                                <?php
+
+                                $kateg = loadKategori();
+                                $no = 1;
+                                ?>
+
+                                <div class="form-group">
+                                    <label>Kategori (Optional)</label>
+                                    <select multiple class="form-control" name="id_kategori[]">
+                                        <?php foreach ($kateg as $kat) : ?>
+                                            <option value="<?= $kat['id_kategori'] ?>"><?= $kat['nama_kategori'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Upload Foto Voucher</label>
+                                    <input type="file" class="form-control-file" name="foto">
+                                    <small class="text-muted">Opsional — jika kosong akan memakai default</small>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button class="btn btn-primary" type="submit" name="add">Simpan</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+
+    </div>
+
+    <div class="modal fade" id="editVoucher" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Voucher</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <form id="formEditVoucher" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="id_voucher" id="edit_id_voucher">
+
+                    <div class="modal-body">
+
+                        <!-- NAV TAB -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-toggle="tab" href="#editTabInfo">Info Utama</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#editTabPengaturan">Pengaturan</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="tab" href="#editTabLainnya">Kategori & Foto</a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+
+                            <!-- TAB Info Utama -->
+                            <div class="tab-pane fade show active" id="editTabInfo">
+                                <div class="form-group">
+                                    <label>Nama Voucher</label>
+                                    <input type="text" class="form-control" name="nama_voucher_edit" id="edit_nama_voucher" required>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Tanggal Mulai</label>
+                                        <input type="date" class="form-control" name="tgl_mulai" id="edit_tgl_mulai" required>
+                                    </div>
+
+                                    <div class="form-group col-md-6">
+                                        <label>Tanggal Berakhir</label>
+                                        <input type="date" class="form-control" name="tgl_berakhir" id="edit_tgl_berakhir" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Deskripsi</label>
+                                    <textarea class="form-control" name="deskripsi" id="edit_deskripsi" rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- TAB Pengaturan -->
+                            <div class="tab-pane fade" id="editTabPengaturan">
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Poin Tukar</label>
+                                        <input type="number" class="form-control" name="poin_tukar" id="edit_poin_tukar" min="0">
+                                    </div>
+
+                                    <div class="form-group col-md-6">
+                                        <label>Minimal Pembelian</label>
+                                        <input type="number" class="form-control" name="minimal_pembelian" id="edit_minimal_pembelian" min="0">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Persentase Potongan (%)</label>
+                                        <input type="number" class="form-control" name="persentase_potongan" id="edit_persentase_potongan" min="0" max="100">
+                                    </div>
+
+                                    <div class="form-group col-md-8">
+                                        <label>Maksimal Potongan (Rp)</label>
+                                        <input type="number" class="form-control" name="maksimal_potongan" id="edit_maksimal_potongan" min="0">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Jenis Voucher</label>
+                                    <select class="form-control" name="jenis_voucher" id="edit_jenis_voucher" required>
+                                        <option value="">Pilih Jenis Voucher</option>
+                                        <option value="diskon">Diskon</option>
+                                        <option value="ongkir">Ongkir</option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <!-- TAB Kategori & Foto -->
+                            <div class="tab-pane fade" id="editTabLainnya">
+
+                                <?php
+
+                                $kateg = loadKategori();
+                                $no = 1;
+                                ?>
+
+                                <div class="form-group">
+                                    <label>Kategori (Optional)</label>
+                                    <select multiple class="form-control" name="id_kategori[]" id="edit_list_kategori">
+                                        <?php foreach ($kateg as $kat) : ?>
+                                            <option value="<?= $kat['id_kategori'] ?>"><?= $kat['nama_kategori'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Foto Voucher</label>
+                                    <input type="file" class="form-control-file" name="foto">
+                                    <img id="edit_preview_foto" src="" class="img-fluid rounded mt-2" style="max-height: 150px;">
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal" type="reset" id="closeBtn">Batal</button>
+                        <button class="btn btn-primary" type="submit" name="update">Simpan Perubahan</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
     <!-- Bootstrap core JavaScript-->
     <script src="../vendor/jquery/jquery.min.js"></script>
     <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -520,191 +994,156 @@ session_start();
     <!-- Custom scripts for all pages-->
     <script src="../js/sb-admin-2.min.js"></script>
 
+    <!-- Page level plugins -->
+    <script src="../vendor/chart.js/Chart.min.js"></script>
+
+
     <script>
-        let vouchers = [];
+        // Di dalam tag <script>
+        document.querySelector('#editVoucher .close').addEventListener('click', function() {
+            $('#editVoucher').modal('hide');
+        });
+        document.querySelector('#closeBtn').addEventListener('click', function() {
+            $('#editVoucher').modal('hide');
+        });
 
-        // Load vouchers from localStorage
-        function loadVouchers() {
-            const saved = localStorage.getItem('vouchers');
-            if (saved) {
-                vouchers = JSON.parse(saved);
-            }
-            updateTable();
-            updateStats();
+
+
+        const table = document.getElementById("myTable");
+        const menu = document.getElementById("contextMenu");
+
+
+        let selectedRow = null;
+        let pressTimer;
+
+        function showMenu(x, y, row) {
+            selectedRow = row;
+            menu.style.left = x + "px";
+            menu.style.top = y + "px";
+            menu.style.display = "block";
+            menu.querySelector('p').textContent = selectedRow.getAttribute('data-id');
         }
 
-        // Save vouchers to localStorage
-        function saveVouchers() {
-            localStorage.setItem('vouchers', JSON.stringify(vouchers));
-        }
+        // Hide menu on click anywhere
+        document.addEventListener("click", () => menu.style.display = "none");
 
-        // Get status of voucher
-        function getVoucherStatus(startDate, endDate) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const start = new Date(startDate);
-            const end = new Date(endDate);
+        // Right click event (Desktop)
+        table.addEventListener("contextmenu", function(e) {
+            e.preventDefault();
+            const row = e.target.closest("tr");
+            if (!row) return;
 
-            if (end < today) {
-                return {
-                    text: 'Expired',
-                    class: 'badge-danger-custom'
-                };
-            } else if (start > today) {
-                return {
-                    text: 'Akan Datang',
-                    class: 'badge-warning-custom'
-                };
-            } else {
-                return {
-                    text: 'Aktif',
-                    class: 'badge-success-custom'
-                };
-            }
-        }
+            showMenu(e.pageX, e.pageY, row);
+        });
 
-        // Format date
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
+        // Long press for Mobile
+        table.addEventListener("touchstart", function(e) {
+            const row = e.target.closest("tr");
+            if (!row) return;
 
-        // Update table
-        function updateTable() {
-            const tbody = document.getElementById('voucherTable');
+            pressTimer = setTimeout(() => {
+                const touch = e.touches[0];
+                showMenu(touch.pageX, touch.pageY, row);
+            }, 600); // tahan 0.6 detik
+        });
 
-            if (vouchers.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
-                            Belum ada voucher. Klik tombol "Tambah Voucher" untuk membuat voucher baru.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+        table.addEventListener("touchend", function() {
+            clearTimeout(pressTimer);
+        });
 
-            tbody.innerHTML = vouchers.map((voucher, index) => {
-                const status = getVoucherStatus(voucher.tgl_mulai, voucher.tgl_berakhir);
-                return `
-                    <tr>
-                        <td><strong>${voucher.kode_voucher}</strong></td>
-                        <td>${voucher.nama_voucher}</td>
-                        <td>${formatDate(voucher.tgl_mulai)}</td>
-                        <td>${formatDate(voucher.tgl_berakhir)}</td>
-                        <td><span class="badge-custom ${status.class}">${status.text}</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn btn-warning btn-sm" onclick="editVoucher(${index})">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteVoucher(${index})">
-                                    <i class="fas fa-trash"></i> Hapus
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
+        // Saat tombol EDIT di klik
+        document.getElementById("btnEdit").addEventListener("click", function() {
+            const id = selectedRow.getAttribute("data-id");
+            menu.style.display = "none";
 
-        // Update statistics
-        function updateStats() {
-            let active = 0,
-                upcoming = 0,
-                expired = 0;
+            // Request data lengkap voucher
+            fetch("?get_voucher_by_id=" + id)
+                .then(res => res.json())
+                .then(data => {
+                    const v = data[0];
 
-            vouchers.forEach(voucher => {
-                const status = getVoucherStatus(voucher.tgl_mulai, voucher.tgl_berakhir);
-                if (status.text === 'Aktif') active++;
-                else if (status.text === 'Akan Datang') upcoming++;
-                else if (status.text === 'Expired') expired++;
-            });
+                    document.getElementById("edit_id_voucher").value = v.id_voucher;
+                    document.getElementById("edit_nama_voucher").value = v.nama_voucher;
+                    document.getElementById("edit_deskripsi").value = v.deskripsi;
+                    document.getElementById("edit_tgl_mulai").value = v.tgl_mulai;
+                    document.getElementById("edit_tgl_berakhir").value = v.tgl_berakhir;
 
-            document.getElementById('totalVouchers').textContent = vouchers.length;
-            document.getElementById('activeVouchers').textContent = active;
-            document.getElementById('upcomingVouchers').textContent = upcoming;
-            document.getElementById('expiredVouchers').textContent = expired;
-        }
+                    document.getElementById("edit_poin_tukar").value = v.poin_tukar;
+                    document.getElementById("edit_minimal_pembelian").value = v.minimal_pembelian;
+                    document.getElementById("edit_persentase_potongan").value = v.persentase_potongan;
+                    document.getElementById("edit_maksimal_potongan").value = v.maksimal_potongan;
 
-        // Open modal
-        function openModal() {
-            document.getElementById('voucherModal').classList.add('active');
-            document.getElementById('modalTitle').textContent = 'Tambah Voucher';
-            document.getElementById('voucherForm').reset();
-            document.getElementById('editIndex').value = '';
-        }
+                    document.getElementById("edit_jenis_voucher").value = v.jenis_voucher;
 
-        // Close modal
-        function closeModal() {
-            document.getElementById('voucherModal').classList.remove('active');
-        }
+                    // kategori multiple
+                    const selectKategori = document.getElementById("edit_list_kategori");
 
-        // Edit voucher
-        function editVoucher(index) {
-            const voucher = vouchers[index];
-            document.getElementById('voucherModal').classList.add('active');
-            document.getElementById('modalTitle').textContent = 'Edit Voucher';
-            document.getElementById('editIndex').value = index;
-            document.getElementById('nama_voucher').value = voucher.nama_voucher;
-            document.getElementById('kode_voucher').value = voucher.kode_voucher;
-            document.getElementById('tgl_mulai').value = voucher.tgl_mulai;
-            document.getElementById('tgl_berakhir').value = voucher.tgl_berakhir;
-            document.getElementById('deskripsi').value = voucher.deskripsi || '';
-            document.getElementById('syarat_ketentuan').value = voucher.syarat_ketentuan || '';
-        }
+                    const kategoriList = v.voucher_kategori_id_voucher_fkey || [];
 
-        // Delete voucher
-        function deleteVoucher(index) {
-            if (confirm('Yakin ingin menghapus voucher ini?')) {
-                vouchers.splice(index, 1);
-                saveVouchers();
-                updateTable();
-                updateStats();
-            }
-        }
+                    // reset selection
+                    for (let opt of selectKategori.options) {
+                        opt.selected = false;
+                    }
 
-        // Handle form submit
-        function handleSubmit(event) {
-            event.preventDefault();
+                    kategoriList.forEach(k => {
+                        for (let opt of selectKategori.options) {
+                            if (opt.value === k.id_kategori) {
+                                opt.selected = true;
+                            }
+                        }
+                    });
 
-            const voucher = {
-                nama_voucher: document.getElementById('nama_voucher').value,
-                kode_voucher: document.getElementById('kode_voucher').value,
-                tgl_mulai: document.getElementById('tgl_mulai').value,
-                tgl_berakhir: document.getElementById('tgl_berakhir').value,
-                deskripsi: document.getElementById('deskripsi').value,
-                syarat_ketentuan: document.getElementById('syarat_ketentuan').value
-            };
+                    document.getElementById("edit_preview_foto").src = v.foto;
 
-            const editIndex = document.getElementById('editIndex').value;
+                    $("#editVoucher").modal("show");
 
-            if (editIndex !== '') {
-                // Edit existing voucher
-                vouchers[editIndex] = voucher;
-            } else {
-                // Add new voucher
-                vouchers.push(voucher);
-            }
+                })
+                .catch(err => console.error(err));
 
-            saveVouchers();
-            updateTable();
-            updateStats();
-            closeModal();
-        }
 
-        // Close modal on outside click
-        document.getElementById('voucherModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeModal();
+
+        });
+
+
+        // Saat tombol HAPUS di klik
+
+        document.getElementById("btnDelete").addEventListener("click", function() {
+            if (confirm("Yakin ingin menghapus voucher ini?")) {
+
+                menu.style.display = "none";
+                window.location.href = "?delete_voucher=" + selectedRow.getAttribute('data-id');
             }
         });
 
-        // Load vouchers on page load
-        loadVouchers();
+        document.getElementById("filterStatus").addEventListener("change", function() {
+            const selected = this.value;
+            const rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                const status = row.getAttribute("data-status");
+
+                if (selected === "all" || status === selected) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+
+        // Di dalam tag <script>
+        $('#editVoucher').on('hidden.bs.modal', function() {
+            // Reset form ketika modal ditutup
+            $('#formEditVoucher')[0].reset();
+
+            // Opsional: Hapus parameter URL yang mungkin tersisa dari proses edit
+            if (window.history.replaceState) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('get_voucher_by_id'); // Hapus parameter yang mungkin Anda gunakan
+                window.history.replaceState({
+                    path: url.href
+                }, '', url.href);
+            }
+        });
     </script>
 
 </body>
