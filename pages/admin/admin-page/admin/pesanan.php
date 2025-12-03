@@ -24,7 +24,6 @@ function getAllPesanan()
         ]);
 
         return json_decode($response->getBody()->getContents(), true) ?? [];
-
     } catch (RequestException $e) {
         echo "<pre>Error: " . $e->getMessage() . "</pre>";
         if ($e->hasResponse()) {
@@ -32,6 +31,36 @@ function getAllPesanan()
         }
         return [];
     }
+}
+
+function getDetailPesanan($idTransaksi)
+{
+    global $client;
+    try {
+        $response = $client->get('/rest/v1/transaksi', [
+            'query' => [
+                'id_transaksi' => 'eq.' . $idTransaksi,
+                'select' => '*,alamat(*),pembayaran(*),batal(*),detail_transaksi_produk(*,produk(*)),detail_transaksi_paket(*,paket(*)),voucher(*)',
+            ],
+            'headers' => [
+                'apikey'        => SUPABASE_SERVICE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY
+            ]
+        ]);
+        $data = json_decode($response->getBody()->getContents(), true);
+        return $data[0] ?? null; // Kembalikan array transaksi atau null
+    } catch (RequestException $e) {
+        return null; // Handle error dengan return null
+    }
+}
+
+
+if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['id_transaksi'])) {
+    $id = $_GET['id_transaksi'];
+    $detail = getDetailPesanan($id);
+    header('Content-Type: application/json');
+    echo json_encode($detail);
+    exit;
 }
 
 ?>
@@ -94,7 +123,7 @@ function getAllPesanan()
                                             <form method="GET" action="">
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" name="search"
-                                                        placeholder="Cari pesanan berdasarkan id keranjang..."
+                                                        placeholder="Cari berdasarkan kode Pesanan"
                                                         value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
                                                     <div class="input-group-append">
                                                         <button class="btn btn-primary" type="submit">
@@ -112,17 +141,17 @@ function getAllPesanan()
                                     </div>
 
                                     <!-- Table -->
-                                    <div class="table-responsive">
+                                    <div class="table-responsive" id="myTable">
                                         <table class="table table-bordered table-hover" width="100%" cellspacing="0">
                                             <thead class="thead-light">
                                                 <tr>
-                                                    <th width="5%">No</th>
-                                                    <th width="20%">Nomer Pesanan</th>
-                                                    <th width="20%">Total Harga</th>
-                                                    <th width="15%">Status</th>
-                                                    <th width="10%">Metode Pengambilan</th>
-                                                    <th width="15%">Waktu Selesai</th>
-                                                    <th width="15%">Aksi</th>
+                                                    <th>No</th>
+                                                    <th>Nomer Pesanan</th>
+                                                    <th>Total Harga</th>
+                                                    <th>Status</th>
+                                                    <th>Metode Pengambilan</th>
+                                                    <th>Waktu Selesai</th>
+                                                    <th width="5%">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -145,17 +174,20 @@ function getAllPesanan()
                                                     $no = 1;
                                                     foreach ($pesanan as $user):
                                                 ?>
-                                                        <tr>
+                                                        <tr data-id="<?= $user['id_transaksi'] ?>">
                                                             <td><?= $no++; ?></td>
 
                                                             <td><?= htmlspecialchars($user['nomor_pesanan'] ?? '-') ?></td>
-                                                            <td><?= htmlspecialchars($user['total_harga'] ?? '-') ?></td>
+                                                            <td>Rp <?= number_format($user['total_harga'], 0, ',', '.') ?></td>
                                                             <td><?= htmlspecialchars($user['status'] ?? '-') ?></td>
                                                             <td><?= htmlspecialchars($user['metode_pengambilan'] ?? '-') ?></td>
-                                                            <td><?= htmlspecialchars($user['waktu_selesai'] ?? '-') ?></td>
+                                                            <td><?= !empty($user['waktu_selesai'])
+                                                                    ? date('d/m/Y', strtotime($user['waktu_selesai']))
+                                                                    : '-' ?></td>
                                                             <td>
-                                                                <i class="bi bi-x-square-fill" title="batal"></i>
-                                                                <i class="bi bi-info-circle-fill" title="detail"></i>
+                                                                <button class="btn btn-light btn-sm action-btn">
+                                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     <?php
@@ -202,6 +234,101 @@ function getAllPesanan()
     </div>
     <!-- End of Page Wrapper -->
 
+    <!-- contextMenu -->
+    <div id="contextMenu" class="dropdown-menu">
+        <!-- <p></p> -->
+        <button class="dropdown-item text-warning" id="btnDetail">
+            <i class="fas fa-info-circle"></i>
+            Detail Pesanan</button>
+        <button class="dropdown-item text-danger" id="btnEdit">
+            <i class="fas fa-window-close"></i>
+            Batalkan Pesanan</button>
+    </div>
+
+    <!-- Modal Detail Pesanan -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">Detail Pesanan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Nav Tabs -->
+                    <ul class="nav nav-tabs" id="detailTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">Informasi Umum</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="produk-tab" data-bs-toggle="tab" data-bs-target="#produk" type="button" role="tab">Detail Produk/Paket</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="alamat-tab" data-bs-toggle="tab" data-bs-target="#alamat" type="button" role="tab">Alamat</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pembayaran-tab" data-bs-toggle="tab" data-bs-target="#pembayaran" type="button" role="tab">Pembayaran</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="batal-tab" data-bs-toggle="tab" data-bs-target="#batal" type="button" role="tab" style="display: none;">Pembatalan</button>
+                        </li>
+                    </ul>
+                    <!-- Tab Content -->
+                    <div class="tab-content mt-3" id="detailTabContent">
+                        <div class="tab-pane fade show active" id="info" role="tabpanel">
+                            <p><strong>Nomor Pesanan:</strong> <span id="nomor_pesanan">-</span></p>
+                            <p><strong>Status:</strong> <span id="status">-</span></p>
+                            <p><strong>Tanggal Dibuat:</strong> <span id="created_at">-</span></p>
+                            <p><strong>Waktu Selesai:</strong> <span id="waktu_selesai">-</span></p>
+                            <p><strong>Metode Pengambilan:</strong> <span id="metode_pengambilan">-</span></p>
+                            <p><strong>Catatan:</strong> <span id="catatan">-</span></p>
+                            <p><strong>Voucher:</strong> <span id="voucher">-</span></p>
+                        </div>
+                        <div class="tab-pane fade" id="produk" role="tabpanel">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Jumlah</th>
+                                        <th>Harga Satuan</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="produkTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="alamat" role="tabpanel">
+                            <p><strong>Nama Penerima:</strong> <span id="nama_lengkap">-</span></p>
+                            <p><strong>No. HP:</strong> <span id="no_hp_penerima">-</span></p>
+                            <p><strong>Alamat:</strong> <span id="alamat_rumah">-</span></p>
+                            <p><strong>Koordinat:</strong> <span id="koordinat">-</span></p>
+                        </div>
+                        <div class="tab-pane fade" id="pembayaran" role="tabpanel">
+                            <p><strong>Subtotal:</strong> <span id="subtotal">-</span></p>
+                            <p><strong>Ongkir:</strong> <span id="ongkir">-</span></p>
+                            <p><strong>Potongan:</strong> <span id="potongan">-</span></p>
+                            <p><strong>Total:</strong> <span id="total_harga">-</span></p>
+                            <hr>
+                            <p><strong>Metode:</strong> <span id="metode_pembayaran">-</span></p>
+                            <p><strong>Nominal:</strong> <span id="nominal">-</span></p>
+                            <p><strong>Status:</strong> <span id="status_pembayaran">-</span></p>
+                            <p><strong>Tanggal:</strong> <span id="tgl_pembayaran">-</span></p>
+                        </div>
+                        <div class="tab-pane fade" id="batal" role="tabpanel">
+                            <p><strong>Alasan:</strong> <span id="alasan_batal">-</span></p>
+                            <p><strong>Tipe:</strong> <span id="tipe_batal">-</span></p>
+                            <p><strong>Status:</strong> <span id="status_batal">-</span></p>
+                            <p><strong>Dikonfirmasi Pada:</strong> <span id="dikonfirmasi_pada">-</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
@@ -228,22 +355,193 @@ function getAllPesanan()
     </div>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
-    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
 
     <!-- Custom scripts for all pages-->
-    <script src="js/sb-admin-2.min.js"></script>
+    <script src="../js/sb-admin-2.min.js"></script>
 
-    <!-- Page level plugins -->
-    <script src="vendor/chart.js/Chart.min.js"></script>
+    <script>
+        const table = document.getElementById("myTable");
+        const menu = document.getElementById("contextMenu");
 
-    <!-- Page level custom scripts -->
-    <script src="js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
 
+        let selectedRow = null;
+        let pressTimer;
+
+        function showMenu(x, y, row) {
+            if (row.getAttribute('data-id') != null) {
+                selectedRow = row;
+                const btnEdit = document.getElementById("btnEdit");
+                const btnDetail = document.getElementById("btnDetail");
+
+                // ===== Auto adjust posisi =====
+                const menuWidth = 180; // lebar perkiraan context menu
+                const screenWidth = window.innerWidth;
+
+                let posX = x;
+                let posY = y;
+
+                // Jika posisi terlalu dekat kanan → pindahkan ke kiri tombol
+                if (x + menuWidth > screenWidth) {
+                    posX = x - menuWidth;
+                    if (posX < 5) posX = 5; // jangan keluar kiri
+                }
+
+                menu.style.left = posX + "px";
+                menu.style.top = posY + "px";
+                menu.style.display = "block";
+            }
+        }
+
+
+        // Hide menu on click anywhere
+        document.addEventListener("click", () => menu.style.display = "none");
+
+        // Right click event (Desktop)
+        table.addEventListener("contextmenu", function(e) {
+            e.preventDefault();
+            const row = e.target.closest("tr");
+            if (!row) return;
+
+            showMenu(e.pageX, e.pageY, row);
+        });
+
+        // Long press for Mobile
+        table.addEventListener("touchstart", function(e) {
+            const row = e.target.closest("tr");
+            if (!row) return;
+
+            pressTimer = setTimeout(() => {
+                const touch = e.touches[0];
+                showMenu(touch.pageX, touch.pageY, row);
+            }, 600); // tahan 0.6 detik
+        });
+
+        table.addEventListener("touchend", function() {
+            clearTimeout(pressTimer);
+        });
+
+        document.querySelectorAll(".action-btn").forEach(btn => {
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+
+                const row = this.closest("tr");
+                const rect = this.getBoundingClientRect();
+
+                // tampilkan menu di samping tombol
+                console.log(rect);
+                showMenu(rect.left + window.scrollX, rect.bottom + window.scrollY - 50, row);
+            });
+        });
+
+        // Fungsi untuk format harga
+        function formatHarga(harga) {
+            return 'Rp ' + new Intl.NumberFormat('id-ID').format(harga);
+        }
+
+        // Fungsi untuk badge status
+        function getStatusBadge(status) {
+            const badges = {
+                'Menunggu Pembayaran': 'warning',
+                'Diproses': 'info',
+                'Dikirim': 'primary',
+                'Selesai': 'success',
+                'Dibatalkan': 'danger'
+            };
+            return `<span class="badge bg-${badges[status] || 'secondary'}">${status}</span>`;
+        }
+
+        // Event listener untuk tombol Detail Pesanan
+        document.getElementById("btnDetail").addEventListener("click", function() {
+            if (!selectedRow) return;
+
+            const idTransaksi = selectedRow.getAttribute('data-id');
+            if (!idTransaksi) return;
+
+            // Fetch data via AJAX
+            fetch('?action=get_detail&id_transaksi=' + encodeURIComponent(idTransaksi))
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        // Populate Produk/Paket
+                        let produkHtml = '';
+                        let totalSubtotal = 0;
+                        if (data.detail_transaksi_produk && Array.isArray(data.detail_transaksi_produk)) {
+                            data.detail_transaksi_produk.forEach(detail => {
+                                const produk = detail.produk;
+                                const harga = produk.harga - (produk.harga * (produk.diskon || 0) / 100);
+                                totalSubtotal += detail.subtotal;
+                                produkHtml += `<tr><td>${produk.nama_produk}<br></td><td>${detail.jumlah}</td><td>${formatHarga(harga)}</td><td>${formatHarga(detail.subtotal)}</td></tr>`;
+                            });
+                        }
+                        if (data.detail_transaksi_paket && Array.isArray(data.detail_transaksi_paket)) {
+                            data.detail_transaksi_paket.forEach(detail => {
+                                const paket = detail.paket;
+                                const harga = paket.harga_paket - (paket.harga_paket * (paket.diskon || 0) / 100);
+                                totalSubtotal += detail.subtotal;
+                                produkHtml += `<tr><td>${paket.nama_paket}<br></td><td>${detail.jumlah}</td><td>${formatHarga(harga)}</td><td>${formatHarga(detail.subtotal)}</td></tr>`;
+                            });
+                        }
+                        document.getElementById('produkTableBody').innerHTML = produkHtml;
+
+                        // Populate Alamat
+                        if (data.alamat) {
+                            document.getElementById('nama_lengkap').textContent = data.alamat.nama_lengkap || '-';
+                            document.getElementById('no_hp_penerima').textContent = data.alamat.no_hp_penerima || '-';
+                            document.getElementById('alamat_rumah').textContent = (data.alamat.alamat_rumah || '') + (data.alamat.detail_lain ? ' (' + data.alamat.detail_lain + ')' : '');
+                            document.getElementById('koordinat').textContent = data.alamat.latitude && data.alamat.longitude ? `Lat: ${data.alamat.latitude}, Lng: ${data.alamat.longitude}` : '-';
+                        } else {
+                            document.getElementById('nama_lengkap').textContent = '-';
+                            document.getElementById('no_hp_penerima').textContent = '-';
+                            document.getElementById('alamat_rumah').textContent = '-';
+                            document.getElementById('koordinat').textContent = '-';
+                        }
+
+                        // Populate Pembayaran
+                        document.getElementById('subtotal').textContent = formatHarga(totalSubtotal);
+                        document.getElementById('ongkir').textContent = formatHarga(data.ongkir || 0);
+                        document.getElementById('potongan').textContent = formatHarga(data.potongan || 0);
+                        document.getElementById('total_harga').textContent = formatHarga(data.total_harga);
+                        if (data.pembayaran) {
+                            document.getElementById('metode_pembayaran').textContent = data.pembayaran.metode || '-';
+                            document.getElementById('nominal').textContent = formatHarga(data.pembayaran.nominal);
+                            document.getElementById('status_pembayaran').innerHTML = getStatusBadge(data.pembayaran.status);
+                            document.getElementById('tgl_pembayaran').textContent = data.pembayaran.tgl_pembayaran ? new Date(data.pembayaran.tgl_pembayaran).toLocaleString('id-ID') : '-';
+                        } else {
+                            document.getElementById('metode_pembayaran').textContent = '-';
+                            document.getElementById('nominal').textContent = '-';
+                            document.getElementById('status_pembayaran').innerHTML = '-';
+                            document.getElementById('tgl_pembayaran').textContent = '-';
+                        }
+
+                        // Populate Batal (jika ada)
+                        if (data.batal) {
+                            document.getElementById('alasan_batal').textContent = data.batal.alasan || '-';
+                            document.getElementById('tipe_batal').textContent = data.batal.tipe || '-';
+                            document.getElementById('status_batal').innerHTML = getStatusBadge(data.batal.status);
+                            document.getElementById('dikonfirmasi_pada').textContent = data.batal.dikonfirmasi_pada ? new Date(data.batal.dikonfirmasi_pada).toLocaleString('id-ID') : 'Belum dikonfirmasi';
+                            document.getElementById('batal-tab').style.display = 'block';
+                        } else {
+                            document.getElementById('batal-tab').style.display = 'none';
+                        }
+
+                        // Show modal
+                        new bootstrap.Modal(document.getElementById('detailModal')).show();
+
+                    } else {
+                        alert('Data tidak ditemukan.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching detail:', error);
+                    alert('Gagal memuat detail pesanan.');
+                });
+        });
+    </script>
 </body>
 
 </html>

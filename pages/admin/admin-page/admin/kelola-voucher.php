@@ -571,11 +571,12 @@ if (isset($_GET['get_voucher_by_id'])) {
                                 <thead>
                                     <tr>
                                         <th>Nama Voucher</th>
-                                        <th>Harga tukar</th>
+                                        <th width="5">Harga tukar</th>
                                         <th>Status</th>
-                                        <th>jumlah klaim</th>
+                                        <th width="5%">jumlah klaim</th>
                                         <th>Tanggal Mulai</th>
                                         <th>Tanggal Berakhir</th>
+                                        <th width="5%">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="voucherTable">
@@ -616,7 +617,11 @@ if (isset($_GET['get_voucher_by_id'])) {
                                                 <td><?= $voucher['jumlah_klaim'] ?></td>
                                                 <td><?= $voucher['tgl_mulai'] ?></td>
                                                 <td><?= $voucher['tgl_berakhir'] ?></td>
-
+                                                <td>
+                                                    <button class="btn btn-light btn-sm action-btn">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         <?php
                                         endforeach;
@@ -1031,14 +1036,14 @@ if (isset($_GET['get_voucher_by_id'])) {
             $('#list_kategori').select2({
                 placeholder: "Pilih satu atau lebih kategori",
                 dropdownParent: $('#addVoucher'),
-                width:'100%',
+                width: '100%',
                 height: '200px'
             });
 
             $('#edit_list_kategori').select2({
                 placeholder: "Pilih satu atau lebih kategori",
                 dropdownParent: $('#editVoucher'),
-                width:'100%',
+                width: '100%',
                 height: '200px'
             });
         });
@@ -1054,10 +1059,23 @@ if (isset($_GET['get_voucher_by_id'])) {
         function showMenu(x, y, row) {
             if (row.getAttribute('data-id') != null) {
                 selectedRow = row;
-                menu.style.left = x + "px";
-                menu.style.top = y + "px";
+
+                // ===== Auto adjust posisi =====
+                const menuWidth = 180; // lebar perkiraan context menu
+                const screenWidth = window.innerWidth;
+
+                let posX = x;
+                let posY = y;
+
+                // Jika posisi terlalu dekat kanan → pindahkan ke kiri tombol
+                if (x + menuWidth > screenWidth) {
+                    posX = x - menuWidth;
+                    if (posX < 5) posX = 5; // jangan keluar kiri
+                }
+
+                menu.style.left = posX + "px";
+                menu.style.top = posY + "px";
                 menu.style.display = "block";
-                // menu.querySelector('p').textContent = selectedRow.getAttribute('data-id');
             }
         }
 
@@ -1184,6 +1202,19 @@ if (isset($_GET['get_voucher_by_id'])) {
         $('#edit_list_kategori').select2({
             placeholder: "Pilih satu atau lebih kategori",
             dropdownParent: $('#editVoucher') // Penting agar dropdown tidak terpotong oleh modal
+        });
+
+        document.querySelectorAll(".action-btn").forEach(btn => {
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+
+                const row = this.closest("tr");
+                const rect = this.getBoundingClientRect();
+
+                // tampilkan menu di samping tombol
+                console.log(rect);
+                showMenu(rect.left + window.scrollX, rect.bottom + window.scrollY - 50, row);
+            });
         });
     </script>
 

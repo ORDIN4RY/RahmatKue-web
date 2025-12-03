@@ -144,11 +144,11 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                                                 </div>
                                             </form>
                                         </div>
-                                        <div class="col-md-6 text-right">
+                                        <!-- <div class="col-md-6 text-right">
                                             <button class="btn btn-success" data-toggle="modal" data-target="#addUserModal">
                                                 <i class="fas fa-plus"></i> Tambah User
                                             </button>
-                                        </div>
+                                        </div> -->
                                     </div>
 
 
@@ -164,7 +164,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                                                     <th width="10%">Point</th>
                                                     <th width="10%">Status</th>
                                                     <th width="15%">Tanggal Daftar</th>
-                                                    <!-- <th width="15%">Aksi</th> -->
+                                                    <th width="5%">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -224,20 +224,12 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                                                                     : '-' ?>
                                                             </td>
 
+                                                            <td>
+                                                                <button class="btn btn-light btn-sm action-btn">
+                                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                                </button>
+                                                            </td>
 
-                                                            <!-- <td>
-                                                                    <?php if ($banStatus): ?>
-                                                                        <a href="?action=unban&id=<?= $user['id'] ?>"
-                                                                            class="btn btn-sm btn-success" title="Buka blokir">
-                                                                            <i class="fas fa-lock-open"></i>
-                                                                        </a>
-                                                                    <?php else: ?>
-                                                                        <a href="?action=ban&id=<?= $user['id'] ?>"
-                                                                            class="btn btn-sm btn-danger" title="Blokir user">
-                                                                            <i class="fas fa-user-slash"></i>
-                                                                        </a>
-                                                                    <?php endif; ?>
-                                                                </td> -->
                                                         </tr>
                                                     <?php
                                                     endforeach;
@@ -389,60 +381,58 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                 const isBlocked = row.getAttribute('data-blocked') === "1";
                 const isAdmin = row.getAttribute('data-is-admin') === "1";
 
-                // Ubah isi tombol berdasarkan status
                 const btnEdit = document.getElementById("btnEdit");
-                const btnAdmin = document.getElementById("btnAdmin")
+                const btnAdmin = document.getElementById("btnAdmin");
 
+                // Status Block/Unblock
                 if (isBlocked) {
                     btnEdit.innerHTML = '<i class="fas fa-unlock"></i> Buka blokir user';
-                    btnEdit.classList.remove("text-danger");
+                    btnEdit.classList.remove("text-danger"); 
                     btnEdit.classList.add("text-success");
-
-                    // arahkan ke action unban
-                    btnEdit.onclick = () => {
-                        window.location.href = `?action=unban&id=${row.getAttribute('data-id')}`;
-                    };
+                    btnEdit.onclick = () => window.location.href = `?action=unban&id=${row.dataset.id}`;
                 } else {
                     btnEdit.innerHTML = '<i class="fas fa-ban"></i> Blokir user';
-                    btnEdit.classList.remove("text-success");
+                    btnEdit.classList.remove("text-success"); 
                     btnEdit.classList.add("text-danger");
-
-                    // arahkan ke action ban
-                    btnEdit.onclick = () => {
-                        window.location.href = `?action=ban&id=${row.getAttribute('data-id')}`;
-                    };
+                    btnEdit.onclick = () => window.location.href = `?action=ban&id=${row.dataset.id}`;
                 }
 
+                // Status Admin/Demote
                 if (isAdmin) {
-                    btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> demote user';
-                    btnAdmin.classList.remove("text-warning");
-                    btnAdmin.classList.add("text-danger");
-                    btnEdit.disabled = 'true'
+                    btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> Demote user';
+                    btnAdmin.classList.remove("text-warning"); 
+                    btnAdmin.classList.add("text-danger"); 
+                    btnEdit.disabled = 'true';
                     btnEdit.classList.add("text-muted")
-                    // arahkan ke action unban
-                    btnAdmin.onclick = () => {
-                        window.location.href = `?action=demote&id=${row.getAttribute('data-id')}`;
-                    };
+                    btnAdmin.onclick = () => window.location.href = `?action=demote&id=${row.dataset.id}`;
                 } else {
-                    btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> promote user';
-                    btnAdmin.classList.remove("text-danger");
-                    btnAdmin.classList.add("text-warning");
-                    btnEdit.disable = 'false'
-                    btnEdit.classList.remove("text-muted")
-
-                    // arahkan ke action ban
-                    btnAdmin.onclick = () => {
-                        window.location.href = `?action=promote&id=${row.getAttribute('data-id')}`;
-                    };
+                    btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> Promote user';
+                    btnAdmin.classList.remove("text-danger"); 
+                    btnAdmin.classList.add("text-warning"); 
+                    btnEdit.enabled = 'true';
+                    btnEdit.classList.remove("text-muted");
+                    btnAdmin.onclick = () => window.location.href = `?action=promote&id=${row.dataset.id}`;
                 }
 
+                // ===== Auto adjust posisi =====
+                const menuWidth = 180; // lebar perkiraan context menu
+                const screenWidth = window.innerWidth;
 
-                menu.style.left = x + "px";
-                menu.style.top = y + "px";
+                let posX = x;
+                let posY = y;
+
+                // Jika posisi terlalu dekat kanan → pindahkan ke kiri tombol
+                if (x + menuWidth > screenWidth) {
+                    posX = x - menuWidth;
+                    if (posX < 5) posX = 5; // jangan keluar kiri
+                }
+
+                menu.style.left = posX + "px";
+                menu.style.top = posY + "px";
                 menu.style.display = "block";
-                // menu.querySelector('p').textContent = selectedRow.getAttribute('data-id');
             }
         }
+
 
         // Hide menu on click anywhere
         document.addEventListener("click", () => menu.style.display = "none");
@@ -469,6 +459,19 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
 
         table.addEventListener("touchend", function() {
             clearTimeout(pressTimer);
+        });
+
+        document.querySelectorAll(".action-btn").forEach(btn => {
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+
+                const row = this.closest("tr");
+                const rect = this.getBoundingClientRect();
+
+                // tampilkan menu di samping tombol
+                console.log(rect);
+                showMenu(rect.left + window.scrollX, rect.bottom + window.scrollY-50, row);
+            });
         });
     </script>
 

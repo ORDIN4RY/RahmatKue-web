@@ -3,9 +3,9 @@
   <!-- Sidebar - Brand -->
   <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
     <div class="sidebar-brand-icon">
-      <img src="../../../../assets/img/logo-remove.png" alt="" style="width: 40px;">
+      <img src="../../../../assets/img/logofix.png" alt="" style="width: 50px;">
     </div>
-    <div class="sidebar-brand-text mx-3">Rahmat Kue</div>
+    <div class="sidebar-brand-text mx-3">Rahmat Bakery</div>
   </a>
 
   <!-- Divider -->
@@ -67,6 +67,11 @@
       <i class="bi bi-plus-circle"></i>
       <span>Kelola Produk</span></a>
   </li>
+    <li class="nav-item <?= sidebar_active('kelola-paket.php') ?>">
+    <a class="nav-link" href="kelola-paket.php">
+      <i class="bi bi-box-seam"></i>
+      <span>Kelola Paket</span></a>
+  </li>
   <li class="nav-item <?= sidebar_active('kelola-user.php') ?>">
     <a class="nav-link" href="kelola-user.php">
       <i class="bi bi-person-gear"></i>
@@ -76,6 +81,11 @@
     <a class="nav-link" href="kelola-voucher.php">
       <i class="bi bi-card-text"></i>
       <span>Kelola Voucher</span></a>
+  </li>
+  <li class="nav-item <?= sidebar_active('laporan.php') ?>">
+    <a class="nav-link" href="laporan.php">
+      <i class="bi bi-journal"></i>
+      <span>Lihat Laporan</span></a>
   </li>
 
 </ul>
