@@ -100,7 +100,7 @@ if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
     <?php include 'component/navbar.php'; ?>
 
     <section class="produk-section">
-        <h2>Produk Kami</h2>
+         <h2 class="produk-section produk-section-animate mb-4">Produk Kami</h2>
         <p>
             Temukan berbagai pilihan kue terbaik dari Rahmat Bakery.<br>
             Pesan dengan mudah dan nikmati cita rasa lezat kami.
@@ -113,6 +113,30 @@ if (isset($_GET['status']) && $_GET['status'] === 'deleted') {
                 </div>
             </form>
         </div>
+
+        <script>
+            function checkProdukAnimation() {
+        const title = document.querySelector('.produk-section-animate');
+        if (!title) return;
+        
+        const rect = title.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.8 && rect.bottom >= 0;
+        
+        if (isVisible) {
+            title.classList.add('animate');
+        } else {
+            title.classList.remove('animate');
+        }
+    }
+     window.addEventListener('scroll', function() {
+        checkProdukAnimation();
+    });
+    
+    window.addEventListener('load', function() {
+        checkProdukAnimation();
+    });
+        </script>
 
         <div class="kategori-container">
             <a class="kategori-btn <?= $kategoriDipilih === 'Semua' ? 'active' : '' ?>"
