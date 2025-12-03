@@ -30,7 +30,7 @@
 
         <a href="index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Beranda</a>
         <a href="produk.php" class="<?= ($current_page == 'produk.php') ? 'active' : '' ?>">Produk</a>
-        <a href="promo.php" class="<?= ($current_page == 'promo.php') ? 'active' : '' ?>">Promo</a>
+        <!-- <a href="promo.php" class="<?= ($current_page == 'promo.php') ? 'active' : '' ?>">Promo</a> -->
 
         <?php if ($isLoggedIn): ?>
             <a href="kustom.php" class="<?= ($current_page == 'kustom.php') ? 'active' : '' ?>">Kustom Pesanan</a>
