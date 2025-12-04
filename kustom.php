@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 require 'auth/koneksi.php';
@@ -22,7 +23,7 @@ $wadah = getSupabaseData("wadah");
 </head>
 
 <body>
-    <?php include 'component/navbar.php'; ?>
+    <!-- <?php include 'component/navbar.php'; ?> -->
 
     <section class="produk-section">
         <h2>Kustom Pesanan</h2>

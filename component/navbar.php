@@ -281,7 +281,6 @@ $initial = strtoupper(substr($username, 0, 1));
             <a href="produk.php" class="<?= ($current_page == 'produk.php') ? 'active' : '' ?>">Produk</a>
 
             <?php if ($isLoggedIn): ?>
-                <a href="kustom.php" class="<?= ($current_page == 'kustom.php') ? 'active' : '' ?>">Kustom Pesanan</a>
                 <a href="keranjang.php" class="<?= ($current_page == 'keranjang.php') ? 'active' : '' ?>">Keranjang</a>
             <?php endif; ?>
 
