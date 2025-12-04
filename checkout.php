@@ -73,6 +73,9 @@ foreach ($alamat as $a) {
     if (!empty($a['alamat_utama']) && $a['alamat_utama'] == 1) {
         $selected_id_alamat = $a['id_alamat'];
         $selected_address_text = htmlspecialchars($a['nama_lengkap']) . ' — ' . htmlspecialchars($a['alamat_rumah']) . ' (Utama)';
+        $latUtama = $a['latitude'] ?? 0;
+        $lngUtama = $a['longitude'] ?? 0;
+
         break;
     }
 }
@@ -175,7 +178,7 @@ try {
                         </h5>
 
                         <div class="address-selection">
-                            <button type="button" class="btn btn-outline-primary" 
+                            <button type="button" class="btn btn-outline-primary"
                                 data-bs-toggle="modal" data-bs-target="#addressModal">
                                 <i class="fas fa-map-marker-alt"></i> Pilih Alamat
                             </button>
@@ -197,8 +200,9 @@ try {
                                     <div class="row">
                                         <?php foreach ($alamat as $a): ?>
                                             <div class="col-md-6 mb-3">
-                                                <div class="card address-card" data-id="<?= htmlspecialchars($a['id_alamat']) ?>" 
-                                                     onclick="selectAddress('<?= htmlspecialchars($a['id_alamat']) ?>', '<?= htmlspecialchars($a['nama_lengkap']) ?> — <?= htmlspecialchars($a['alamat_rumah']) ?><?= !empty($a['alamat_utama']) ? ' (Utama)' : '' ?>')">
+                                                <div class="card address-card"
+                                                    data-id="<?= htmlspecialchars($a['id_alamat']) ?>"
+                                                    onclick="selectAddress('<?= htmlspecialchars($a['id_alamat']) ?>', '<?= htmlspecialchars($a['nama_lengkap']) ?> — <?= htmlspecialchars($a['alamat_rumah']) ?><?= !empty($a['alamat_utama']) ? ' (Utama)' : '' ?>', <?= $a['latitude'] ?? 0 ?>, <?= $a['longitude'] ?? 0 ?>)">
                                                     <div class="card-body">
                                                         <h6 class="card-title">
                                                             <?= htmlspecialchars($a['nama_lengkap']) ?>
@@ -246,7 +250,7 @@ try {
                                     <div class="payment-name">Diantar</div>
                                     <div class="payment-desc">Kirim ke alamat</div>
                                 </div>
-                                <strong class="ms-auto">Rp 25.000</strong>
+                                <strong class="ms-auto" id="ongkir_harga">Rp 25.000</strong>
                             </label>
                         </div>
                     </div>
@@ -338,18 +342,24 @@ try {
                                 <span>Subtotal Produk</span>
                                 <span>Rp<?= number_format($total_harga, 0, ',', '.') ?></span>
                             </div>
+
                             <div class="price-row">
                                 <span>Ongkos Kirim</span>
-                                <span>Gratis</span>
+                                <span id="ongkir_text">Gratis</span>
                             </div>
+
                             <div class="price-row">
                                 <span>Diskon Voucher</span>
                                 <span>-</span>
                             </div>
                             <div class="price-row total">
                                 <span>Total Pembayaran</span>
-                                <span>Rp<?= number_format($total_harga, 0, ',', '.') ?></span>
+                                <span id="total_pembayaran_text">Rp<?= number_format($total_harga, 0, ',', '.') ?></span>
                             </div>
+
+                            <!-- Hidden field untuk submit -->
+                            <input type="hidden" name="ongkir" id="ongkir_input" value="0">
+
                         </div>
 
                         <button type="submit" class="btn-checkout">
@@ -368,12 +378,19 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Fungsi untuk pilih alamat di modal
-        function selectAddress(id, text) {
+        var latUser = '<?= $latUtama ?? 'null' ?>';
+        var lngUser = '<?= $lngUtama ?? 'null' ?>';
+
+        function selectAddress(id, text, lat, long) {
             document.getElementById('selected_id_alamat').value = id;
             document.getElementById('selected_address_text').innerText = 'Dipilih: ' + text;
+            latUser = lat;
+            lngUser = long;
             // Tutup modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('addressModal'));
             if (modal) modal.hide();
+
+            updateOngkir(); // update ongkir otomatis
         }
 
         // Validasi form
@@ -393,11 +410,138 @@ try {
                 alert('Mohon pilih tanggal dan waktu pengambilan pesanan');
                 return;
             }
- 
+
             // Logging untuk debugging
             console.log('Form submitted with id_alamat:', idAlamat, 'metode:', metodePengambilan);
         });
+
+        const apiKey = "169eeb94843c4186aafc3ff188996682"; // ganti dengan API key kamu
+        const latToko = -8.163745;
+        const lngToko = 113.445406;
+        const totalHarga = parseInt(document.getElementById('total_harga').value);
+
+        function hitungOngkir(jarakKm) {
+            if (jarakKm <= 10) return 10000;
+            return 10000 + Math.ceil(jarakKm - 10) * 1000;
+        }
+
+        function round6(num) {
+            return Math.round(num * 1e6) / 1e6;
+        }
+
+
+        // async function getDistance(latUser, lngUser) {
+
+        //     const latUserRounded = round6(latUser);
+        //     const lngUserRounded = round6(lngUser);
+        //     const latTokoRounded = round6(latToko);
+        //     const lngTokoRounded = round6(lngToko);
+        //     console.log("Menghitung jarak dari toko ke user:", latToko, lngToko, "->", latUser, lngUser);
+
+        //     const url = `https://api.geoapify.com/v1/routing?waypoints=${lngToko},${latToko}|${lngUser},${latUser}&mode=drive&apiKey=${apiKey}`;
+        //     console.log("Geoapify URL:", url);
+        //     try {
+        //         const res = await fetch(url);
+        //         const data = await res.json();
+        //         console.log("Response Geoapify:", data);
+        //         if (!data.features || data.features.length === 0) return null;
+        //         const distanceKm = data.features[0].properties.distance / 1000;
+        //         return distanceKm;
+        //     } catch (err) {
+        //         console.error("Gagal menghitung jarak:", err);
+        //         return null;
+        //     }
+        // }
+
+        // function updateOngkir() {
+        //     if (!latUser || !lngUser) return;
+
+        //     // Bulatkan koordinat
+        //     const latU = parseFloat(latUser);
+        //     const lngU = parseFloat(lngUser);
+        //     const latT = parseFloat(latToko);
+        //     const lngT = parseFloat(lngToko);
+
+        //     const waypoints = encodeURIComponent(`${lngT},${latT}|${lngU},${latU}`);
+        //     const url = `https://api.geoapify.com/v1/routing?waypoints=${waypoints}&mode=drive&apiKey=${apiKey}`;
+        //     console.log("URL:", url);
+        //     fetch(url)
+        //         .then(res => res.json())
+        //         .then(data => {
+        //             if (!data.features || data.features.length === 0) return;
+        //             const jarakKm = data.features[0].properties.distance / 1000;
+
+        //             let ongkir = 0;
+        //             const metode = document.querySelector('input[name="metode_pengambilan"]:checked').value;
+        //             if (metode === 'diantar') {
+        //                 ongkir = jarakKm <= 10 ? 10000 : 10000 + Math.ceil(jarakKm - 10) * 1000;
+        //             }
+
+        //             document.getElementById('ongkir_text').innerText = ongkir > 0 ? `Rp${ongkir.toLocaleString()}` : 'Gratis';
+        //             const total = totalHarga + ongkir;
+        //             document.getElementById('total_pembayaran_text').innerText = `Rp${total.toLocaleString()}`;
+        //             document.getElementById('ongkir_input').value = ongkir;
+
+        //             console.log("Calculated distance (km):", jarakKm);
+        //         })
+        //         .catch(err => console.error("Gagal menghitung jarak:", err));
+        // }
+
+        async function updateOngkir() {
+            const selectedAddressId = document.getElementById('selected_id_alamat').value;
+            if (!selectedAddressId) return;
+            if (latUser === '' || lngUser === '') return;
+
+            // pastikan tipe number
+            const lat = parseFloat(latUser);
+            const lng = parseFloat(lngUser);
+
+            const jarak = await getDistance(lat, lng);
+            if (jarak === null) return;
+
+            const metode = document.querySelector('input[name="metode_pengambilan"]:checked').value;
+            let ongkir = 0;
+            if (metode === 'diantar') {
+                ongkir = hitungOngkir(jarak);
+            }
+            console.log("Jarak (km):", jarak, "Ongkir:", ongkir);
+
+            document.getElementById('ongkir_text').innerText = ongkir > 0 ? `Rp${ongkir.toLocaleString()}` : 'Gratis';
+            const total = totalHarga + ongkir;
+            document.getElementById('total_pembayaran_text').innerText = `Rp${total.toLocaleString()}`;
+            document.getElementById('ongkir_input').value = ongkir;
+            document.getElementById('ongkir_harga').innerText = `Rp ${hitungOngkir(jarak).toLocaleString()}`;
+        }
+
+        async function getDistance(lngUser, latUser) {
+            // bulatkan max 6 desimal
+            const latRounded = latUser.toFixed(6);
+            const lngRounded = lngUser.toFixed(6);
+
+            const url = `https://api.geoapify.com/v1/routing?waypoints=${latToko},${lngToko}|${lngRounded},${latRounded}&mode=drive&apiKey=${apiKey}`;
+            console.log("Geoapify URL:", url);
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                console.log("Response Geoapify:", data);
+                if (!data.features || data.features.length === 0) return null;
+                const distanceKm = data.features[0].properties.distance / 1000;
+                return distanceKm;
+            } catch (err) {
+                console.error("Gagal menghitung jarak:", err);
+                return null;
+            }
+        }
+
+        // Event listener metode pengambilan
+        document.querySelectorAll('input[name="metode_pengambilan"]').forEach(el => {
+            el.addEventListener('change', updateOngkir);
+        });
+
+        // Hitung ongkir awal saat page load (jika alamat sudah dipilih)
+        window.addEventListener('load', updateOngkir);
     </script>
+
 
     <!-- CSS Tambahan untuk Modal -->
     <style>
@@ -405,12 +549,15 @@ try {
             cursor: pointer;
             transition: border-color 0.3s;
         }
+
         .address-card:hover {
             border-color: #007bff;
         }
+
         .address-selection {
             margin-bottom: 1rem;
         }
     </style>
 </body>
+
 </html>

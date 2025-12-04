@@ -40,7 +40,7 @@ function getDetailPesanan($idTransaksi)
         $response = $client->get('/rest/v1/transaksi', [
             'query' => [
                 'id_transaksi' => 'eq.' . $idTransaksi,
-                'select' => '*,alamat(*),pembayaran(*),batal(*),detail_transaksi_produk(*,produk(*)),detail_transaksi_paket(*,paket(*)),voucher(*)',
+                'select' => '*,alamat(*),pembayaran:pembayaran(*),batal(*),detail_transaksi_produk(*,produk(*)),detail_transaksi_paket(*,paket(*)),voucher(*)'
             ],
             'headers' => [
                 'apikey'        => SUPABASE_SERVICE_KEY,
@@ -276,7 +276,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['i
                     <div class="tab-content mt-3" id="detailTabContent">
                         <div class="tab-pane fade show active" id="info" role="tabpanel">
                             <p><strong>Nomor Pesanan:</strong> <span id="nomor_pesanan">-</span></p>
-                            <p><strong>Status:</strong> <span id="status">-</span></p>
+                            <p><strong>Status:</strong> <span id="status" style="color:white">-</span></p>
                             <p><strong>Tanggal Dibuat:</strong> <span id="created_at">-</span></p>
                             <p><strong>Waktu Selesai:</strong> <span id="waktu_selesai">-</span></p>
                             <p><strong>Metode Pengambilan:</strong> <span id="metode_pengambilan">-</span></p>
@@ -300,7 +300,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['i
                             <p><strong>Nama Penerima:</strong> <span id="nama_lengkap">-</span></p>
                             <p><strong>No. HP:</strong> <span id="no_hp_penerima">-</span></p>
                             <p><strong>Alamat:</strong> <span id="alamat_rumah">-</span></p>
-                            <p><strong>Koordinat:</strong> <span id="koordinat">-</span></p>
+                            <div id="mapContainer" style="height: 300px; width: 100%; border: 1px solid #ddd; border-radius: 5px;">
+                                <p style="text-align: center; padding-top: 100px;">Koordinat tidak tersedia</p>
+                            </div>
                         </div>
                         <div class="tab-pane fade" id="pembayaran" role="tabpanel">
                             <p><strong>Subtotal:</strong> <span id="subtotal">-</span></p>
@@ -308,15 +310,23 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['i
                             <p><strong>Potongan:</strong> <span id="potongan">-</span></p>
                             <p><strong>Total:</strong> <span id="total_harga">-</span></p>
                             <hr>
-                            <p><strong>Metode:</strong> <span id="metode_pembayaran">-</span></p>
-                            <p><strong>Nominal:</strong> <span id="nominal">-</span></p>
-                            <p><strong>Status:</strong> <span id="status_pembayaran">-</span></p>
-                            <p><strong>Tanggal:</strong> <span id="tgl_pembayaran">-</span></p>
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Metode</th>
+                                        <th>Nominal</th>
+                                        <th>Status</th>
+                                        <th>Tanggal</th>
+                                        <th>Invoice</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pembayaranTableBody"></tbody>
+                            </table>
                         </div>
                         <div class="tab-pane fade" id="batal" role="tabpanel">
                             <p><strong>Alasan:</strong> <span id="alasan_batal">-</span></p>
                             <p><strong>Tipe:</strong> <span id="tipe_batal">-</span></p>
-                            <p><strong>Status:</strong> <span id="status_batal">-</span></p>
+                            <p><strong>Status:</strong> <span id="status_batal" style="color:white">-</span></p>
                             <p><strong>Dikonfirmasi Pada:</strong> <span id="dikonfirmasi_pada">-</span></p>
                         </div>
                     </div>
@@ -447,8 +457,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['i
         function getStatusBadge(status) {
             const badges = {
                 'Menunggu Pembayaran': 'warning',
-                'Diproses': 'info',
-                'Dikirim': 'primary',
+                'Sedang Diproses': 'info',
+                'Siap Diambil/Diantar': 'primary',
                 'Selesai': 'success',
                 'Dibatalkan': 'danger'
             };
@@ -467,6 +477,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['i
                 .then(response => response.json())
                 .then(data => {
                     if (data) {
+                        console.log(data);
                         // Populate Produk/Paket
                         let produkHtml = '';
                         let totalSubtotal = 0;
@@ -493,33 +504,72 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['i
                             document.getElementById('nama_lengkap').textContent = data.alamat.nama_lengkap || '-';
                             document.getElementById('no_hp_penerima').textContent = data.alamat.no_hp_penerima || '-';
                             document.getElementById('alamat_rumah').textContent = (data.alamat.alamat_rumah || '') + (data.alamat.detail_lain ? ' (' + data.alamat.detail_lain + ')' : '');
-                            document.getElementById('koordinat').textContent = data.alamat.latitude && data.alamat.longitude ? `Lat: ${data.alamat.latitude}, Lng: ${data.alamat.longitude}` : '-';
+                            // Map handling
+                            const mapContainer = document.getElementById('mapContainer');
+                            if (data.alamat.latitude && data.alamat.longitude) {
+                                const lat = data.alamat.latitude;
+                                const lng = data.alamat.longitude;
+                                mapContainer.innerHTML = `<iframe src="https://maps.google.com/maps?q=${lat},${lng}&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>`;
+                            } else {
+                                mapContainer.innerHTML = '<p style="text-align: center; padding-top: 100px;">Koordinat tidak tersedia</p>';
+                            }
                         } else {
                             document.getElementById('nama_lengkap').textContent = '-';
                             document.getElementById('no_hp_penerima').textContent = '-';
                             document.getElementById('alamat_rumah').textContent = '-';
-                            document.getElementById('koordinat').textContent = '-';
+                            document.getElementById('mapContainer').innerHTML = '<p style="text-align: center; padding-top: 100px;">Koordinat tidak tersedia</p>';
                         }
+
+                        document.getElementById('nomor_pesanan').textContent = data.nomor_pesanan || '-';
+                        document.getElementById('status').innerHTML = getStatusBadge(data.status);
+                        document.getElementById('created_at').textContent = data.created_at ? new Date(data.created_at).toLocaleString('id-ID') : '-';
+                        document.getElementById('waktu_selesai').textContent = data.waktu_selesai ?
+                            new Date(data.waktu_selesai).toLocaleString('id-ID') :
+                            '-';
+                        document.getElementById('metode_pengambilan').textContent = data.metode_pengambilan || '-';
+                        document.getElementById('catatan').textContent = data.catatan || '-';
 
                         // Populate Pembayaran
                         document.getElementById('subtotal').textContent = formatHarga(totalSubtotal);
                         document.getElementById('ongkir').textContent = formatHarga(data.ongkir || 0);
                         document.getElementById('potongan').textContent = formatHarga(data.potongan || 0);
                         document.getElementById('total_harga').textContent = formatHarga(data.total_harga);
-                        if (data.pembayaran) {
-                            document.getElementById('metode_pembayaran').textContent = data.pembayaran.metode || '-';
-                            document.getElementById('nominal').textContent = formatHarga(data.pembayaran.nominal);
-                            document.getElementById('status_pembayaran').innerHTML = getStatusBadge(data.pembayaran.status);
-                            document.getElementById('tgl_pembayaran').textContent = data.pembayaran.tgl_pembayaran ? new Date(data.pembayaran.tgl_pembayaran).toLocaleString('id-ID') : '-';
+                        // Populate Semua Pembayaran (Array)
+                        let pembayaranHtml = '';
+                        pembayaranTotal = 0;
+                        if (data.pembayaran && Array.isArray(data.pembayaran)) {
+                            data.pembayaran.forEach(pay => {
+
+                                let metode = pembayaranTotal >= data.total_harga ? 'Lunas' : 'DP';
+                                pembayaranTotal += pay.nominal;
+
+                                pembayaranHtml += `
+                                <tr>
+                                    <td>${metode}</td>
+                                    <td>${formatHarga(pay.nominal)}</td>
+                                    <td style='color:white'>${getStatusBadge(pay.status)}</td>
+                                    <td>${pay.tgl_pembayaran ? new Date(pay.tgl_pembayaran).toLocaleString('id-ID') : '-'}</td>
+                                    <td>
+                                        ${pay.invoice_url 
+                                            ? `<a href="${pay.invoice_url}" target="_blank" class="btn btn-primary btn-sm">
+                                                   Buka Invoice
+                                               </a>`
+                                            : '-'
+                                        }
+                                    </td>
+                                </tr>`;
+                            });
                         } else {
-                            document.getElementById('metode_pembayaran').textContent = '-';
-                            document.getElementById('nominal').textContent = '-';
-                            document.getElementById('status_pembayaran').innerHTML = '-';
-                            document.getElementById('tgl_pembayaran').textContent = '-';
+                            pembayaranHtml = `
+                                <tr><td colspan="5" class="text-center">Tidak ada data pembayaran</td></tr>
+                            `;
                         }
 
+                        document.getElementById('pembayaranTableBody').innerHTML = pembayaranHtml;
+
+
                         // Populate Batal (jika ada)
-                        if (data.batal) {
+                        if (data.status === 'Dibatalkan' && data.batal) {
                             document.getElementById('alasan_batal').textContent = data.batal.alasan || '-';
                             document.getElementById('tipe_batal').textContent = data.batal.tipe || '-';
                             document.getElementById('status_batal').innerHTML = getStatusBadge(data.batal.status);

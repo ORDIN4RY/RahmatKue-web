@@ -118,7 +118,7 @@ if ($total_harga <= 0) {
 // =========================
 // TENTUKAN ONGKIR
 // =========================
-$ongkir = ($metode_pengambilan === "diantar") ? 25000 : 0;
+$ongkir = ($metode_pengambilan === "diantar") ? $_POST["ongkir"] : 0;
 $total_harga += $ongkir;
 
 // =========================
@@ -222,5 +222,67 @@ foreach ($ids as $idKeranjang) {
 // ========================= 
 // REDIRECT
 // =========================
-header("Location: produk.php?id=" . $idTransaksi);
+// header("Location: produk.php?id=" . $idTransaksi);
+// exit;
+// =========================
+// GENERATE INVOICE XENDIT
+// =========================
+
+// API KEY STAGING
+$apiKey = XENDIT_API_KEY;
+
+// External ID = nomor transaksi
+$external_id = $insert[0]['nomor_pesanan'] ?? $idTransaksi;
+
+// Nominal yg harus dibayar (DP minimal)
+$amount = $dp_minimal;
+
+// Data customer
+$customer = [
+    "given_names" => $_SESSION['username'] ?? "User",
+    "email" => $_SESSION['email'] ?? "usermail@gmail.com"
+];
+
+$dataInvoice = [
+    "external_id" => $external_id,
+    "amount" => $amount,
+    "description" => "Pembayaran Pesanan #$external_id",
+    "payment_methods" => ["QRIS"], // 🔥 hanya QRIS
+
+    // CALLBACK → update status + insert pembayaran
+    "callback_url" => "https://ordin4ry.my.id/callback/xendit.php",
+
+    // Redirect setelah bayar
+    "success_redirect_url" => "https://ordin4ry.my.id/rahmatbakery/produk.php?id=" . $idTransaksi,
+    "failure_redirect_url" => "https://ordin4ry.my.id/rahmatbakery/produk.php?id=" . $idTransaksi,
+];
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://api.xendit.co/v2/invoices");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataInvoice));
+curl_setopt($ch, CURLOPT_USERPWD, $apiKey . ":");
+curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+$invoice = json_decode($response, true);
+
+if (!isset($invoice['invoice_url'])) {
+    error_log("XENDIT ERROR: " . $response);
+    die("Gagal membuat invoice pembayaran!");
+}
+
+// Simpan ke Supabase sebagai pembayaran menunggu (opsional)
+insertSupabaseData("pembayaran", [
+    "id_transaksi" => $idTransaksi,
+    "nominal" => $amount,
+    "metode" => "QRIS",
+    "status" => "Menunggu Pembayaran"
+]);
+
+// 🔥 Langsung redirect ke halaman pembayaran Xendit
+header("Location: " . $invoice['invoice_url']);
 exit;

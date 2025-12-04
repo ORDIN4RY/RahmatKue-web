@@ -161,26 +161,26 @@ if (isset($_SESSION['message'])) {
 
                             $nama = $produk['nama_produk'];
                             $harga = $produk['harga'];
-                            $foto = $produk['foto_produk'] ?? 'assets/img/no-image.png';
+                            $foto = $produk['foto_produk'] ?? 'default/default%20product.png';
                         } elseif (!empty($item['paket'])) {
                             // ITEM PAKET
                             $paket = $item['paket'];
 
                             $nama = $paket['nama_paket'];
                             $harga = $paket['harga_paket'];
-                            $foto = $paket['foto_paket'] ?? 'assets/img/no-image.png';
+                            $foto = $paket['foto_paket'] ?? 'default/default%20paket.png';
                         } else {
                             // fallback jika tidak ada yang sesuai
                             $nama = "Produk Tidak Dikenal";
                             $harga = 0;
-                            $foto = 'assets/img/no-image.png';
+                            $foto = 'default/default%20product.png';
                         }
 
 
-                        $foto = $produk['foto_produk'] ?? 'assets/img/no-image.png';
+                        $foto = $produk['foto_produk'] ?? 'default/default%20product.png';
 
                         if (!filter_var($foto, FILTER_VALIDATE_URL)) {
-                            $foto = SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
+                            $foto = SUPABASE_STORAGE_URL . '/images/' . $foto;
                         }
 
                         $subtotal = $harga * $item['jumlah'];

@@ -54,8 +54,8 @@ $wadah = getSupabaseData("wadah");
                             <?= htmlspecialchars($row['varian']) ?>
                         </div>
                         <img src="<?= !empty($row['foto_wadah'])
-                                        ? htmlspecialchars($row['foto_wadah'])
-                                        : 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?q=80&w=600' ?>"
+                                        ? $row['foto_wadah']
+                                        : 'https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/default/default%20box.png' ?>"
                             alt="Foto <?= htmlspecialchars($row['nama_wadah']) ?>"
                             class="wadah-img">
                         <div class="produk-card-content">

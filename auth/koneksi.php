@@ -9,6 +9,7 @@ define("SUPABASE_URL", "https://fsiuefdwcbdhunfhbiwl.supabase.co");
 define("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzM0NDMsImV4cCI6MjA3NTUwOTQ0M30.pSATGpW89fntkKRuF-qvC7wiO1oZsTruDd-1wMjOdIU");
 define("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTkzMzQ0MywiZXhwIjoyMDc1NTA5NDQzfQ.Fuj3tINEzdkmIzJQ6YPegk--_AGPTN7HIiupCWM6mU4");
 define("SUPABASE_STORAGE_URL", SUPABASE_URL . "/storage/v1/object/public");
+define("XENDIT_API_KEY","xnd_development_OtdTZHUMLg2HaFdTEnMV0KAtXL5W1H1ZJMtYMLcOB1Z8SCvvoBSBbwz34dEKVmO");
 
 $client = new Client([
     'base_uri' => SUPABASE_URL,
@@ -470,8 +471,9 @@ function getRiwayatPesanan($id_user)
     try {
         $response = $client->get('/rest/v1/transaksi', [
             'query' => [
-                'select' => '*',
-                'id_user' => 'eq.' . $id_user
+                'select' => '*,alamat(*)',
+                'id_user' => 'eq.' . $id_user,
+                'order' => 'created_at.desc'
             ]
         ]);
 
