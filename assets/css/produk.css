@@ -13,7 +13,7 @@
 }
 
 body {
-  background-color: #f8f4f0;
+  background-color: #fff5e6;
   font-family: "Montserrat", sans-serif;
   color: #2d1810;
   line-height: 1.6;
@@ -24,7 +24,7 @@ body {
    ============================================ */
 .produk-section {
   padding: 1rem 1.25rem;
-  background-color: #f8f4f0;
+  background-color: #fff5e6;
   text-align: center;
   min-height: 10vh;
 }

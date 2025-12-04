@@ -18,10 +18,7 @@ if (!isset($_SESSION['id'])) {
 
 $id_user = $_SESSION['id'];
 $access_token = $_SESSION['access_token'] ?? null;
-
-// ==========================
 // AMBIL DATA KERANJANG
-// ==========================
 try {
     $response = $client->get("/rest/v1/keranjang", [
         'headers' => [

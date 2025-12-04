@@ -24,7 +24,7 @@ $initial = strtoupper(substr($username, 0, 1));
             align-items: center;
             justify-content: space-between;
             padding: 1.2rem 3rem;
-            background: transparent;
+            background-color: #fff5e6;
             transition: all 0.3s ease;
             z-index: 1000;
             backdrop-filter: blur(0px);
