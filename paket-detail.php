@@ -360,23 +360,6 @@ if (isset($_SESSION['message'])) {
 
                 </form>
 
-                <!-- FORM BELI SEKARANG (TERPISAH) -->
-                <form method="GET" action="checkout.php" class="mt-3">
-                    <input type="hidden" name="id" value="<?= htmlspecialchars($id_paket) ?>">
-                    <input type="hidden" name="quantity" id="checkout-quantity">
-
-                    <button type="submit" name="buy_now" class="btn btn-success" onclick="
-                        document.getElementById('checkout-quantity').value = 
-                        document.getElementById('quantity').value;
-            ">
-                        <i class="bi bi-lightning-fill"></i> Beli Sekarang
-                    </button>
-                </form>
-
-                <p class="wishlist mt-3">
-                    <i class="bi bi-heart"></i> Tambahkan ke wishlist
-                </p>
-
             </div>
         </div>
 
