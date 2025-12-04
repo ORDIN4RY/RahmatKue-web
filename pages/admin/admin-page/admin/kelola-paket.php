@@ -112,7 +112,7 @@ if (isset($_POST['update_paket'])) {
   }
 
   // ===== UPDATE KE SUPABASE DB =====
-  $res = updateSupabaseData('paket', $id_paket, $updateData);
+  $res = updateSupabaseData('paket', ["id_paket" => $id_paket], $updateData);
 
   if ($res) {
     echo "<script>alert('Paket berhasil diperbarui'); window.location='kelola-paket.php';</script>";

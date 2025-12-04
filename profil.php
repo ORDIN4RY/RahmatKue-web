@@ -179,7 +179,6 @@ if (isset($_POST['ubah_password'])) {
     }
 }
 
-$voucherSaya = getVoucherUser($id_user);
 $pesanan = getRiwayatPesanan($id_user);
 
 ?>

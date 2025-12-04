@@ -9,7 +9,7 @@ define("SUPABASE_URL", "https://fsiuefdwcbdhunfhbiwl.supabase.co");
 define("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MzM0NDMsImV4cCI6MjA3NTUwOTQ0M30.pSATGpW89fntkKRuF-qvC7wiO1oZsTruDd-1wMjOdIU");
 define("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzaXVlZmR3Y2JkaHVuZmhiaXdsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTkzMzQ0MywiZXhwIjoyMDc1NTA5NDQzfQ.Fuj3tINEzdkmIzJQ6YPegk--_AGPTN7HIiupCWM6mU4");
 define("SUPABASE_STORAGE_URL", SUPABASE_URL . "/storage/v1/object/public");
-define("XENDIT_API_KEY","xnd_development_OtdTZHUMLg2HaFdTEnMV0KAtXL5W1H1ZJMtYMLcOB1Z8SCvvoBSBbwz34dEKVmO");
+define("XENDIT_API_KEY", "xnd_development_OtdTZHUMLg2HaFdTEnMV0KAtXL5W1H1ZJMtYMLcOB1Z8SCvvoBSBbwz34dEKVmO");
 
 $client = new Client([
     'base_uri' => SUPABASE_URL,
@@ -166,6 +166,13 @@ function updateSupabaseData($table, $filters = [], $data = [])
 {
     global $SUPABASE_URL, $SUPABASE_SERVICE_KEY;
 
+    $headers = [
+        "apikey: " . SUPABASE_KEY,
+        "Authorization: Bearer " . SUPABASE_KEY,
+        "Content-Type: application/json",
+        "Prefer: return=representation"
+    ];
+
     $client = new Client([
         'base_uri' => $SUPABASE_URL,
         'headers' => [
@@ -174,23 +181,51 @@ function updateSupabaseData($table, $filters = [], $data = [])
             'Content-Type'  => 'application/json'
         ]
     ]);
-
+    // var_dump($filters);
     // --- BENTUKKAN QUERY UPDATE ---
     $query = [];
     foreach ($filters as $field => $value) {
         $query[] = $field . '=eq.' . $value;
     }
+    // var_dump($query);
+    $url = SUPABASE_URL . "/rest/v1/$table?" . implode('&', $query);
+    // var_dump($url);
+    // --- EKSEKUSI PATCH ---
+    // try {
+    //     $response = $client->patch($url, [
+    //         'body' => json_encode($data),
 
-    $url = "/rest/v1/$table?" . implode('&', $query);
+    //     ]);
 
-    try {
-        $response = $client->patch($url, [
-            'body' => json_encode($data)
-        ]);
+    //     var_dump($response->getBody());
 
-        return json_decode($response->getBody(), true);
-    } catch (Exception $e) {
-        echo "ERROR UPDATE: " . $e->getMessage();
+    //     return json_decode($response->getBody(), true);
+    // } catch (Exception $e) {
+    //     echo "ERROR UPDATE: " . $e->getMessage();
+    //     return false;
+    // }
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PATCH");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    // ✅ Jika cURL error
+    if ($error) {
+        error_log("cURL Error: " . $error);
+        return false;
+    }
+
+    // ✅ Cek status HTTP (200 atau 204 = berhasil)
+    if (in_array($httpCode, [200, 204])) {
+        return true;
+    } else {
+        error_log("Update gagal ke tabel '$table'. HTTP Code: $httpCode. Response: $response");
         return false;
     }
 }
@@ -478,31 +513,10 @@ function getRiwayatPesanan($id_user)
         ]);
 
         return json_decode($response->getBody(), true);
-    try {
-        return getSupabaseData("transaksi", [
-            "id_user" => "eq.$id_user",
-            "select" => "id_transaksi, total_harga, status, metode_pengambilan, ongkir, potongan, created_at, alamat(*)",
-            "order"  => "id_transaksi.desc"
-        ]);
     } catch (Exception $e) {
-        error_log("Error getRiwayatPesanan: " . $e->getMessage());
         return [];
     }
 }
-
-
-
-
-function getVoucherUser($id_user)
-{
-    $query = [
-        "id_user" => "eq.$id_user",
-        "select"  => "id_voucher,nama_voucher,tgl_mulai,tgl_berakhir,deskripsi,poin_tukar,minimal_pembelian"
-    ];
-
-    return getSupabaseData("voucher", $query);
-}
-
 
 function getAlamatCheckout($id_user)
 {
@@ -823,6 +837,58 @@ function unbanUser($uid)
             ],
             'json' => [
                 "is_blocked" => false
+            ]
+        ]);
+
+        return json_decode($response->getBody(), true);
+    } catch (RequestException $e) {
+        return [
+            "error" => $e->getMessage(),
+            "response" => $e->getResponse() ? $e->getResponse()->getBody()->getContents() : null
+        ];
+    }
+}
+
+function promote($uid)
+{
+    try {
+        $client = new Client();
+
+        $response = $client->patch(SUPABASE_URL . '/rest/v1/profiles?id=eq.' . $uid, [
+            'headers' => [
+                'apikey' => SUPABASE_SERVICE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY,
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation'
+            ],
+            'json' => [
+                "level" => 'admin'
+            ]
+        ]);
+
+        return json_decode($response->getBody(), true);
+    } catch (RequestException $e) {
+        return [
+            "error" => $e->getMessage(),
+            "response" => $e->getResponse() ? $e->getResponse()->getBody()->getContents() : null
+        ];
+    }
+}
+
+function demote($uid)
+{
+    try {
+        $client = new Client();
+
+        $response = $client->patch(SUPABASE_URL . '/rest/v1/profiles?id=eq.' . $uid, [
+            'headers' => [
+                'apikey' => SUPABASE_SERVICE_KEY,
+                'Authorization' => 'Bearer ' . SUPABASE_SERVICE_KEY,
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=representation'
+            ],
+            'json' => [
+                "level" => 'user'
             ]
         ]);
 

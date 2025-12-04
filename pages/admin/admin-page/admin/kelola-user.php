@@ -43,10 +43,10 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
             unbanUser($id);
             break;
         case 'promote':
-
+            promote($id);
             break;
         case 'demote':
-
+            demote($id);
             break;
         default:
             # code...
@@ -357,16 +357,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="../vendor/jquery/jquery.min.js"></script>
-    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Core plugin JavaScript-->
-    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
-
-    <!-- Custom scripts for all pages-->
-    <script src="../js/sb-admin-2.min.js"></script>
-
     <script>
         const table = document.getElementById("myTable");
         const menu = document.getElementById("contextMenu");
@@ -387,29 +377,33 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                 // Status Block/Unblock
                 if (isBlocked) {
                     btnEdit.innerHTML = '<i class="fas fa-unlock"></i> Buka blokir user';
-                    btnEdit.classList.remove("text-danger"); 
+                    btnEdit.classList.remove("text-danger");
                     btnEdit.classList.add("text-success");
+                    btnAdmin.classList.add("text-muted");
+                    btnAdmin.disabled = true;
                     btnEdit.onclick = () => window.location.href = `?action=unban&id=${row.dataset.id}`;
                 } else {
                     btnEdit.innerHTML = '<i class="fas fa-ban"></i> Blokir user';
-                    btnEdit.classList.remove("text-success"); 
+                    btnEdit.classList.remove("text-success");
                     btnEdit.classList.add("text-danger");
+                    btnAdmin.classList.remove("text-muted");
+                    btnAdmin.disabled = false;
                     btnEdit.onclick = () => window.location.href = `?action=ban&id=${row.dataset.id}`;
                 }
 
                 // Status Admin/Demote
                 if (isAdmin) {
                     btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> Demote user';
-                    btnAdmin.classList.remove("text-warning"); 
-                    btnAdmin.classList.add("text-danger"); 
-                    btnEdit.disabled = 'true';
+                    btnAdmin.classList.remove("text-warning");
+                    btnAdmin.classList.add("text-danger");
+                    btnEdit.disabled = true;
                     btnEdit.classList.add("text-muted")
                     btnAdmin.onclick = () => window.location.href = `?action=demote&id=${row.dataset.id}`;
                 } else {
                     btnAdmin.innerHTML = '<i class="fas fa-hammer"></i> Promote user';
-                    btnAdmin.classList.remove("text-danger"); 
-                    btnAdmin.classList.add("text-warning"); 
-                    btnEdit.enabled = 'true';
+                    btnAdmin.classList.remove("text-danger");
+                    btnAdmin.classList.add("text-warning");
+                    btnEdit.disabled = false;
                     btnEdit.classList.remove("text-muted");
                     btnAdmin.onclick = () => window.location.href = `?action=promote&id=${row.dataset.id}`;
                 }
@@ -435,7 +429,14 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
 
 
         // Hide menu on click anywhere
-        document.addEventListener("click", () => menu.style.display = "none");
+        document.addEventListener("click", () => {
+            menu.style.display = "none";
+
+            const btnEdit = document.getElementById("btnEdit");
+            const btnAdmin = document.getElementById("btnAdmin");
+            btnEdit.disabled = false;
+            btnAdmin.disabled = false;
+        });
 
         // Right click event (Desktop)
         table.addEventListener("contextmenu", function(e) {
@@ -470,7 +471,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
 
                 // tampilkan menu di samping tombol
                 console.log(rect);
-                showMenu(rect.left + window.scrollX, rect.bottom + window.scrollY-50, row);
+                showMenu(rect.left + window.scrollX, rect.bottom + window.scrollY - 50, row);
             });
         });
     </script>

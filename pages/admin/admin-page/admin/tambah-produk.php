@@ -169,7 +169,7 @@ if (isset($_POST['update_produk'])) {
   }
 
   // --- PROSES UPDATE KE DATABASE ---
-  $res = updateSupabaseData('produk', $id_produk, $updateData);
+  $res = updateSupabaseData('produk', ['id_produk' => $id_produk], $updateData);
 
 
   if ($res) {
@@ -337,7 +337,7 @@ if (isset($_POST['update_produk'])) {
                   <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahKategori">
                     Tambah Kategori
                   </button>
-         
+
                 </div>
               </div>
             </div>
@@ -420,7 +420,7 @@ if (isset($_POST['update_produk'])) {
                         ? $foto
                         : SUPABASE_STORAGE_URL . '/images/produk/' . rawurlencode($foto);
                     } else {
-                      $imgUrl = '../../assets/img/no-image.png';
+                      $imgUrl = 'https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/default/default%20product.png';
                     }
 
                     // Filter search
@@ -441,7 +441,7 @@ if (isset($_POST['update_produk'])) {
                           class="product-image"
                           alt="<?= htmlspecialchars($row['nama_produk']) ?>"
                           loading="lazy"
-                          onerror="this.src='../../assets/img/no-image.png'">
+                          onerror="this.src='https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/default/default%20product.png'">
 
                         <div class="card-body">
 

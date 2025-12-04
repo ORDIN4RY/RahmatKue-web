@@ -40,7 +40,8 @@ function getDetailPesanan($idTransaksi)
         $response = $client->get('/rest/v1/transaksi', [
             'query' => [
                 'id_transaksi' => 'eq.' . $idTransaksi,
-                'select' => '*,alamat(*),pembayaran:pembayaran(*),batal(*),detail_transaksi_produk(*,produk(*)),detail_transaksi_paket(*,paket(*)),voucher(*)'
+                'select' => '*,alamat(*),pembayaran:pembayaran(*),batal(*),detail_transaksi_produk(*,produk(*)),detail_transaksi_paket(*,paket(*)),voucher(*)',
+                'order' => 'created_at.desc,status.desc'
             ],
             'headers' => [
                 'apikey'        => SUPABASE_SERVICE_KEY,
@@ -364,15 +365,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_detail' && isset($_GET['i
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="../vendor/jquery/jquery.min.js"></script>
-    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Core plugin JavaScript-->
-    <script src="../vendor/jquery-easing/jquery.easing.min.js"></script>
-
-    <!-- Custom scripts for all pages-->
-    <script src="../js/sb-admin-2.min.js"></script>
 
     <script>
         const table = document.getElementById("myTable");
