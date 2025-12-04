@@ -31,6 +31,16 @@ try {
 
     $cart_items = json_decode($response->getBody(), true);
 } catch (Exception $e) {
+    // Handle JWT expired
+    if (strpos($e->getMessage(), 'JWT expired') !== false || 
+        strpos($e->getMessage(), 'PGRST303') !== false ||
+        strpos($e->getMessage(), '401') !== false) {
+        session_destroy();
+        session_start();
+        $_SESSION['message'] = "⏰ Sesi Anda telah berakhir. Silakan login kembali.";
+        header("Location: login.php?redirect=keranjang.php");
+        exit;
+    }
     die("Gagal memuat keranjang: " . $e->getMessage());
 }
 
@@ -112,6 +122,339 @@ if (isset($_SESSION['message'])) {
     <link rel="icon" type="image/x-icon" href="assets/img/icon.png">
     <link rel="stylesheet" href="assets/css/pesan.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS untuk Keranjang -->
+    <style>
+        body {
+            background-color: #fff5e6;
+            padding-bottom: 120px;
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        h2 {
+            color: #8e5e48;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        /* Cart Container */
+        .cart-container {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(142, 94, 72, 0.1);
+        }
+
+        /* Cart Header */
+        .cart-header {
+            display: grid;
+            grid-template-columns: 60px 2fr 1fr 1fr 1fr 120px;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #8e5e48 0%, #a66d5a 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            gap: 15px;
+        }
+
+        /* Product Item */
+        .product-item {
+            display: grid;
+            grid-template-columns: 60px 2fr 1fr 1fr 1fr 120px;
+            padding: 25px;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+
+        .product-item:hover {
+            background-color: #fffbf5;
+            transform: translateX(5px);
+        }
+
+        /* Checkbox */
+        .checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #d0d0d0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:hover {
+            border-color: #8e5e48;
+            transform: scale(1.1);
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked {
+            background-color: #8e5e48;
+            border-color: #8e5e48;
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Product Info */
+        .product-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .product-image {
+            width: 90px;
+            height: 90px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .product-image:hover {
+            border-color: #8e5e48;
+            transform: scale(1.05);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-title {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .product-variant {
+            color: #666;
+            font-size: 13px;
+            margin-top: 5px;
+            padding: 4px 8px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        /* Price */
+        .price {
+            color: #333;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .total-price {
+            color: #8e5e48;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Quantity Control */
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #e0e0e0;
+            background-color: white;
+            cursor: pointer;
+            font-size: 20px;
+            color: #8e5e48;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .qty-btn:hover:not(:disabled) {
+            background-color: #8e5e48;
+            color: white;
+            border-color: #8e5e48;
+            transform: scale(1.1);
+        }
+
+        .qty-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .quantity-control span {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            min-width: 35px;
+            text-align: center;
+            padding: 6px 12px;
+            background: #f8f8f8;
+            border-radius: 6px;
+        }
+
+        /* Delete Button */
+        .delete-btn {
+            background: transparent;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background-color: #e74c3c;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        /* Cart Footer */
+        .cart-footer {
+            background: white;
+            border-top: 2px solid #e5e5e5;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .select-all {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .select-all input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #8e5e48;
+        }
+
+        .total-section {
+            text-align: right;
+        }
+
+        .total-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            font-size: 28px;
+            color: #8e5e48;
+            font-weight: 700;
+        }
+
+        .checkout-btn {
+            background: linear-gradient(135deg, #8e5e48 0%, #a66d5a 100%);
+            color: white;
+            border: none;
+            padding: 14px 45px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(142, 94, 72, 0.3);
+        }
+
+        .checkout-btn:hover {
+            background: linear-gradient(135deg, #7a4d3a 0%, #8e5e48 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(142, 94, 72, 0.4);
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 35px;
+        }
+
+        /* Empty Cart */
+        .text-center.py-5 {
+            background: white;
+            border-radius: 12px;
+            padding: 60px 20px;
+            box-shadow: 0 2px 12px rgba(142, 94, 72, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .cart-header {
+                display: none;
+            }
+
+            .product-item {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 20px;
+                position: relative;
+                padding-left: 60px;
+            }
+
+            .checkbox {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+            }
+
+            .cart-footer {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .footer-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -162,8 +505,8 @@ if (isset($_SESSION['message'])) {
                                         type="checkbox"
                                         class="item-checkbox"
                                         name="selected_items[]"
-                                        value="<?= $item['id_keranjang'] ?>">
-                                    <span class="checkmark"></span>
+                                        value="<?= $item['id_keranjang'] ?>"
+                                        checked>
                                 </label>
                             </div>
 
@@ -224,14 +567,9 @@ if (isset($_SESSION['message'])) {
             <div class="cart-footer mt-4">
                 <div class="footer-left">
                     <div class="select-all">
-                        <input type="checkbox" id="select-all" style="width: 20px; height: 20px;">
+                        <input type="checkbox" id="select-all" checked>
                         <span>Pilih Semua (<?= count($cart_items) ?>)</span>
                     </div>
-                    <!-- <form method="POST" action="keranjang.php" id="delete-selected-form">
-                        <input type="hidden" name="delete_selected" value="1">
-                        <input type="hidden" id="selected_ids" name="selected_ids">
-                        <span class="delete-link" onclick="deleteSelected()">Hapus</span>
-                    </form> -->
                 </div>
                 <div class="footer-right">
                     <div class="total-section">
@@ -256,6 +594,7 @@ if (isset($_SESSION['message'])) {
                 alert('Anda harus memilih item untuk checkout!');
             }
         });
+        
         // Data harga dan jumlah dari PHP ke JS
         const cartData =
             <?php
@@ -298,7 +637,7 @@ if (isset($_SESSION['message'])) {
             document.getElementById('checkout-selected-ids').value = selectedIds.join(',');
         }
 
-        // Inisialisasi total pertama kali
+        // Inisialisasi total pertama kali (auto-checked)
         updateTotal();
 
         function deleteSelected() {
