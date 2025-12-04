@@ -32,7 +32,8 @@ if (isset($_POST['tambah'])) {
           echo "<script>alert('Gagal upload file ke server.');</script>";
         } else {
           // Upload ke Supabase Storage (bucket: images)
-          $uploadRes = uploadToSupabaseStorage('images', $localPath, 'paket/' . $namaFile);
+          $uploadRes = uploadToSupabaseStorage('', $localPath, 'paket/'.$namaFile);
+
           // (opsional) hapus file lokal setelah upload
           if (file_exists($localPath)) @unlink($localPath);
           if ($uploadRes === false) {
@@ -59,7 +60,7 @@ if (isset($_POST['tambah'])) {
   }
 }
 
-// === UPDATE PAKET ===
+// // === UPDATE PAKET ===
 if (isset($_POST['update_paket'])) {
 
   $id_paket  = $_POST['id_paket'];
@@ -93,10 +94,11 @@ if (isset($_POST['update_paket'])) {
 
     $localPath = $folder . $namaFile;
 
+    // Simpan sementara di server lokal
     move_uploaded_file($tmpName, $localPath);
 
-    // Upload ke Supabase Storage
-    $upload = uploadToSupabaseStorage('images', $localPath, "paket/" . $namaFile);
+    // Upload ke Supabase Storage (HANYA SEKALI)
+   $upload = uploadToSupabaseStorage("", $localPath, $namaFile);
 
     // Hapus file lokal
     @unlink($localPath);
@@ -106,7 +108,7 @@ if (isset($_POST['update_paket'])) {
       exit;
     }
 
-    // MASUKKAN URL BARU
+    // MASUKKAN URL BARU KE DATABASE
     $updateData['foto_paket'] =
       "https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/paket/" . $namaFile;
   }
@@ -122,9 +124,10 @@ if (isset($_POST['update_paket'])) {
   }
 }
 
-// === DELETE PAKET ===
-if (isset($_GET['hapus'])) {
-  $id_paket = $_GET['hapus'];
+
+    // === DELETE PAKET ===
+    if (isset($_GET['hapus'])) {
+    $id_paket = $_GET['hapus'];
 
   if ($result['success']) {
     echo "<script>alert('Paket berhasil dihapus!'); window.location='kelola-paket.php';</script>";

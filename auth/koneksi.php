@@ -283,23 +283,24 @@ function generateUUID()
 
 function uploadToSupabaseStorage($folder, $localPath, $fileName)
 {
-    global $SUPABASE_URL, $SUPABASE_SERVICE_KEY;
-
-    $bucket = "images"; // FIX: bucket-mu hanya 1 yaitu "images"
+    $bucket = "images"; // bucket kamu
+    $projectUrl = SUPABASE_URL; 
+    $serviceKey = SUPABASE_SERVICE_KEY;
 
     if (!file_exists($localPath)) {
         echo "File tidak ditemukan: $localPath";
         return false;
     }
 
-    // Path dalam storage
-    $uploadPath = "$bucket/$folder/$fileName"; // contoh: images/produk/a.png
+    // Path akhir di Supabase Storage
+    $uploadPath = "$bucket/$folder/$fileName";  
+    // contoh hasil: images/paket/foto.png
 
     $client = new Client([
-        'base_uri' => $SUPABASE_URL,
+        'base_uri' => $projectUrl, // BENAR
         'headers' => [
-            'Authorization' => "Bearer {$SUPABASE_SERVICE_KEY}",
-            'apikey'        => $SUPABASE_SERVICE_KEY,
+            'Authorization' => "Bearer {$serviceKey}",
+            'apikey'        => $serviceKey,
         ]
     ]);
 
@@ -312,13 +313,14 @@ function uploadToSupabaseStorage($folder, $localPath, $fileName)
             "/storage/v1/object/$uploadPath",
             [
                 'headers' => [
-                    'Content-Type'   => $mime
+                    'Content-Type'   => $mime,
+                    'Content-Length' => strlen($fileData)
                 ],
                 'body' => $fileData
             ]
         );
 
-        return $response->getStatusCode() === 200 || $response->getStatusCode() === 201;
+        return ($response->getStatusCode() === 200 || $response->getStatusCode() === 201);
     } catch (Exception $e) {
         echo "Error saat upload ke storage: " . $e->getMessage();
         return false;
