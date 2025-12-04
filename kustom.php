@@ -2,6 +2,7 @@
 session_start();
 require 'auth/koneksi.php';
 
+$isLoggedIn = isset($_SESSION['id_user']);
 $wadah = getSupabaseData("wadah");
 ?>
 
@@ -42,26 +43,27 @@ $wadah = getSupabaseData("wadah");
             <?php if (!empty($wadah)): ?>
                 <?php foreach ($wadah as $row): ?>
 
-                    <div class="wadah-card">
+                    <div class="wadah-card" style="cursor: pointer;"
+                        <?php if ($isLoggedIn): ?>
+                        onclick="window.location.href='kustom-detail.php?id=<?= urlencode($row['id_wadah']) ?>'"
+                        <?php else: ?>
+                        data-bs-toggle="modal" data-bs-target="#loginModal"
+                        <?php endif; ?>>
 
                         <div class="wadah-badge">
                             <?= htmlspecialchars($row['varian']) ?>
                         </div>
-
-                        <img
-                            src="<?= !empty($row['foto_wadah'])
+                        <img src="<?= !empty($row['foto_wadah'])
                                         ? htmlspecialchars($row['foto_wadah'])
                                         : 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?q=80&w=600' ?>"
                             alt="Foto <?= htmlspecialchars($row['nama_wadah']) ?>"
                             class="wadah-img">
-
-                        <h3><?= htmlspecialchars($row['nama_wadah']) ?></h3>
-
-                        <p><?= htmlspecialchars($row['deskripsi']) ?></p>
-
-                        <p>Kapasitas: <strong><?= htmlspecialchars($row['kapasitas']) ?></strong> item</p>
-
-                        <p class="harga">Rp <?= number_format($row['harga_wadah'], 0, ',', '.') ?></p>
+                        <div class="produk-card-content">
+                            <h3><?= htmlspecialchars($row['nama_wadah']) ?></h3>
+                            <p class="harga"><?= htmlspecialchars($row['deskripsi']) ?></p>
+                            <p class="harga">Rp <?= number_format($row['harga_wadah'], 0, ',', '.') ?></p>
+                            <h10>Kapasitas: <strong><?= htmlspecialchars($row['kapasitas']) ?></strong> item</h10>
+                        </div>
 
                     </div>
 
