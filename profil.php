@@ -113,7 +113,7 @@ if (isset($_POST['tambah_alamat'])) {
     $insert = insertSupabaseData("alamat", $dataInsert);
 
     if ($insert) {
-        header("Location: pilih_alamat.php?success=1");
+        header("Location: profil.php?success=1");
         exit;
     } else {
         echo "Gagal menambahkan alamat";
@@ -179,8 +179,7 @@ if (isset($_POST['ubah_password'])) {
     }
 }
 
-
-
+$voucherSaya = getVoucherUser($id_user);
 $pesanan = getRiwayatPesanan($id_user);
 
 ?>
@@ -236,7 +235,6 @@ $pesanan = getRiwayatPesanan($id_user);
                     <a href="#" class="menu-item" onclick="showPage('alamat'); return false;">Alamat</a>
                     <a href="#" class="menu-item" onclick="showPage('ubah-pw'); return false;">Ubah Password</a>
                     <a href="#" class="menu-item" onclick="showPage('pesanan-saya'); return false;">Pesanan Saya</a>
-                    <a href="#" class="menu-item" onclick="showPage('voucher'); return false;">Voucher</a>
                 </div>
             </div>
 
@@ -423,6 +421,62 @@ $pesanan = getRiwayatPesanan($id_user);
                     </form>
                 </div>
 
+                <div id="detail-pesanan-page" class="page-content" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="page-title mb-0">Tambah Alamat Anda</h1>
+                    </div>
+
+                    <form method="POST">
+                        <div class="form-section">
+                            <div class="form-left">
+                                <input type="hidden" name="tambah_alamat" value="1">
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Nama Lengkap</label>
+                                        <input type="text" name="nama_lengkap" id="nama_lengkap" class="form-control" placeholder="Masukkan nama lengkap">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Nomor Hp Penerima</label>
+                                        <input type="text" name="no_hp_penerima" id="no_hp_penerima" class="form-control" placeholder="Masukkan nomor hp penerima">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Alamat Rumah</label>
+                                        <input type="text" name="alamat_rumah" id="alamat_rumah" class="form-control" placeholder="Masukkan alamat rumah lengkap">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="form-row">
+                                        <label class="form-label">Detail Alamat (opsional)</label>
+                                        <input type="text" name="detail_lain" id="detail_lain" class="form-control" placeholder="Masukkan detail alamat seperti kode pos, patokan, dll.">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Pilih Lokasi Pada Map</label>
+                                    <button type="button" class="btn btn-primary mb-2" onclick="centerUserLocation()">
+                                        Pusatkan Lokasi Saya
+                                    </button>
+
+                                    <div id="map"
+                                        style="width: 70%; height: 250px; border-radius: 10px; border: 1px solid #ddd;"></div>
+
+                                    <!-- Input Hidden untuk disimpan ke DB -->
+                                    <input type="hidden" name="latitude" id="lat">
+                                    <input type="hidden" name="longitude" id="lng">
+                                </div>
+                                <button class="submit-button" type="submit">Simpan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <div id="ubah-pw-page" class="page-content" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h1 class="page-title mb-0">Ubah Password Akun Anda</h1>
@@ -477,22 +531,20 @@ $pesanan = getRiwayatPesanan($id_user);
                                     <div class="address-header">
                                         <div>
                                             <h3 class="address-name">
-                                                <?= $trx['alamat']['nama_penerima'] ?? 'Tanpa Nama' ?>
+                                                <?= $trx['alamat']['nama_lengkap'] ?? 'Tanpa Nama' ?>
                                             </h3>
                                             <span class="address-phone">
-                                                (<?= $trx['alamat']['no_hp'] ?? '-' ?>)
+                                                (<?= $trx['alamat']['no_hp_penerima'] ?? '-' ?>)
                                             </span>
                                         </div>
                                         <div class="address-actions">
-                                            <a href="detail-pesanan.php?id=<?= $trx['id_transaksi'] ?>" class="action-link">
-                                                Detail
-                                            </a>
+                                            <a style="text-decoration: none;" href="#" class="add-address-btn" onclick="showPage('detail-pesanan'); return false;"><i class="fas fa-plus"></i>Detail</a>
                                         </div>
                                     </div>
 
                                     <!-- DETAIL ALAMAT -->
                                     <div class="address-detail">
-                                        <?= $trx['alamat']['alamat_lengkap'] ?? '-' ?><br>
+                                        <?= $trx['alamat']['alamat_rumah'] ?? '-' ?><br>
                                         <?php if (!empty($trx['nomor_pesanan'])) : ?>
                                             Nomor Pesanan: <strong><?= $trx['nomor_pesanan'] ?></strong><br>
                                         <?php endif; ?>
@@ -539,59 +591,8 @@ $pesanan = getRiwayatPesanan($id_user);
 
                 </div>
 
-                <div id="voucher-page" class="page-content" style="display: none;">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h1 class="page-title mb-0">Alamat Saya</h1>
-                    </div>
 
-                    <div class="address-section-title mb-3">Alamat</div>
-
-                    <!-- Address List -->
-                    <div class="address-list">
-                        <!-- Address 1 -->
-                        <div class="address-card">
-                            <div class="address-header">
-                                <div>
-                                    <h3 class="address-name">Muhammad Rafi Naufal</h3>
-                                    <span class="address-phone">(+62) 857 5558 1947</span>
-                                </div>
-                                <div class="address-actions">
-                                    <a href="#" class="action-link">Ubah</a>
-                                </div>
-                            </div>
-                            <div class="address-detail">
-                                Dusun Krajan 1, RT 2 RW 14, Desa Jombang, Kecamatan Jombang, 68168<br>
-                                JOMBANG, KAB. JEMBER, JAWA TIMUR, ID, 68168
-                            </div>
-                            <div class="address-footer">
-                                <span class="address-badge badge-primary">Utama</span>
-                                <button class="default-btn">Atur sebagai utama</button>
-                            </div>
-                        </div>
-
-                        <!-- Address 2 -->
-                        <div class="address-card">
-                            <div class="address-header">
-                                <div>
-                                    <h3 class="address-name">muhammadrafinaufa071</h3>
-                                    <span class="address-phone">(+62) 857 5558 1947</span>
-                                </div>
-                                <div class="address-actions">
-                                    <a href="#" class="action-link">Ubah</a>
-                                    <a href="#" class="action-link text-danger">Hapus</a>
-                                </div>
-                            </div>
-                            <div class="address-detail">
-                                Perumahan Grand Kaliurang, Jambuan, Antirogo<br>
-                                SUMBER SARI, KAB. JEMBER, JAWA TIMUR, ID, 68125
-                            </div>
-                            <div class="address-footer">
-                                <button class="default-btn">Atur sebagai utama</button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>
