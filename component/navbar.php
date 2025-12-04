@@ -1,7 +1,4 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $isLoggedIn = isset($_SESSION['id_user']) || isset($_SESSION['access_token']);
@@ -11,11 +8,11 @@ $initial = strtoupper(substr($username, 0, 1));
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+<head>  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Navbar</title>
-    <link rel="stylesheet" href="assets/css/main.css">
+    <!-- <link rel="stylesheet" href="assets/css/main.css"> -->
 
     <style>
         .navbar {
