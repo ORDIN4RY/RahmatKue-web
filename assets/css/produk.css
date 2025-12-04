@@ -1,191 +1,74 @@
-<<<<<<< Updated upstream
 @import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 
-* {
+/* ============================================
+   RESET & BASE STYLES
+   ============================================ */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Montserrat", sans-serif;
 }
 
 body {
-  background: #fff6f0;
+  background-color: #f8f4f0;
+  font-family: "Montserrat", sans-serif;
+  color: #2d1810;
+  line-height: 1.6;
 }
 
-/* Produk */
-
+/* ============================================
+   PRODUK SECTION
+   ============================================ */
 .produk-section {
-  padding: 40px 20px;
-  /* background: #fff6f0; */
+  padding: 1rem 1.25rem;
+  background-color: #f8f4f0;
   text-align: center;
+  min-height: 10vh;
 }
+
 .produk-section h2 {
-  /* margin-top: 2rem; */
-  margin-top: 10px;
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #8b4513;
-    font-family: "Montserrat", sans-serif;
-    position: relative;
-    display: inline-block;
-    padding-bottom: 10px;
-}
-.produk-section::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 3px;
-    background-color: #8b4513;
-    transition: width 1.2s ease-out;
-}
-
-.produk-section.animate::after {
-    width: 100%;
-}
-.produk-section p {
-  font-size: 17px;
-  margin-top: 20px;
-  font-family: "Montserrat", sans-serif;
-}
-
-.produk-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 0 20px;
-}
-
-/* Card */
-.produk-card {
-  position: relative;
-  overflow: hidden;
-  background-color: #fff;
-  border-radius: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  max-width: 280px;
-}
-
-.produk-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-}
-
-/* Wrapper untuk foto dengan rasio tetap */
-.produk-image-wrapper {
-  width: 100%;
-  padding-top: 70%; /* Rasio lebih pendek */
-  position: relative;
-  overflow: hidden;
-  background-color: #f5f5f5;
-}
-
-/* Foto */
-.produk-card img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Konten teks */
-.produk-card-content {
-  flex: 1;
-  padding: 15px 12px;
-  color: #333;
-  background-color: #fff;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.produk-card-content h3 {
-  font-family: "Montserrat", sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  color: #2c2c2c;
-  line-height: 1.3;
-}
-.produk-card-content h10 {
-   font-family: "Montserrat", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  margin: 0;
-  color: #555;
-  line-height: 1.3;
-}
-
-.produk-card-content .deskripsi {
-   font-family: "Montserrat", sans-serif;
-  font-size: 13px;
-  color: #666;
-  margin: 0;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.produk-card-content .harga {
-   font-family: "Montserrat", sans-serif;
-  font-size: 18px;
+  margin-top: 0.625rem;
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
   font-weight: 700;
-  color: #1a1a1a;
-  margin: 6px 0 0 0;
+  color: #5b3b2e;
+  font-family: "Montserrat", sans-serif;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-  .produk-container {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.produk-section h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 0.25rem;
+  background-color: #8b4513;
 }
 
-@media (max-width: 768px) {
-  .produk-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-
-  .produk-card {
-    max-width: 100%;
-  }
-
-  .produk-card-content h3 {
-    font-size: 16px;
-  }
-
-  .produk-card-content .harga {
-    font-size: 16px;
-  }
+.produk-section p {
+  font-size: clamp(0.9375rem, 2vw, 1.0625rem);
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  color: #666;
+  line-height: 1.6;
+  font-family: "Montserrat", sans-serif;
 }
 
-@media (max-width: 480px) {
-  .produk-container {
-    grid-template-columns: 1fr;
-  }
-}
-
+/* ============================================
+   SEARCH CONTAINER
+   ============================================ */
 .search-container {
   width: 100%;
-  max-width: 900px;
-  margin: 20px auto 30px;
-  padding: 0 20px;
+  max-width: 56.25rem;
+  margin: 1.25rem auto 1.875rem;
+  padding: 0 1.25rem;
 }
 
 .search-form {
@@ -198,25 +81,32 @@ body {
   align-items: center;
   background-color: #fff;
   border: 1px solid #e4e4e4;
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+  border-color: #8b4513;
+  box-shadow: 0 0.25rem 0.75rem rgba(139, 69, 19, 0.12);
 }
 
 .search-icon {
-  color: #8e5e48;
-  margin-right: 12px;
-  font-size: 18px;
+  color: #5b3b2e;
+  margin-right: 0.75rem;
+  font-size: 1.125rem;
 }
 
 .search-box input {
   flex: 1;
   border: none;
   background: none;
-  padding: 8px;
-  font-size: 16px;
+  padding: 0.5rem;
+  font-size: 1rem;
   color: #333;
   outline: none;
+  font-family: "Montserrat", sans-serif;
 }
 
 .search-box input::placeholder {
@@ -226,23 +116,31 @@ body {
 .filter-btn {
   background: none;
   border: none;
-  color: #8e5e48;
-  padding: 8px;
+  color: #5b3b2e;
+  padding: 0.5rem;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 1.125rem;
+  transition: color 0.3s ease;
 }
 
-/* Category buttons styles */
+.filter-btn:hover {
+  color: #8b4513;
+}
+
+/* ============================================
+   KATEGORI BUTTONS
+   ============================================ */
 .kategori-container {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   overflow-x: auto;
-  padding: 10px 20px;
-  margin: 0 auto 30px;
-  max-width: 800px;
+  padding: 0.625rem 1.25rem;
+  margin: 0 auto 2.5rem;
+  max-width: 56.25rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .kategori-container::-webkit-scrollbar {
@@ -251,96 +149,182 @@ body {
 
 .kategori-btn {
   background-color: #fff;
-  color: #8e5e48;
-  border: 1px solid #8e5e48;
-  padding: 10px 24px;
-  border-radius: 5px;
-  font-size: 14px;
+  color: #5b3b2e;
+  border: 0.125rem solid #5b3b2e;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
   white-space: nowrap;
   text-decoration: none;
   transition: all 0.3s ease;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
 }
 
 .kategori-btn:hover {
-  background-color: #fff5f1;
-  border-color: #8e5e48;
+  background-color: #fff8f0;
+  border-color: #8b4513;
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.25rem 0.5rem rgba(91, 59, 46, 0.15);
 }
 
 .kategori-btn.active {
-  background-color: #8e5e48;
+  background-color: #5b3b2e;
   color: white;
-  border-color: #8e5e48;
+  border-color: #5b3b2e;
+  box-shadow: 0 0.25rem 0.5rem rgba(91, 59, 46, 0.2);
 }
 
-/* Tombol */
+/* ============================================
+   PRODUK CONTAINER & CARDS
+   ============================================ */
+.produk-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1.5rem;
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* CARD STYLING - PERBAIKAN UTAMA */
+.produk-card {
+  position: relative;
+  overflow: hidden;
+  background-color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  height: auto;
+  min-height: 24rem;
+}
+
+.produk-card:hover {
+  transform: translateY(-0.5rem);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.12);
+}
+
+/* IMAGE WRAPPER - FIXED ASPECT RATIO */
+.produk-image-wrapper {
+  width: 100%;
+  height: 14rem;
+  position: relative;
+  overflow: hidden;
+  background-color: #f5f5f5;
+  flex-shrink: 0;
+}
+
+.produk-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.produk-card:hover img {
+  transform: scale(1.05);
+}
+
+/* CARD CONTENT - PROPER SPACING */
+.produk-card-content {
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-grow: 1;
+  background-color: #fff;
+}
+
+.produk-card-content h3 {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-weight: 600;
+  margin: 0;
+  color: #2d1810;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.produk-card-content h10 {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  font-weight: 500;
+  margin: 0;
+  color: #666;
+  line-height: 1.3;
+  text-align: left;
+  display: block;
+}
+
+.produk-card-content .deskripsi {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(0.8125rem, 2vw, 0.8125rem);
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-align: left;
+}
+
+.produk-card-content .harga {
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 700;
+  color: #8b4513;
+  margin: 0.5rem 0 0 0;
+  text-align: left;
+}
+
+/* BUTTON - POSITIONED AT BOTTOM */
 .btn-produk {
-  position: absolute;
-  bottom: 10px; /* posisikan di bawah */
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 30px); /* beri jarak dari sisi kiri kanan */
+  display: block;
+  width: calc(100% - 2.5rem);
+  margin: 0 auto 1rem;
   text-align: center;
-  padding: 10px 18px;
-  background: #5a3c35;
+  padding: 0.75rem 1rem;
+  background: #5b3b2e;
   color: #fff;
-  border-radius: 20px;
+  border-radius: 1.25rem;
   text-decoration: none;
-  font-size: 14px;
-  transition: 0.3s;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 0.25rem 0.5rem rgba(91, 59, 46, 0.2);
+  font-family: "Montserrat", sans-serif;
 }
 
 .btn-produk:hover {
-  background: #3a2722;
+  background: #3e2920;
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.375rem 0.75rem rgba(91, 59, 46, 0.3);
 }
 
-.pesanan-controls {
-  display: none;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  margin-top: 10px;
-}
-.pesanan-controls button {
-  border: none;
-  background: #6b4226;
-  color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
-}
-.pesanan-controls span {
-  font-weight: bold;
-  font-size: 16px;
-}
-.catatan {
-  display: none;
-  font-size: 14px;
-  color: #6b4226;
-  margin-top: 8px;
-}
-.catatan i {
-  margin-right: 5px;
-}
-
-/* Sticky Cart Button */
+/* ============================================
+   STICKY CART BUTTON
+   ============================================ */
 .sticky-cart-btn {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
+  bottom: 1.875rem;
+  right: 1.875rem;
+  width: 3.75rem;
+  height: 3.75rem;
   border-radius: 50%;
-  background-color: #8e5e48;
+  background-color: #5b3b2e;
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(142, 94, 72, 0.3);
+  box-shadow: 0 0.25rem 0.75rem rgba(91, 59, 46, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 1.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 1000;
@@ -348,8 +332,8 @@ body {
 
 .sticky-cart-btn:hover {
   transform: scale(1.1);
-  background-color: #7a4e3c;
-  box-shadow: 0 6px 16px rgba(142, 94, 72, 0.4);
+  background-color: #3e2920;
+  box-shadow: 0 0.375rem 1rem rgba(91, 59, 46, 0.4);
 }
 
 .sticky-cart-btn i {
@@ -357,90 +341,76 @@ body {
   padding: 0;
 }
 
-/* ==========================================
-   PRODUK DETAIL PAGE - RAHMAT BAKERY
-   Professional Marketplace Design
-   ========================================== */
-
-/* Background */
-body {
-  background-color: #faf8f6;
-}
-
-/* Container */
+/* ============================================
+   PRODUK DETAIL PAGE
+   ============================================ */
 .container {
-  max-width: 1280px;
-  padding: 40px 20px;
+  max-width: 80rem;
+  padding: 2.5rem 1.25rem;
 }
 
-/* Image Produk */
 .foto-produk {
   width: 100%;
-  height: 500px;
+  height: 31.25rem;
   object-fit: cover;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 1.25rem;
+  box-shadow: 0 0.625rem 2.5rem rgba(0, 0, 0, 0.1);
   background: white;
-  border: 1px solid #f0ebe5;
+  border: 0.0625rem solid #f0ebe5;
 }
 
-/* Product Info Box */
 #produk-detail-form {
   background: white;
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f0ebe5;
+  padding: 2.5rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.06);
+  border: 0.0625rem solid #f0ebe5;
 }
 
-/* Title */
-h2 {
+#produk-detail-form h2 {
   font-weight: 700;
   color: #2d1810;
-  font-size: 2rem;
-  margin-bottom: 12px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 0.75rem;
 }
 
-/* Price */
-h4 {
+#produk-detail-form h4 {
   font-weight: 800;
-  color: #2d1810;
-  font-size: 2.25rem;
-  margin: 0 0 20px 0;
+  color: #8b4513;
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  margin: 0 0 1.25rem 0;
 }
 
-/* Description */
 #produk-detail-form > p:first-of-type {
   color: #6b5d52;
   line-height: 1.7;
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 }
 
-/* Category Badge */
 #produk-detail-form > p:nth-of-type(2) {
   display: inline-block;
   background: #f5f0eb;
-  padding: 8px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.25rem;
   font-size: 0.9rem;
 }
 
 #produk-detail-form > p:nth-of-type(2) b {
-  color: #6b5d52;
+  color: #5b3b2e;
 }
 
-/* Info Box - Hijau (minimal 1) */
+/* Info Boxes */
 .min-order-info {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  border-left: 4px solid #4caf50;
+  border-left: 0.25rem solid #4caf50;
   color: #2e7d32;
-  padding: 16px 20px;
-  border-radius: 12px;
-  margin-bottom: 28px;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.75rem;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .min-order-info i {
@@ -450,14 +420,14 @@ h4 {
 
 .min-order-warning {
   background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  border-left: 4px solid #ff9800;
+  border-left: 0.25rem solid #ff9800;
   color: #e65100;
-  padding: 16px 20px;
-  border-radius: 12px;
-  margin-bottom: 28px;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.75rem;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .min-order-warning i {
@@ -465,426 +435,249 @@ h4 {
   font-size: 1.3rem;
 }
 
-/* Form Label */
+/* Form Elements */
 .form-label {
   font-weight: 600;
   color: #2d1810;
-  margin-bottom: 10px;
+  margin-bottom: 0.625rem;
   display: block;
 }
 
-/* Input & Select */
 .form-control,
 .form-select {
-  border-radius: 12px;
-  border: 2px solid #e5ddd5;
-  padding: 14px 18px;
+  border-radius: 0.75rem;
+  border: 0.125rem solid #e5ddd5;
+  padding: 0.875rem 1.125rem;
   font-size: 1rem;
   background: #fafaf9;
   transition: all 0.3s ease;
+  font-family: "Montserrat", sans-serif;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #8b6f47;
-  box-shadow: 0 0 0 4px rgba(139, 111, 71, 0.08);
+  border-color: #8b4513;
+  box-shadow: 0 0 0 0.25rem rgba(139, 69, 19, 0.08);
   outline: none;
   background: white;
 }
 
-/* Quantity Input */
 input[type="number"] {
-  max-width: 180px;
+  max-width: 11.25rem;
   font-weight: 600;
   text-align: center;
 }
 
-/* Button Container */
+/* Buttons */
 .d-flex.gap-3 {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
-/* Tambah ke Keranjang Button */
 .btn-submit {
-  background: linear-gradient(135deg, #8b6f47 0%, #6d5636 100%);
+  background: linear-gradient(135deg, #5b3b2e 0%, #3e2920 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 16px 32px;
+  border-radius: 0.75rem;
+  padding: 1rem 2rem;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(139, 111, 71, 0.25);
+  box-shadow: 0 0.25rem 1rem rgba(91, 59, 46, 0.25);
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   flex: 1;
   justify-content: center;
+  font-family: "Montserrat", sans-serif;
 }
 
 .btn-submit:hover {
-  background: linear-gradient(135deg, #6d5636 0%, #5a4528 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 111, 71, 0.35);
+  background: linear-gradient(135deg, #3e2920 0%, #2d1810 100%);
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.375rem 1.25rem rgba(91, 59, 46, 0.35);
 }
 
-/* Beli Sekarang Button */
 .btn-success {
   background: linear-gradient(135deg, #28a745 0%, #218838 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 16px 32px;
+  border-radius: 0.75rem;
+  padding: 1rem 2rem;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.25);
+  box-shadow: 0 0.25rem 1rem rgba(40, 167, 69, 0.25);
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   justify-content: center;
+  font-family: "Montserrat", sans-serif;
 }
 
 .btn-success:hover {
   background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.35);
+  transform: translateY(-0.125rem);
+  box-shadow: 0 0.375rem 1.25rem rgba(40, 167, 69, 0.35);
 }
 
-/* Alert Messages */
+/* Alerts */
 .alert {
-  border-radius: 14px;
-  padding: 18px 24px;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 0.875rem;
+  padding: 1.125rem 1.5rem;
+  margin-bottom: 1.875rem;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
 }
 
 .alert-success {
   background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
   color: #155724;
-  border-left: 4px solid #28a745;
+  border-left: 0.25rem solid #28a745;
 }
 
 .alert-danger {
   background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-  color: #000000;
-  border-left: 4px solid #000000;
+  color: #721c24;
+  border-left: 0.25rem solid #dc3545;
 }
 
-/* ==========================================
-   RESPONSIVE - MOBILE
-   ========================================== */
-@media (max-width: 992px) {
-  #produk-detail-form {
-    padding: 30px 25px;
-    margin-top: 30px;
-  }
-  
-  .foto-produk {
-    height: 400px;
-  }
-}
-
-@media (max-width: 768px) {
-  h2 {
-    font-size: 1.75rem;
-  }
-  
-  h4 {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .container {
-    padding: 20px 15px;
-  }
-  
-  #produk-detail-form {
-    padding: 25px 20px;
-  }
-  
-  .foto-produk {
-    height: 300px;
-  }
-  
-  h2 {
-    font-size: 1.5rem;
-  }
-  
-  h4 {
-    font-size: 1.75rem;
-  }
-  
-  .d-flex.gap-3 {
-    flex-direction: column;
-  }
-  
-  .btn-submit,
-  .btn-success {
-    width: 100%;
-  }
-  
-  input[type="number"] {
-    max-width: 100%;
-  }
-}
-
-/* HALAMAN KUSTOM PESANAN */
+/* ============================================
+   KUSTOM PESANAN
+   ============================================ */
 .wadah-card {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: 0.3s ease;
-  border: 1px solid #eee;
+  border-radius: 1rem;
+  padding: 0.9375rem;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 0.0625rem solid #eee;
   position: relative;
 }
 
 .wadah-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  transform: translateY(-0.3125rem);
+  box-shadow: 0 0.5rem 1.125rem rgba(0, 0, 0, 0.15);
 }
 
 .wadah-img {
   width: 100%;
-  height: 200px;
-  border-radius: 12px;
+  height: 12.5rem;
+  border-radius: 0.75rem;
   object-fit: cover;
-  margin-bottom: 15px;
+  margin-bottom: 0.9375rem;
 }
 
 .wadah-badge {
   position: absolute;
   background: #ff7b00;
   color: white;
-  font-size: 13px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  top: 10px;
-  left: 10px;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  top: 0.625rem;
+  left: 0.625rem;
   z-index: 10;
+  font-weight: 600;
 }
 
 .harga {
-  color: #ff4d00;
-  font-weight: bold;
-  font-size: 18px;
+  color: #8b4513;
+  font-weight: 700;
+  font-size: clamp(1.0625rem, 2.5vw, 1.125rem);
 }
-=======
-@import url('https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap');
-* {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
 
-        body {
-            background: linear-gradient(to right, #d9b89b, #e5c9a5);
-            color: #333;
-        }
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1200px) {
+  .produk-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
 
-        /* Navbar */
-        .navbar {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            padding: 15px 50px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 30px;
-            background: transparent;
-            transition: background 0.3s, backdrop-filter 0.3s;
-            z-index: 999;
-        }
+@media (max-width: 992px) {
+  .produk-section {
+    padding: 4rem 1.25rem;
+  }
 
-      .navbar.scrolled {
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.2);
-      }
+  #produk-detail-form {
+    padding: 1.875rem 1.5625rem;
+    margin-top: 1.875rem;
+  }
 
-        .navbar p {
-            font-size: 20px;
-            color: #5b3b2e;
-            font-weight: bold;  
-            margin-right: auto;
-            font-family: "Abhaya Libre", sans-serif;
-        }
-        .navbar a {
-            text-decoration: none;
-            font-size: 16px;
-            color: #333;
-            font-weight: 500;
-            transition: 0.3s;
-            font-family: "Abhaya Libre", sans-serif;
-        }
-        .navbar a:hover {
-            color: #7c4d33;
-        }
+  .foto-produk {
+    height: 25rem;
+  }
+}
 
-        .navbar a.active {
-            font-weight: bold;
-            border-bottom: 2px solid #7c4d33;
-            padding-bottom: 2px;
-        }
+@media (max-width: 768px) {
+  .produk-section {
+    padding: 3rem 1rem;
+  }
 
+  .produk-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
 
-        /* Produk */
+  .kategori-container {
+    justify-content: flex-start;
+  }
 
-        .produk-section {
-        text-align: center;
-        margin-top: -5rem;
-        padding: 40px 20px;
-        background: #FFF6F0;
-      }
-      .produk-section h2 {
-        font-size: 37px;
-        margin-top: 13vh;
-        font-family: "Abhaya Libre", serif;
-      }
-      .produk-section p {
-        font-size: 17px;
-        margin-bottom: 20px;
-        font-family: "Abhaya Libre", serif;
-      }
+  .foto-produk {
+    height: 20rem;
+  }
 
-      .produk-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 25px;
-        max-width: 1100px;
-        margin: auto;
-      }
+  .produk-image-wrapper {
+    height: 12rem;
+  }
+}
 
-      .btn-search {
-        margin-bottom: 20px;
-        margin-top: 4rem;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-      .btn-search input[type="text"] {
-        padding: 10px;
-        width: 85%;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-      }
-      .btn-search button {
-        padding: 10px;
-        width: 40px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-      }
-      .kategori {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: left;
-        margin-left: 4rem;
-        gap: 10px;
-      }
-      .kategori .btn-kategori {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-        font-weight: 500;
-        background-color: #ECB69E;
-        cursor: pointer;
-      }
+@media (max-width: 576px) {
+  .produk-section {
+    padding: 2.5rem 1rem;
+  }
 
-      .kategori .btn-kategori.active {
-        font-weight: bold;
-        background-color: #FFD1B8;
-      }
-      .kategori button {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 14px;
-        font-weight: 500;
-        background-color: #FFD1B8;
-      }
+  .container {
+    padding: 1.25rem 0.9375rem;
+  }
 
-      /* Card */
-      .produk-card {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        height: 400px;
-        min-height: 380px;
-        background-color: #FFE8D8;
-        margin-top: 3rem;
-      }
+  #produk-detail-form {
+    padding: 1.5625rem 1.25rem;
+  }
 
-      /* Foto */
-      .produk-card-img {
-        height: 230px;
-        object-fit: cover;
-        display: block;
-      }
+  .foto-produk {
+    height: 18.75rem;
+  }
 
+  .d-flex.gap-3 {
+    flex-direction: column;
+  }
 
-      /* Konten teks */
-      .produk-card-content {
-        position: absolute;
-        padding-top: 18px;
-        padding-bottom: 50px;
-        padding-left: 15px;
-        padding-right: 15px;
-        color: #000;
-        z-index: 2;
-        text-align: left;
-        background-color: #fff;
-      }
+  .btn-submit,
+  .btn-success {
+    width: 100%;
+  }
 
-      .produk-card-content h3 {
-        font-size: 20px;
-        margin-bottom: 10px;
-        font-weight: bold;
-        font-family: "Abhaya Libre", serif;
-      }
+  input[type="number"] {
+    max-width: 100%;
+  }
+}
 
-      .produk-card-content p {
-        font-size: 14px;
-        margin-bottom: 15px;
-        line-height: 1.5;
-        font-family: "Abhaya Libre", serif;
-      }
+@media (max-width: 480px) {
+  .produk-container {
+    grid-template-columns: 1fr;
+  }
 
-      /* Tombol */
-      .btn-produk {
-        text-align: center;
-        display: inline-block;
-        padding: 10px 18px;
-        width: 100%;
-        background: #5a3c35;
-        color: #fff;
-        border-radius: 20px;
-        text-decoration: none;
-        font-size: 14px;
-        transition: 0.3s;
-      }
+  .sticky-cart-btn {
+    width: 3.125rem;
+    height: 3.125rem;
+    font-size: 1.25rem;
+    bottom: 1.25rem;
+    right: 1.25rem;
+  }
 
-      .btn-produk:hover {
-        background: #3a2722;
-      }
-
-
-      /* Responsive */
-      @media (max-width: 992px) {
-        .produk-container {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-
-      @media (max-width: 600px) {
-        .produk-container {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      
->>>>>>> Stashed changes
+  .produk-image-wrapper {
+    height: 11rem;
+  }
+}

@@ -1,6 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&display=swap");
 * {
-<<<<<<< Updated upstream
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -293,14 +292,9 @@ body {
     grid-template-columns: 1fr;
   }
 }
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
 
         body {
-            background: linear-gradient(to right, #d9b89b, #e5c9a5);
+            background: linear-gradient(to right, #f8f4f0, #f8f4f0);
             color: #333;
         }
 
@@ -695,5 +689,3 @@ body {
         }
       }
 
-      
->>>>>>> Stashed changes
