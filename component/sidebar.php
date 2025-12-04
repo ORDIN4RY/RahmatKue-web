@@ -82,10 +82,5 @@
       <i class="bi bi-card-text"></i>
       <span>Kelola Voucher</span></a>
   </li>
-  <li class="nav-item <?= sidebar_active('laporan.php') ?>">
-    <a class="nav-link" href="laporan.php">
-      <i class="bi bi-journal"></i>
-      <span>Lihat Laporan</span></a>
-  </li>
 
 </ul>

@@ -9,8 +9,24 @@ if (!isset($_SESSION['id'])) {
 }
 
 $id_user        = $_SESSION['id'];
-$id_alamat = $_POST['id_alamat'] ?? null;
+// $id_alamat = $_POST['id_alamat'] ?? $selected_id_alamat ?? null;
 $access_token   = $_SESSION['access_token'] ?? null;
+
+function hitungJarakKm($lat1, $lon1, $lat2, $lon2)
+{
+    $earthRadius = 6371; // KM
+
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+
+    $a = sin($dLat / 2) * sin($dLat / 2) +
+        cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+        sin($dLon / 2) * sin($dLon / 2);
+
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    return $earthRadius * $c;
+}
+
 
 // ==========================
 // AMBIL DATA PRODUK TERPILIH
@@ -102,6 +118,45 @@ try {
 } catch (Exception $e) {
     error_log("Error mengambil voucher: " . $e->getMessage());
 }
+
+// ========================== Ongkir ==========================
+// ========================== ONGKIR FIX ==========================
+
+// PASTIKAN id_alamat SELALU AMBIL DARI HIDDEN INPUT
+$id_alamat = $_POST['id_alamat'] ?? $selected_id_alamat;
+
+// METODE PENGAMBILAN (DEFAULT DIAMBIL)
+$metode_pengambilan = $_POST['metode_pengambilan'] ?? 'diambil';
+
+$lat_toko = -8.163745;
+$lng_toko = 113.445406;
+
+$ongkir = 0;
+
+// AMBIL ALAMAT USER DENGAN BENAR
+$alamatUser = getSupabaseData("alamat", [
+    "id_alamat" => "eq." . $id_alamat
+]);
+
+if (!empty($alamatUser)) {
+
+    $latUser = $alamatUser[0]['latitude'] ?? 0;
+    $lonUser = $alamatUser[0]['longitude'] ?? 0;
+
+    if ($metode_pengambilan === "diantar" && $latUser != 0 && $lonUser != 0) {
+
+        $jarak = hitungJarakKm($lat_toko, $lng_toko, $latUser, $lonUser);
+        $ongkir = ceil($jarak) * 1000;
+
+        error_log("ONGKIR DIHITUNG: $jarak KM = Rp $ongkir");
+    }
+}
+
+// VALIDASI ONGKIR
+if ($ongkir < 0 || $ongkir > 500000) {
+    die("Ongkir tidak valid");
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -152,9 +207,13 @@ try {
             <input type="hidden" name="selected_ids" value="<?= htmlspecialchars($_GET['selected_ids'] ?? '') ?>">
             <input type="hidden" name="id_user" value="<?= $_SESSION['id'] ?>">
 
+            <input type="hidden" name="lat_user" id="lat">
+            <input type="hidden" name="lng_user" id="lng">
+
             <!-- NILAI YANG BENAR (tidak lagi NULL) -->
             <input type="hidden" id="total_harga" name="total_harga" value="<?= $total_harga ?>">
             <input type="hidden" id="dp_minimal" name="dp_minimal" value="<?= $dp_minimal ?>">
+            <input type="hidden" id="ongkir_hidden" name="ongkir" value="<?= $ongkir ?>"
 
             <!-- Hidden untuk id_alamat -->
             <input type="hidden" name="id_alamat" id="selected_id_alamat" value="<?= htmlspecialchars($selected_id_alamat) ?>">
@@ -227,10 +286,9 @@ try {
                         <h5 class="section-title">
                             <i class="fas fa-truck"></i> Metode Pengambilan
                         </h5>
-
                         <!-- DIAMBIL SENDIRI -->
                         <div class="payment-method">
-                            <input type="radio" name="metode_pengambilan" value="diambil" id="diambil" checked>
+                            <input type="radio" name="metode_pengambilan" value="diambil" id="diambil" checked onchange="updateOngkir()">
                             <label for="diambil">
                                 <div class="payment-icon"><i class="fas fa-box"></i></div>
                                 <div class="payment-info">
@@ -240,10 +298,9 @@ try {
                                 <strong class="ms-auto">Gratis</strong>
                             </label>
                         </div>
-
                         <!-- DIANTAR -->
                         <div class="payment-method">
-                            <input type="radio" name="metode_pengambilan" value="diantar" id="diantar">
+                            <input type="radio" name="metode_pengambilan" value="diantar" id="diantar" onchange="updateOngkir()">
                             <label for="diantar">
                                 <div class="payment-icon"><i class="fas fa-motorcycle"></i></div>
                                 <div class="payment-info">
@@ -411,6 +468,7 @@ try {
                 return;
             }
 
+
             // Logging untuk debugging
             console.log('Form submitted with id_alamat:', idAlamat, 'metode:', metodePengambilan);
         });
@@ -550,14 +608,17 @@ try {
             transition: border-color 0.3s;
         }
 
+
         .address-card:hover {
             border-color: #007bff;
         }
+
 
         .address-selection {
             margin-bottom: 1rem;
         }
     </style>
 </body>
+
 
 </html>
