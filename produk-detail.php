@@ -326,7 +326,11 @@ if (isset($_SESSION['message'])) {
                         <button type="submit" name="add_to_cart" class="btn-submit">
                             <i class="bi bi-cart-plus"></i> Tambahkan ke Keranjang
                         </button>
-                        </form>
+                        <!-- <form method="GET" action="checkout.php" id="checkout-form">
+                            <button type="submit" name="checkout" class="btn btn-success">
+                                <i class="bi bi-lightning-fill"></i> Beli Sekarang
+                            </button>
+                        </form> -->
                     </div>
                 </form>
             </div>

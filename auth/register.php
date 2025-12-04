@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $signupData = json_decode($signup->getBody()->getContents(), true);
 
       if (empty($signupData['user']['id'])) {
-        $error = "❌ Sign up gagal dari Supabase.";
+        $error = "Cek Konfirmasi Email Anda.";
       } else {
         $user_id = $signupData['user']['id'];
 

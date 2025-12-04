@@ -80,19 +80,19 @@ if (isset($_POST['update_paket'])) {
     $tmpName = $_FILES['foto_paket']['tmp_name'];
     $oriName = basename($_FILES['foto_paket']['name']);
     $ext = strtolower(pathinfo($oriName, PATHINFO_EXTENSION));
-    $allowed = ['jpg','jpeg','png','gif','webp'];
+    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     if (!in_array($ext, $allowed)) {
       echo "<script>alert('Format gambar tidak didukung');</script>";
       exit;
     }
 
-    $namaFile = uniqid()."_".$oriName;
+    $namaFile = uniqid() . "_" . $oriName;
 
     $folder = __DIR__ . "/uploads/";
     if (!is_dir($folder)) mkdir($folder, 0777, true);
 
-    $localPath = $folder.$namaFile;
+    $localPath = $folder . $namaFile;
 
     // Simpan sementara di server lokal
     move_uploaded_file($tmpName, $localPath);
@@ -110,7 +110,7 @@ if (isset($_POST['update_paket'])) {
 
     // MASUKKAN URL BARU KE DATABASE
     $updateData['foto_paket'] =
-      "https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/paket/".$namaFile;
+      "https://fsiuefdwcbdhunfhbiwl.supabase.co/storage/v1/object/public/images/paket/" . $namaFile;
   }
 
   // ===== UPDATE KE DATABASE (TIDAK ADA UPLOAD ULANG) =====
@@ -129,14 +129,12 @@ if (isset($_POST['update_paket'])) {
     if (isset($_GET['hapus'])) {
     $id_paket = $_GET['hapus'];
 
-    $result = deletePaket($id_paket);
-
-    if ($result['success']) {
-        echo "<script>alert('Paket berhasil dihapus!'); window.location='kelola-paket.php';</script>";
-        exit;
-    } else {
-        echo "<script>alert('Gagal menghapus paket: {$result['message']}'); console.log(`Debug: {$result['debug']}`);</script>";
-    }
+  if ($result['success']) {
+    echo "<script>alert('Paket berhasil dihapus!'); window.location='kelola-paket.php';</script>";
+    exit;
+  } else {
+    echo "<script>alert('Gagal menghapus paket: {$result['message']}'); console.log(`Debug: {$result['debug']}`);</script>";
+  }
 }
 
 
@@ -295,6 +293,9 @@ if (isset($_POST['update_paket'])) {
                 <div class="action-buttons">
                   <button type="button" class="btn btn-success btn-lg btn-action" data-bs-toggle="modal" data-bs-target="#modalTambahPaket">
                     <p>Tambah Paket</p>
+                  </button>
+                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahKategori">
+                    Tambah Kategori
                   </button>
                 </div>
               </div>
@@ -583,7 +584,7 @@ if (isset($_POST['update_paket'])) {
                   </label>
                   <textarea class="form-control" id="deskripsi" name="deskripsi" rows="5" required></textarea>
                 </div
-                </div>
+                  </div>
               </div>
             </div>
             <div class="modal-footer">
@@ -599,82 +600,6 @@ if (isset($_POST['update_paket'])) {
     </div>
   </div>
 
-  <div class="modal fade" id="modalTambahPaket" tabindex="-1" aria-labelledby="modalTambahPaketLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title" id="modalTambahPaketLabel">
-            <i class="fas fa-plus-circle"></i> Tambah Paket Baru
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <form method="POST" enctype="multipart/form-data">
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="nama_paket" class="form-label">
-                    <i class="fas fa-box"></i> Nama Paket <span class="text-danger">*</span>
-                  </label>
-                  <input type="text" class="form-control" id="nama_paket" name="nama_paket" required>
-                </div>
-
-                <div class="mb-3">
-                  <label for="harga_paket" class="form-label">
-                    <i class="fas fa-money-bill-wave"></i> Harga Paket <span class="text-danger">*</span>
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text">Rp</span>
-                    <input type="number" class="form-control" id="harga_paket" name="harga_paket" required>
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="foto_paket" class="form-label">
-                    <i class="fas fa-image"></i> Gambar Paket <span class="text-danger">*</span>
-                  </label>
-                  <input type="file" class="form-control" id="foto_paket" name="foto_paket" accept="image/*" required>
-                  <small class="text-muted">Format: JPG, PNG, JPEG (Max 2MB)</small>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="deskripsi" class="form-label">
-                    <i class="fas fa-align-left"></i> Deskripsi Paket <span class="text-danger">*</span>
-                  </label>
-                  <textarea class="form-control" id="deskripsi" name="deskripsi" rows="5" required></textarea>
-                </div>
-
-                  <label for="id_kategori" class="form-label">
-                    <i class="fas fa-tags"></i> Kategori Produk <span class="text-danger">*</span>
-                  </label>
-                  <select class="form-select" id="id_kategori" name="id_kategori" required>
-                    <option value="">-- Pilih Kategori --</option>
-                    <?php if (!empty($kategori)): ?>
-                      <?php foreach ($kategori as $kat): ?>
-                        <option value="<?= htmlspecialchars($kat['id_kategori']) ?>">
-                          <?= htmlspecialchars($kat['nama_kategori']) ?>
-                        </option>
-                      <?php endforeach; ?>
-                    <?php endif; ?>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="fas fa-times"></i> Batal
-            </button>
-            <button type="submit" name="tambah" class="btn btn-success">
-              <i class="fas fa-save"></i> Simpan Paket
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
 
   <!-- Scroll to Top Button-->
   <a class="scroll-to-top rounded" href="#page-top">

@@ -467,21 +467,31 @@ function deleteProdukDenganRelasi($id_produk)
 // Profil
 function getRiwayatPesanan($id_user)
 {
-    global $client;
-
     try {
-        $response = $client->get('/rest/v1/transaksi', [
-            'query' => [
-                'select' => '*',
-                'id_user' => 'eq.' . $id_user
-            ]
+        return getSupabaseData("transaksi", [
+            "id_user" => "eq.$id_user",
+            "select" => "id_transaksi, total_harga, status, metode_pengambilan, ongkir, potongan, created_at, alamat(*)",
+            "order"  => "id_transaksi.desc"
         ]);
-
-        return json_decode($response->getBody(), true);
     } catch (Exception $e) {
+        error_log("Error getRiwayatPesanan: " . $e->getMessage());
         return [];
     }
 }
+
+
+
+
+function getVoucherUser($id_user)
+{
+    $query = [
+        "id_user" => "eq.$id_user",
+        "select"  => "id_voucher,nama_voucher,tgl_mulai,tgl_berakhir,deskripsi,poin_tukar,minimal_pembelian"
+    ];
+
+    return getSupabaseData("voucher", $query);
+}
+
 
 function getAlamatCheckout($id_user)
 {

@@ -173,11 +173,7 @@ if (isset($_POST['update_produk'])) {
   }
 
   // --- PROSES UPDATE KE DATABASE ---
-  $upload = uploadToSupabaseStorage(
-    'images',
-    $localPath,
-    'produk/' . $namaFile
-  );
+  $res = updateSupabaseData('produk', $id_produk, $updateData);
 
 
   if ($res) {
@@ -345,13 +341,10 @@ if (isset($_POST['update_produk'])) {
                     data-bs-target="#modalTambahProduk">
                     <p>Tambah Produk</p>
                   </button>
-                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahKategori1">
+                  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambahKategori">
                     Tambah Kategori
                   </button>
-                  <button type="button" class="btn btn-primary btn-lg btn-action" data-bs-toggle="modal"
-                    data-bs-target="#modalTambahPaket">
-                    <p>Tambah Paket</p>
-                  </button>
+         
                 </div>
               </div>
             </div>
@@ -405,22 +398,6 @@ if (isset($_POST['update_produk'])) {
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-tags fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-xl-4 col-md-6 mb-4">
-              <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Produk Terbaru</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">Hari Ini</div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-clock fa-2x text-gray-300"></i>
                     </div>
                   </div>
                 </div>
@@ -572,14 +549,13 @@ if (isset($_POST['update_produk'])) {
                                     </select>
                                   </div>
                                   <div class="mb-3">
-                                    <label class="form-label">Kategori Produk</label>
-                                    <select name="id_kategori" class="form-select" required>
-                                      <?php foreach ($kategori as $kat): ?>
-                                        <option value="<?= $kat['id_kategori'] ?>"
-                                          <?= ($kat['id_kategori'] == $row['id_kategori']) ? 'selected' : '' ?>>
-                                          <?= htmlspecialchars($kat['nama_kategori']) ?>
-                                        </option>
-                                      <?php endforeach; ?>
+                                    <label for="id_kategori" class="form-label">
+                                      Varian Produk <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="varian" id="varian" class="form-control" required>
+                                      <option value="">-- Pilih Varian --</option>
+                                      <option value="mini">Mini</option>
+                                      <option value="normal">Normal</option>
                                     </select>
                                   </div>
 
@@ -733,52 +709,47 @@ if (isset($_POST['update_produk'])) {
     </div>
   </div>
 
-
-  <div class="modal fade" id="modalTambahKategori1" tabindex="-1" aria-labelledby="modalTambahProdukLabel"
-    aria-hidden="true">
+  <div class="modal fade" id="modalTambahKategori" tabindex="-1" aria-labelledby="modalTambahKategoriLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header bg-success text-white">
-          <h5 class="modal-title" id="modalTambahProdukLabel">
+          <h5 class="modal-title" id="modalTambahKategoriLabel">
             <i class="fas fa-plus-circle"></i> Tambah Kategori Baru
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST">
           <div class="modal-body">
             <div class="row">
-              <div class="modal-body">
-                <div class="mb-3">
-                  <label for="nama_kategori" class="form-label">
-                    <i class="fas fa-tag"></i> Nama Kategori <span class="text-danger">*</span>
-                  </label>
-                  <input type="text" class="form-control" id="nama_kategori" name="nama_kategori"
-                    placeholder="Contoh: Kue Kering" required>
-                </div>
-                <div class="mb-3">
-                  <label for="minimal_pembelian" class="form-label">
-                    <i class="fas fa-tag"></i> Minimal Pembelian <span class="text-danger">*</span>
-                  </label>
-                  <input type="number" class="form-control" id="minimal_pembelian" name="minimal_pembelian"
-                    placeholder="" required>
-                </div>
+              <div class="mb-3">
+                <label for="nama_kategori" class="form-label">
+                  <i class="fas fa-tag"></i> Nama Kategori <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="nama_kategori" name="nama_kategori" placeholder="Contoh: Kue Kering" required>
+              </div>
+              <div class="mb-3">
+                <label for="minimal_pembelian" class="form-label">
+                  <i class="fas fa-tag"></i> Minimal Pembelian <span class="text-danger">*</span>
+                </label>
+                <input type="number" class="form-control" id="minimal_pembelian" name="minimal_pembelian" placeholder="" required>
               </div>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i class="fas fa-times"></i> Batal
-              </button>
-              <button type="submit" name="tambah" class="btn btn-success">
-                <i class="fas fa-save"></i> Simpan Produk
-              </button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Batal
+            </button>
+            <button type="submit" name="tambah_kategori" class="btn btn-success">
+              <i class="fas fa-save"></i> Simpan Kategori
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="modalTambahPaket" tabindex="-1" aria-labelledby="modalTambahProdukLabel"
-    aria-hidden="true">
+
+  <div class="modal fade" id="modalTambahPaket" tabindex="-1" aria-labelledby="modalTambahProdukLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header bg-success text-white">
@@ -856,47 +827,6 @@ if (isset($_POST['update_produk'])) {
     </div>
   </div>
 
-  <!-- Modal Tambah Kategori -->
-  <div class="modal fade" id="modalTambahKategori" tabindex="-1" aria-labelledby="modalTambahKategoriLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header bg-warning text-dark">
-          <h5 class="modal-title" id="modalTambahKategoriLabel">
-            <i class="fas fa-tags"></i> Tambah Kategori Baru
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <form method="POST" action="">
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="nama_kategori" class="form-label">
-                <i class="fas fa-tag"></i> Nama Kategori <span class="text-danger">*</span>
-              </label>
-              <input type="text" class="form-control" id="nama_kategori" name="nama_kategori"
-                placeholder="Contoh: Kue Kering" required>
-            </div>
-            <div class="mb-3">
-              <label for="minimal_pembelian" class="form-label">
-                <i class="fas fa-tag"></i> Minimal Pembelian <span class="text-danger">*</span>
-              </label>
-              <input type="number" class="form-control" id="minimal_pembelian" name="minimal_pembelian" placeholder=""
-                required>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="fas fa-times"></i> Batal
-            </button>
-            <button type="submit" name="tambah_kategori" class="btn btn-warning">
-              <i class="fas fa-save"></i> Simpan Kategori
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
   <!-- Scroll to Top Button-->
   <a class="scroll-to-top rounded" href="#page-top">
     <i class="fas fa-angle-up"></i>
@@ -908,6 +838,13 @@ if (isset($_POST['update_produk'])) {
 
   <!-- Custom scripts for all pages-->
   <script src="js/sb-admin-2.min.js"></script>
+
+  <script>
+    document.addEventListener('hidden.bs.modal', function() {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+    });
+  </script>
 
 </body>
 
