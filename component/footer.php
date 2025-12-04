@@ -335,7 +335,6 @@
                     <ul>
                         <li><a href="index.php">Beranda</a></li>
                         <li><a href="produk.php">Produk Kami</a></li>
-                        <li><a href="kustom.php">Kustom Pesanan</a></li>
                         <li><a href="keranjang.php">Keranjang</a></li>
                         <li><a href="profil.php">Profil</a></li>
                     </ul>
